@@ -13,15 +13,20 @@ local prefabs = {
 local start_inv = {
 }
 
+local function ondeath(inst, data)
+	inst._toughness = math.min(inst._toughness + 0.05, TUNING.ATEZAROTH_MAX_TOUGHNESS)
+end
+
 local function becomebloodlust_1(inst)
 	if inst._state == "bloodlust_1" then
 		return
 	end
 
-	inst._state = "bloodlust_1"
 	inst:AddTag("bloodlust")
 	inst.components.combat.damagemultiplier = 2
-	inst.components.locomotor:SetExternalSpeedMultiplier(inst, "bloodlust", 1.75)
+	inst.components.locomotor:SetExternalSpeedMultiplier(inst, "bloodlust", 1.55)
+	inst._state = "bloodlust_1"
+	inst.sg:PushEvent("powerup")
 	inst.components.talker:Say(GetString(inst, "ANNOUNCE_BLOODLUST_1"))
 end
 
@@ -29,12 +34,19 @@ local function becomebloodlust_2(inst)
 	if inst._state == "bloodlust_2" then
 		return
 	end
-
-	inst._state = "bloodlust_2"
+	
 	inst:AddTag("bloodlust")
 	inst.components.combat.damagemultiplier = 1.5
-	inst.components.locomotor:SetExternalSpeedMultiplier(inst, "bloodlust", 1.45)
-	inst.components.talker:Say(GetString(inst, "ANNOUNCE_BLOODLUST_2"))
+	inst.components.locomotor:SetExternalSpeedMultiplier(inst, "bloodlust", 1.25)
+
+	if inst._state == "bloodlust_1" then
+		inst.sg:PushEvent("powerdown")
+	elseif inst._state == "normal" then
+		inst.sg:PushEvent("powerup")
+		inst.components.talker:Say(GetString(inst, "ANNOUNCE_BLOODLUST_2"))
+	end
+
+	inst._state = "bloodlust_2"
 end
 
 local function becomenormal(inst)
@@ -42,10 +54,11 @@ local function becomenormal(inst)
 		return
 	end
 
-	inst._state = "normal"
 	inst:RemoveTag("bloodlust")
 	inst.components.combat.damagemultiplier = 1
 	inst.components.locomotor:RemoveExternalSpeedMultiplier(inst, "bloodlust")
+	inst._state = "normal"
+	inst.sg:PushEvent("powerdown")
 end
 
 local function onhungerchange(inst, data, forcesilent)
@@ -53,9 +66,9 @@ local function onhungerchange(inst, data, forcesilent)
         return
     end
 
-    if inst.components.hunger:GetPercent() < TUNING.ATEZAROTH_BLOODLUST_THRESHOLD_1
+    if inst.components.hunger:GetPercent() < TUNING.ATEZAROTH_BLOODLUST_THRESHOLD_1 then
     	becomebloodlust_1(inst)
-    elseif inst.components.hunger:GetPercent() < TUNING.ATEZAROTH_BLOODLUST_THRESHOLD_2
+    elseif inst.components.hunger:GetPercent() < TUNING.ATEZAROTH_BLOODLUST_THRESHOLD_2 then
     	becomebloodlust_2(inst)
     else
     	becomenormal(inst)
@@ -67,13 +80,13 @@ local function onbecamehuman(inst)
 	-- Toughness
 	inst.components.health:SetAbsorptionAmount(inst._toughness)
 	-- Bloodlust
-	--[[inst:ListenForEvent("hungerdelta", onhungerchange)
-	onhungerchange(inst)]]
+	inst:ListenForEvent("hungerdelta", onhungerchange)
+	onhungerchange(inst)
 end
 
 local function onbecameghost(inst)
-	--[[becomenormal(inst)
-	inst:RemoveEventCallback("hungerdelta", onhungerchange)]]
+	becomenormal(inst)
+	inst:RemoveEventCallback("hungerdelta", onhungerchange)
 end
 
 -- When loading or spawning the character
@@ -107,11 +120,6 @@ local function oneat(inst, food)
 	end
 end
 
-local function ondeath(inst, data)
-	inst._toughness = math.min(inst._toughness + 0.05, TUNING.ATEZAROTH_MAX_TOUGHNESS)
-end
-
-
 -- This initializes for both the server and client. Tags can be added here.
 local common_postinit = function(inst) 
 	-- Minimap icon
@@ -128,8 +136,8 @@ local master_postinit = function(inst)
 	
 	-- Stats	
 	inst.components.health:SetMaxHealth(TUNING.ATEZAROTH_MAX_HEALTH)
-	inst.components.hunger:SetMax(TUNING.ATEZAROTH_MAX_SANITY)
-	inst.components.sanity:SetMax(TUNING.ATEZAROTH_MAX_HUNGER)
+	inst.components.hunger:SetMax(TUNING.ATEZAROTH_MAX_HUNGER)
+	inst.components.sanity:SetMax(TUNING.ATEZAROTH_MAX_SANITY)
 	inst.components.hunger.hungerrate = TUNING.WILSON_HUNGER_RATE * 1.75
 
 	-- Initial state
@@ -140,7 +148,7 @@ local master_postinit = function(inst)
 
 	-- Handle death
 	inst._toughness = 0.0
-	-- inst:ListenForEvent('death', ondeath)
+	inst:ListenForEvent('death', ondeath)
 	
 	inst.OnLoad = onload
     inst.OnNewSpawn = onload

@@ -71,8 +71,8 @@ return {
 	ANNOUNCE_CRAFTING_FAIL = "I don't have all of the ingredients.",
 	ANNOUNCE_DEERCLOPS = "That sounded big!",
 	ANNOUNCE_DUSK = "It's getting late. It will be dark soon.",
-	ANNOUNCE_BLOODLUST_1 = "ME HUNGRYYYYYY!!!",
-	ANNOUNCE_BLOODLUST_2 = "MORE...MORE...MOREEEEE!!!"
+	ANNOUNCE_BLOODLUST_2 = "Must feed!",
+	ANNOUNCE_BLOODLUST_1 = "I hunger!",
 	ANNOUNCE_EAT =
 	{
 		GENERIC = "Yum!",
