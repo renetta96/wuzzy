@@ -6,23 +6,74 @@ local assets = {
     Asset("SCRIPT", "scripts/prefabs/player_common.lua"),
 }
 local prefabs = {
-	"spoiled_food",
-	"poop"
+	"spoiled_food"
 }
 
 -- Custom starting items
 local start_inv = {
 }
 
+local function becomebloodlust_1(inst)
+	if inst._state == "bloodlust_1" then
+		return
+	end
+
+	inst._state = "bloodlust_1"
+	inst:AddTag("bloodlust")
+	inst.components.combat.damagemultiplier = 2
+	inst.components.locomotor:SetExternalSpeedMultiplier(inst, "bloodlust", 1.75)
+	inst.components.talker:Say(GetString(inst, "ANNOUNCE_BLOODLUST_1"))
+end
+
+local function becomebloodlust_2(inst)
+	if inst._state == "bloodlust_2" then
+		return
+	end
+
+	inst._state = "bloodlust_2"
+	inst:AddTag("bloodlust")
+	inst.components.combat.damagemultiplier = 1.5
+	inst.components.locomotor:SetExternalSpeedMultiplier(inst, "bloodlust", 1.45)
+	inst.components.talker:Say(GetString(inst, "ANNOUNCE_BLOODLUST_2"))
+end
+
+local function becomenormal(inst)
+	if inst._state == "normal" then
+		return
+	end
+
+	inst._state = "normal"
+	inst:RemoveTag("bloodlust")
+	inst.components.combat.damagemultiplier = 1
+	inst.components.locomotor:RemoveExternalSpeedMultiplier(inst, "bloodlust")
+end
+
+local function onhungerchange(inst, data, forcesilent)
+	if inst:HasTag("playerghost") or inst.components.health:IsDead() then
+        return
+    end
+
+    if inst.components.hunger:GetPercent() < TUNING.ATEZAROTH_BLOODLUST_THRESHOLD_1
+    	becomebloodlust_1(inst)
+    elseif inst.components.hunger:GetPercent() < TUNING.ATEZAROTH_BLOODLUST_THRESHOLD_2
+    	becomebloodlust_2(inst)
+    else
+    	becomenormal(inst)
+    end
+end
+
 -- When the character is revived from human
 local function onbecamehuman(inst)
-	-- Set speed when reviving from ghost (optional)
-	inst.components.locomotor:SetExternalSpeedMultiplier(inst, "zeta_speed_mod", 1)
+	-- Toughness
+	inst.components.health:SetAbsorptionAmount(inst._toughness)
+	-- Bloodlust
+	--[[inst:ListenForEvent("hungerdelta", onhungerchange)
+	onhungerchange(inst)]]
 end
 
 local function onbecameghost(inst)
-	-- Remove speed modifier when becoming a ghost
-   inst.components.locomotor:RemoveExternalSpeedMultiplier(inst, "zeta_speed_mod")
+	--[[becomenormal(inst)
+	inst:RemoveEventCallback("hungerdelta", onhungerchange)]]
 end
 
 -- When loading or spawning the character
@@ -35,6 +86,29 @@ local function onload(inst)
     else
         onbecamehuman(inst)
     end
+end
+
+local function oneat(inst, food)
+	-- Handle eating rot
+	if food and food.components.edible and food.prefab == "spoiled_food" then
+		local stack_mult = inst.components.eater.eatwholestack and food.components.stackable ~= nil and food.components.stackable:StackSize() or 1
+
+		local health_delta = food.components.edible:GetHealth(inst) * inst.components.eater.healthabsorption
+		if health_delta < 0 then
+			inst.components.health:DoDelta(-health_delta * stack_mult, nil)
+		end
+
+		local hunger_delta = food.components.edible:GetHunger(inst) * inst.components.eater.hungerabsorption
+		if hunger_delta < 0 then
+			inst.components.hunger:DoDelta(-hunger_delta * stack_mult)
+		end
+
+		inst.components.health:DoDelta(15, nil)
+	end
+end
+
+local function ondeath(inst, data)
+	inst._toughness = math.min(inst._toughness + 0.05, TUNING.ATEZAROTH_MAX_TOUGHNESS)
 end
 
 
@@ -53,15 +127,20 @@ local master_postinit = function(inst)
     inst.talker_path_override = "dontstarve_DLC001/characters/"
 	
 	-- Stats	
-	inst.components.health:SetMaxHealth(150)
-	inst.components.hunger:SetMax(150)
-	inst.components.sanity:SetMax(200)
-	
-	-- Damage multiplier (optional)
-    inst.components.combat.damagemultiplier = 1
-	
-	-- Hunger rate (optional)
-	inst.components.hunger.hungerrate = 1 * TUNING.WILSON_HUNGER_RATE
+	inst.components.health:SetMaxHealth(TUNING.ATEZAROTH_MAX_HEALTH)
+	inst.components.hunger:SetMax(TUNING.ATEZAROTH_MAX_SANITY)
+	inst.components.sanity:SetMax(TUNING.ATEZAROTH_MAX_HUNGER)
+	inst.components.hunger.hungerrate = TUNING.WILSON_HUNGER_RATE * 1.75
+
+	-- Initial state
+	inst._state = "normal"
+
+	-- Can eat rot
+	inst.components.eater:SetOnEatFn(oneat)
+
+	-- Handle death
+	inst._toughness = 0.0
+	-- inst:ListenForEvent('death', ondeath)
 	
 	inst.OnLoad = onload
     inst.OnNewSpawn = onload
@@ -69,9 +148,8 @@ local master_postinit = function(inst)
     -- Drop rotten food randomly
     inst:AddComponent("periodicspawner")
     inst.components.periodicspawner:SetPrefab("spoiled_food")
-    inst.components.periodicspawner:SetRandomTimes(20, 10)
-    inst.components.periodicspawner:SetDensityInRange(20, 3)
-    inst.components.periodicspawner:SetMinimumSpacing(5)
+    inst.components.periodicspawner:SetRandomTimes(20, 5)
+    inst.components.periodicspawner:SetDensityInRange(10, 3)
     inst.components.periodicspawner:Start()
 	
 end

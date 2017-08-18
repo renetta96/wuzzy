@@ -38,12 +38,21 @@ Assets = {
 
 local require = GLOBAL.require
 local STRINGS = GLOBAL.STRINGS
+local TUNING = GLOBAL.TUNING
+
+-- Stats
+TUNING.ATEZAROTH_MAX_HEALTH = 175
+TUNING.ATEZAROTH_MAX_SANITY = 150
+TUNING.ATEZAROTH_MAX_HUNGER = 200
+TUNING.ATEZAROTH_BLOODLUST_THRESHOLD_1 = 25
+TUNING.ATEZAROTH_BLOODLUST_THRESHOLD_2 = 50
+TUNING.ATEZAROTH_MAX_TOUGHNESS = 0.6
 
 -- The character select screen lines
-STRINGS.CHARACTER_TITLES.zeta = "The Undead"
+STRINGS.CHARACTER_TITLES.zeta = "The Hollow Walker"
 STRINGS.CHARACTER_NAMES.zeta = "Atezaroth"
-STRINGS.CHARACTER_DESCRIPTIONS.zeta = "*Perk 1\n*Perk 2\n*Perk 3"
-STRINGS.CHARACTER_QUOTES.zeta = "\"Fuck you that's why !\""
+STRINGS.CHARACTER_DESCRIPTIONS.zeta = "*Is a decaying Undead\n*Get angry when hunger\n*Become tougher every time come back from death"
+STRINGS.CHARACTER_QUOTES.zeta = "\"Every man lives. Not every man truly dies.\""
 
 -- Custom speech strings
 STRINGS.CHARACTERS.ZETA = require "speech_zeta"

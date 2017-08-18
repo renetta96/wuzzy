@@ -1,12 +1,3 @@
---[[
-	--- This is Wilson's speech file for Don't Starve Together ---
-	Write your character's lines here.
-	If you want to use another speech file as a base, or use a more up-to-date version, get them from data\scripts\
-	
-	If you want to use quotation marks in a quote, put a \ before it.
-	Example:
-	"Like \"this\"."
-]]
 return {
 	ACTIONFAIL =
 	{
@@ -80,11 +71,13 @@ return {
 	ANNOUNCE_CRAFTING_FAIL = "I don't have all of the ingredients.",
 	ANNOUNCE_DEERCLOPS = "That sounded big!",
 	ANNOUNCE_DUSK = "It's getting late. It will be dark soon.",
+	ANNOUNCE_BLOODLUST_1 = "ME HUNGRYYYYYY!!!",
+	ANNOUNCE_BLOODLUST_2 = "MORE...MORE...MOREEEEE!!!"
 	ANNOUNCE_EAT =
 	{
 		GENERIC = "Yum!",
 		PAINFUL = "I don't feel so good.",
-		SPOILED = "Yuck! That was terrible!",
+		SPOILED = "Tasty!",
 		STALE = "I think that was starting to turn.",
 		INVALID = "I can't eat that!",
 		YUCKY = "Puting that in my mouth would be disgusting!",
