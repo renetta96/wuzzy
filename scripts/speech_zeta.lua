@@ -73,6 +73,7 @@ return {
 	ANNOUNCE_DUSK = "It's getting late. It will be dark soon.",
 	ANNOUNCE_BLOODLUST_2 = "Must feed!",
 	ANNOUNCE_BLOODLUST_1 = "I hunger!",
+	ANNOUNCE_NORMAL = "No more bloodlust.",
 	ANNOUNCE_EAT =
 	{
 		GENERIC = "Yum!",

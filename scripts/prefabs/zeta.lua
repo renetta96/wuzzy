@@ -23,8 +23,8 @@ local function becomebloodlust_1(inst)
 	end
 
 	inst:AddTag("bloodlust")
-	inst.components.combat.damagemultiplier = 2
-	inst.components.locomotor:SetExternalSpeedMultiplier(inst, "bloodlust", 1.55)
+	inst.components.combat.damagemultiplier = 1.75
+	inst.components.locomotor:SetExternalSpeedMultiplier(inst, "bloodlust", 1.5)
 	inst._state = "bloodlust_1"
 	inst.sg:PushEvent("powerup")
 	inst.components.talker:Say(GetString(inst, "ANNOUNCE_BLOODLUST_1"))
@@ -55,10 +55,11 @@ local function becomenormal(inst)
 	end
 
 	inst:RemoveTag("bloodlust")
-	inst.components.combat.damagemultiplier = 1
+	inst.components.combat.damagemultiplier = TUNING.ATEZAROTH_DEFAULT_DAMAGE_MULTIPLIER
 	inst.components.locomotor:RemoveExternalSpeedMultiplier(inst, "bloodlust")
 	inst._state = "normal"
 	inst.sg:PushEvent("powerdown")
+	inst.components.talker:Say(GetString(inst, "ANNOUNCE_NORMAL"))
 end
 
 local function onhungerchange(inst, data, forcesilent)
@@ -111,10 +112,12 @@ local function oneat(inst, food)
 			inst.components.health:DoDelta(-health_delta * stack_mult, nil)
 		end
 
+		--[[
 		local hunger_delta = food.components.edible:GetHunger(inst) * inst.components.eater.hungerabsorption
 		if hunger_delta < 0 then
 			inst.components.hunger:DoDelta(-hunger_delta * stack_mult)
 		end
+		]]
 
 		inst.components.health:DoDelta(15, nil)
 	end
@@ -138,7 +141,7 @@ local master_postinit = function(inst)
 	inst.components.health:SetMaxHealth(TUNING.ATEZAROTH_MAX_HEALTH)
 	inst.components.hunger:SetMax(TUNING.ATEZAROTH_MAX_HUNGER)
 	inst.components.sanity:SetMax(TUNING.ATEZAROTH_MAX_SANITY)
-	inst.components.hunger.hungerrate = TUNING.WILSON_HUNGER_RATE * 1.75
+	inst.components.hunger.hungerrate = TUNING.WILSON_HUNGER_RATE * 1.55
 
 	-- Initial state
 	inst._state = "normal"
