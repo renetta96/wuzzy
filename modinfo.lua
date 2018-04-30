@@ -1,6 +1,6 @@
 -- This information tells other players more about the mod
-name = "Atezaroth The Hollow Walker"
-description = "An Undead character"
+name = "Franz The Rot"
+description = "A lost zombie"
 author = "Zeta"
 version = "1.0.0" -- This is the version of the template. Change it to your own number.
 
