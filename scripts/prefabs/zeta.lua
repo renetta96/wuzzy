@@ -6,73 +6,48 @@ local assets = {
     Asset("SCRIPT", "scripts/prefabs/player_common.lua"),
 }
 local prefabs = {
-	"spoiled_food"
+	"mutantbeecocoon",
+	"honey"
 }
 
 -- Custom starting items
 local start_inv = {
-	"meat", "meat", "meat", "meat"
+	"mutantbeecocoon"
 }
 
-local function DoVirusDamage(inst)
-	if inst._virusticks <= 0 or inst.components.health:IsDead() then
-		inst.virustask:Cancel()
-		inst.virustask = nil
-		return
-	end
-
-    inst.components.health:DoDelta(TUNING.FRANZ_VIRUS_DAMAGE, true, "virus")  
-    inst.AnimState:SetMultColour(1, 0, 1, 1) -- Purple
-    inst:DoTaskInTime(0.2, function(inst) inst.AnimState:SetMultColour(1, 1, 1, 1) end)
-    inst._virusticks = inst._virusticks - 1
-
-    if inst._virusticks <= 0 or inst.components.health:IsDead() then
-		inst.virustask:Cancel()
-		inst.virustask = nil
+local function OnEat(inst, data)
+	if data.food 
+		and (data.food.prefab == "petals" or data.food.prefab == "petals_evil") then
+		inst._eatenpetals = inst._eatenpetals + 1
+		if (inst._eatenpetals >= TUNING.OZZY_NUM_PETALS_PER_HONEY) then
+			local honey = SpawnPrefab("honey")
+			honey.Transform:SetPosition(inst.Transform:GetWorldPosition())
+			inst._eatenpetals = 0
+		end
 	end
 end
 
-local function onattackother(inst, data)
-	if data.target and data.target.components.health and not data.target.components.health:IsDead() then
-		-- No target players.
-		if not data.target:HasTag("player") then
-			data.target._virusticks = TUNING.FRANZ_MAX_VIRUS_TICKS
-			if data.target.virustask == nil then
-				data.target.virustask = data.target:DoPeriodicTask(TUNING.FRANZ_VIRUS_PERIOD, DoVirusDamage)
-        	end
-    	end
+local function OnAttacked(inst, data)
+	local attacker = data.attacker
+	if not (attacker:HasTag("mutant") or attacker:HasTag("player")) then
+		inst.components.combat:ShareTarget(attacker, TUNING.OZZY_SHARE_TARGET_DIST, 
+			function(dude)
+				return dude:HasTag("mutant") and not (dude:IsInLimbo() or dude.components.health:IsDead())
+			end, 
+			TUNING.OZZY_MAX_SHARE_TARGETS)
+
+		local hive = GetClosestInstWithTag("mutantbeehive", inst, TUNING.OZZY_SHARE_TARGET_DIST)
+		if hive then
+			hive:OnHit(attacker)
+		end
 	end
-end
-
-local function UpdateDamageMultiplier(inst)
-	local multiplier = TUNING.FRANZ_DEFAULT_DAMAGE_MULTIPLIER + TUNING.FRANZ_BONUS_DAMAGE_MULTIPLIER * (1 - inst.components.hunger:GetPercent())
-	inst.components.combat.damagemultiplier = multiplier
-end
-
-local function UpdateSpeedMultiplier(inst)
-	local multiplier = TUNING.FRANZ_DEFAUT_SPEED_MULTIPLIER + TUNING.FRANZ_BONUS_SPEED_MULTIPLIER * (1 - inst.components.hunger:GetPercent())
-	inst.components.locomotor:SetExternalSpeedMultiplier(inst, "bloodlust", multiplier)
-end
-
-local function RemoveSpeedMultiplier(inst)
-	inst.components.locomotor:RemoveExternalSpeedMultiplier(inst, "bloodlust")
-end
-
-local function onhungerdelta(inst, data, forcesilent)
-	UpdateDamageMultiplier(inst)
-	UpdateSpeedMultiplier(inst)
 end
 
 -- When the character is revived from human
 local function onbecamehuman(inst)
-	UpdateDamageMultiplier(inst)
-	UpdateSpeedMultiplier(inst)
-	inst:ListenForEvent("hungerdelta", onhungerdelta)
 end
 
 local function onbecameghost(inst)	
-	inst:RemoveEventCallback("hungerdelta", onhungerdelta)
-	RemoveSpeedMultiplier(inst)
 end
 
 -- When loading or spawning the character
@@ -91,6 +66,10 @@ end
 local common_postinit = function(inst) 
 	-- Minimap icon
 	inst.MiniMapEntity:SetIcon( "zeta.tex" )
+	inst:AddTag("mutant")
+	inst:AddTag("insect")
+	inst:AddTag("beemaster")
+	inst:AddTag(UPGRADETYPES.DEFAULT.."_upgradeuser")
 end
 
 -- This initializes for the server only. Components are added here.
@@ -102,30 +81,18 @@ local master_postinit = function(inst)
     inst.talker_path_override = "dontstarve_DLC001/characters/"
 	
 	-- Stats	
-	inst.components.health:SetMaxHealth(TUNING.FRANZ_MAX_HEALTH)
-	inst.components.hunger:SetMax(TUNING.FRANZ_MAX_HUNGER)
-	inst.components.sanity:SetMax(TUNING.FRANZ_MAX_SANITY)
-	inst.components.hunger.hungerrate = TUNING.WILSON_HUNGER_RATE * TUNING.FRANZ_HUNGER_SCALE
-	inst.components.combat.damagemultiplier = TUNING.FRANZ_DEFAULT_DAMAGE_MULTIPLIER
+	inst.components.health:SetMaxHealth(TUNING.OZZY_MAX_HEALTH)
+	inst.components.hunger:SetMax(TUNING.OZZY_MAX_HUNGER)
+	inst.components.sanity:SetMax(TUNING.OZZY_MAX_SANITY)
+	inst.components.hunger.hungerrate = TUNING.WILSON_HUNGER_RATE * TUNING.OZZY_HUNGER_SCALE
+	inst.components.combat.damagemultiplier = TUNING.OZZY_DEFAULT_DAMAGE_MULTIPLIER
 
-	-- Virus damage
-	inst:ListenForEvent("onattackother", onattackother)
+	inst._eatenpetals = 0
+	inst:ListenForEvent("oneat", OnEat)
+	inst:ListenForEvent("attacked", OnAttacked)
 	
 	inst.OnLoad = onload
     inst.OnNewSpawn = onload
-
-    -- Drop rot randomly
-    inst:AddComponent("periodicspawner")
-    inst.components.periodicspawner:SetPrefab("spoiled_food")
-    inst.components.periodicspawner:SetRandomTimes(60, 5)
-    inst.components.periodicspawner:SetDensityInRange(10, 3)
-    inst.components.periodicspawner:Start()
-
-    -- Eater
-    inst.components.eater:SetDiet({ FOODGROUP.OMNI }, { FOODTYPE.MEAT, FOODTYPE.GOODIES })
-    inst.components.eater:SetCanEatRaw()
-    inst.components.eater:SetCanEatHorrible()
-    inst.components.eater:SetAbsorptionModifiers(1, 1, 0.7)
 end
 
 return MakePlayerCharacter("zeta", prefabs, assets, common_postinit, master_postinit, start_inv)

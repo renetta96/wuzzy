@@ -70,10 +70,7 @@ return {
 	ANNOUNCE_HOT = "Need... ice... or... shade!",
 	ANNOUNCE_CRAFTING_FAIL = "I don't have all of the ingredients.",
 	ANNOUNCE_DEERCLOPS = "That sounded big!",
-	ANNOUNCE_DUSK = "It's getting late. It will be dark soon.",
-	ANNOUNCE_BLOODLUST_2 = "Must feed!",
-	ANNOUNCE_BLOODLUST_1 = "I hunger!",
-	ANNOUNCE_NORMAL = "No more bloodlust.",
+	ANNOUNCE_DUSK = "It's getting late. It will be dark soon.",	
 	ANNOUNCE_EAT =
 	{
 		GENERIC = "Yum!",
@@ -157,7 +154,7 @@ return {
 	},
 	DESCRIBE =
 	{
-
+		MUTANTBEEHIVE = "Buzz buzz my friends.",
 		BERNIE_INACTIVE =
 		{
 			BROKEN = "It finally fell apart.",
