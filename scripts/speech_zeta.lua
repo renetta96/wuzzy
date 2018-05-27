@@ -1,248 +1,349 @@
 return {
 	ACTIONFAIL =
 	{
+		REPAIR =
+        {
+            WRONGPIECE = "Seems not about right.",
+        },
+        BUILD =
+        {
+            MOUNTED = "I hope I were higher.",
+            HASPET = "My pet is loyal, I must be too.",
+        },
 		SHAVE =
 		{
-			AWAKEBEEFALO = "I'm not going to try that while he's awake.",
-			GENERIC = "I can't shave that!",
-			NOBITS = "There isn't even any stubble left!",
+			AWAKEBEEFALO = "Must wait for him to sleep first.",
+			GENERIC = "Unshaveable!",
+			NOBITS = "He is bald already!",
 		},
+		USEKLAUSSACKKEY =
+        {
+            WRONGKEY = "This key seems not to fit.",
+            KLAUS = "Kill him first!",
+        },
 		STORE =
 		{
-			GENERIC = "It's full.",
-			NOTALLOWED = "That can't go in there.",
-			INUSE = "I should wait my turn.",
+			GENERIC = "No space left to put it here.",
+			NOTALLOWED = "Nah not here.",
+			INUSE = "Hurry up!",
 		},
+		WRITE =
+        {
+            GENERIC = "Hmmm bee can't write you know ?",
+            INUSE = "Guess I have to wait then.",
+        },
 		RUMMAGE =
 		{	
-			GENERIC = "I can't do that.",
-			INUSE = "I should wait my turn.",	
+			GENERIC = "Nope can't do that.",
+			INUSE = "You first, then me.",	
 		},
         COOK =
         {
-            GENERIC = "I can't do that.",
-            INUSE = "I should wait my turn.",
-            TOOFAR = "It's too far away!",
+            GENERIC = "Cooking is for human, not for bee anyway...",
+            INUSE = "Is smells sweeeet!",
+            TOOFAR = "How can I even cook if I can't reach it ?",
+        },
+        MOUNT =
+        {
+            INUSE = "Get off! I want to ride.",
+            TARGETINCOMBAT = "He is fighting, too dangerous to get on.",
+        },
+        SADDLE =
+        {
+            TARGETINCOMBAT = "He is fighting, maybe later.",
         },
         GIVE =
         {
-            DEAD = "Maybe I'll just hold on to this.",
-            SLEEPING = "Too unconscious to care.",
-            BUSY = "I'll try again in a second.",
+        	GENERIC = "It cannot be given.",
+            DEAD = "Oh hell no it's dead, isn't it ?",
+            SLEEPING = "Too sleepy to take that.",
+            BUSY = "Hurry up and take this already!",
+            ABIGAILHEART = "She does not want it.",
+            GHOSTHEART = "Nah!",
+            NOTGEM = "Too tight, can't fit!",
+            WRONGGEM = "Not this gem.",
+            NOTSTAFF = "I need other staff, not this one.",
+            MUSHROOMFARM_NEEDSSHROOM = "Nah it should be mushroom.",
+            MUSHROOMFARM_NEEDSLOG = "It needs those terrific screaming logs.",
+            SLOTFULL = "Let's finish what we already have firt, alright ?",
+            DUPLICATE = "I got this recipe already!",
+            NOTSCULPTABLE = "This material is not suitable for sculpting.",
+            CANTSHADOWREVIVE = "Did I miss something ?",
+            WRONGSHADOWFORM = "It's not as easy as the puzzle I used to play.",
         },
         GIVETOPLAYER = 
         {
-        	FULL = "Their pockets are too full!",
-            DEAD = "Maybe I'll just hold on to this.",
-            SLEEPING = "Too unconscious to care.",
-            BUSY = "I'll try again in a second.",
+        	FULL = "Their pockets are full already, don't be too generous!",
+            DEAD = "Well, I will keep this for myself.",
+            SLEEPING = "They look nice when they sleep.",
+            BUSY = "Why so busy ?",
     	},
     	GIVEALLTOPLAYER = 
         {
-        	FULL = "Their pockets are too full!",
-            DEAD = "Maybe I'll just hold on to this.",
-            SLEEPING = "Too unconscious to care.",
-            BUSY = "I'll try again in a second.",
+        	FULL = "They can't take anything anymore!",
+            DEAD = "Well, I will keep this for myself.",
+            SLEEPING = "They look nice when they sleep. Am I disturbing them ?",
+            BUSY = "Why so busy ?",
     	},
-        WRITE =
+        DRAW =
         {
-            GENERIC = "I can't do that.",
-            INUSE = "There's only room for one scribbler.",
+            NOIMAGE = "Hmmm my hands are too shaky!",
         },
         CHANGEIN =
         {
-            GENERIC = "I can't do that.",
-            BURNING = "It's too dangerous right now!",
-            INUSE = "It can only handle one style change at a time.",
+            GENERIC = "Bee doesn't need clothes.",
+            BURNING = "Too hot to wear!",
+            INUSE = "Come on I'm losing my patience!",
         },
         ATTUNE =
         {
-            NOHEALTH = "I don't feel well enough.",
+            NOHEALTH = "Mr.Buzz I don't feel so good.",
+        },
+        TEACH =
+        {
+            KNOWN = "I got a Bee for this already!",
+            CANTLEARN = "Come on brain, get up!",
+            WRONGWORLD = "It does not belong here.",
+        },
+        WRAPBUNDLE =
+        {
+            EMPTY = "Can't wrap nothing.",
         },
 	},
-	ACTIONFAIL_GENERIC = "I can't do that.",
-	ANNOUNCE_ADVENTUREFAIL = "That didn't go well. I'll have to try again.",
-	ANNOUNCE_BEES = "BEEEEEEEEEEEEES!!!!",
-	ANNOUNCE_BOOMERANG = "Ow! I should try to catch that!",
-	ANNOUNCE_CHARLIE = "What was that?!",
-	ANNOUNCE_CHARLIE_ATTACK = "OW! Something bit me!",
-	ANNOUNCE_COLD = "So cold!",
-	ANNOUNCE_HOT = "Need... ice... or... shade!",
-	ANNOUNCE_CRAFTING_FAIL = "I don't have all of the ingredients.",
-	ANNOUNCE_DEERCLOPS = "That sounded big!",
-	ANNOUNCE_DUSK = "It's getting late. It will be dark soon.",	
-	ANNOUNCE_EAT =
-	{
-		GENERIC = "Yum!",
-		PAINFUL = "I don't feel so good.",
-		SPOILED = "Tasty!",
-		STALE = "I think that was starting to turn.",
-		INVALID = "I can't eat that!",
-		YUCKY = "Puting that in my mouth would be disgusting!",
-	},
-	ANNOUNCE_ENTER_DARK = "It's so dark!",
-	ANNOUNCE_ENTER_LIGHT = "I can see again!",
-	ANNOUNCE_FREEDOM = "I'm free! I'm finally free!",
-	ANNOUNCE_HIGHRESEARCH = "I feel so smart now!",
-	ANNOUNCE_HOUNDS = "Did you hear that?",
-	ANNOUNCE_WORMS = "Did you feel that?",
-	ANNOUNCE_HUNGRY = "I'm so hungry!",
-	ANNOUNCE_HUNT_BEAST_NEARBY = "This track is fresh, the beast must be nearby.",
-	ANNOUNCE_HUNT_LOST_TRAIL = "The trail ends here.",
-	ANNOUNCE_HUNT_LOST_TRAIL_SPRING = "The wet ground won't hold a footprint.",
-	ANNOUNCE_INV_FULL = "I can't carry any more stuff!",
-	ANNOUNCE_KNOCKEDOUT = "Ugh, my head!",
-	ANNOUNCE_LOWRESEARCH = "I didn't learn very much from that.",
-	ANNOUNCE_MOSQUITOS = "Aaah! Bug off!",
-    ANNOUNCE_NOWARDROBEONFIRE = "It's too dangerous right now!",
-    ANNOUNCE_NODANGERGIFT = "It's too dangerous right now!",
-	ANNOUNCE_NODANGERSLEEP = "It's too dangerous right now!",
-	ANNOUNCE_NODAYSLEEP = "It's too bright out.",
-	ANNOUNCE_NODAYSLEEP_CAVE = "I'm not tired.",
-	ANNOUNCE_NOHUNGERSLEEP = "I'm too hungry to sleep, the growling will keep me up!",
-	ANNOUNCE_NOSLEEPONFIRE = "Sleeping in that seems like a bad idea.",
-	ANNOUNCE_NODANGERSIESTA = "It's too dangerous right now!",
-	ANNOUNCE_NONIGHTSIESTA = "Night is for sleeping, not taking siestas.",
-	ANNOUNCE_NONIGHTSIESTA_CAVE = "I don't think I could really relax down here.",
-	ANNOUNCE_NOHUNGERSIESTA = "I'm too hungry for a siesta!",
-	ANNOUNCE_NODANGERAFK = "Now's not the time to flee this fight!",
-	ANNOUNCE_NO_TRAP = "Well, that was easy.",
-	ANNOUNCE_PECKED = "Ow! Quit it!",
-	ANNOUNCE_QUAKE = "That doesn't sound good.",
-	ANNOUNCE_RESEARCH = "Never stop learning!",
-	ANNOUNCE_SHELTER = "Thanks for the protection from the elements, tree!",
-	ANNOUNCE_THORNS = "Ow!",
-	ANNOUNCE_BURNT = "Yikes! That was hot!",
-	ANNOUNCE_TORCH_OUT = "My light just ran out!",
-	ANNOUNCE_FAN_OUT = "My fan is gone with the wind.",
-    ANNOUNCE_COMPASS_OUT = "This compass doesn't point anymore.",
-	ANNOUNCE_TRAP_WENT_OFF = "Oops.",
-	ANNOUNCE_UNIMPLEMENTED = "OW! I don't think it's ready yet.",
-	ANNOUNCE_WORMHOLE = "That was not a sane thing to do.",
-	ANNOUNCE_CANFIX = "\nI think I can fix this!",
-	ANNOUNCE_ACCOMPLISHMENT = "I feel so accomplished!",
-	ANNOUNCE_ACCOMPLISHMENT_DONE = "If only my friends could see me now...",	
-	ANNOUNCE_INSUFFICIENTFERTILIZER = "Are you still hungry, plant?",
-	ANNOUNCE_TOOL_SLIP = "Wow that tool is slippery!",
-	ANNOUNCE_LIGHTNING_DAMAGE_AVOIDED = "Safe from that frightening lightning!",
+	ACTIONFAIL_GENERIC = "Nope can't do that.",
+	ANNOUNCE_DIG_DISEASE_WARNING = "I should have taken care of it better...",
+    ANNOUNCE_PICK_DISEASE_WARNING = "Yuck what's wrong with this plant ?",
+    ANNOUNCE_MOUNT_LOWHEALTH = "Oh you poor little sweet, want some honey ?",    
+    ANNOUNCE_NOSLEEPONFIRE = "Sleep on fire and the bee will die.",
+    ANNOUNCE_NODANGERSIESTA = "I don't want to die in my sleep.",
+    ANNOUNCE_ANTLION_SINKHOLE = 
+    {
+        "Earthquake!!?",
+        "Woah the ground is cracking!",
+        "Run bee runnnnn!!!",
+    },
+    ANNOUNCE_ANTLION_TRIBUTE =
+    {
+        "We are distantly relative you know ?",
+        "Bees and ants have a long fellowship.",
+        "Take this and spare us, please.",
+    },
+    ANNOUNCE_SACREDCHEST_YES = "Easy honey!",
+    ANNOUNCE_SACREDCHEST_NO = "I thought I got it.",
+    ANNOUNCE_NONIGHTSIESTA = "Siesta is not for night.",
+    ANNOUNCE_NONIGHTSIESTA_CAVE = "This cave is scary, I can't relax.",
+    ANNOUNCE_NOHUNGERSIESTA = "My stomach is screaming, I need to eat first.",
+    ANNOUNCE_SHELTER = "I love trees!",
+    ANNOUNCE_BURNT = "Babee on fireeee!!!",
+    ANNOUNCE_TOOL_SLIP = "I thought I have sticky hair under my hands ?",
+    ANNOUNCE_DAMP = "Oh no water.",
+    ANNOUNCE_WET = "Bee hates water.",
+    ANNOUNCE_WETTER = "Where is the raincoat when I need it ?",
+    ANNOUNCE_SOAKED = "I'm all soaked up now!",
+    ANNOUNCE_ADVENTUREFAIL = "Next time, will there be a next time ?",
+    ANNOUNCE_BOOMERANG = "Why is it coming back ?",
+    ANNOUNCE_CHARLIE = "No jump scare please!",
+    ANNOUNCE_CHARLIE_ATTACK = "Holy @#$%! It got me!",
+    ANNOUNCE_COLD = "It's so cold, I miss my hive.",
+    ANNOUNCE_HOT = "I am sweating all over!",
+    ANNOUNCE_CRAFTING_FAIL = "More material is needed.",
+    ANNOUNCE_DUSK = "The sun is getting low.",
+    ANNOUNCE_EAT =
+    {
+        GENERIC = "Sweet!",
+        PAINFUL = "Oh my stomach hurts.",
+        SPOILED = "Did I just eat trash ?",
+        STALE = "It's a bit rotten.",
+        INVALID = "That's not edible.",
+        YUCKY = "I feel sick after eating that.",
+    },
+    ANNOUNCE_ENCUMBERED =
+    {
+        "My... bee... legs...",
+        "Come on, a little... more...",
+        "So... exhausting...",        
+        "Knees weak, arms are heavy.",
+        "Mom's spaghetti ?",
+        "My palms are sweaty!",
+        "Try harder!",
+        "How long do I have to carry this ?",
+        "I can't feel my legs...",
+    },
+    ANNOUNCE_ATRIUM_DESTABILIZING = 
+    {
+        "Run for my life!",
+        "Is it about to collapse ?",
+        "We should not stay here.",
+    },
+    ANNOUNCE_RUINS_RESET = "Here come the monsters again!",
 
-	ANNOUNCE_DAMP = "Oh, H2O.",
-	ANNOUNCE_WET = "My clothes appear to be permeable.",
-	ANNOUNCE_WETTER = "Water way to go!",
-	ANNOUNCE_SOAKED = "I've nearly reached my saturation point.",
-	
-	ANNOUNCE_BECOMEGHOST = "ooOOoooOOOoOooo!!",
-	ANNOUNCE_GHOSTDRAIN = "My humanity is about to start slipping away...",
+    ANNOUNCE_BECOMEGHOST = "oOooOOoo!!",
+    ANNOUNCE_GHOSTDRAIN = "What is that voice inside my head ?",
+    ANNOUNCE_PETRIFED_TREES = "That's one hard tree.",
+    ANNOUNCE_KLAUS_ENRAGE = "Come and get me!",
+    ANNOUNCE_KLAUS_UNCHAINED = "He broke it!",
+    ANNOUNCE_KLAUS_CALLFORHELP = "Look out, more monsters are coming!",
 
-	DESCRIBE_SAMECHARACTER = "Is that a mirror?",
+    ANNOUNCE_SNARED = "I must get out!",
+    ANNOUNCE_REPELLED = "Strong bubble protects beast!",
+    ANNOUNCE_ENTER_DARK = "Who turns off the light ?",
+    ANNOUNCE_ENTER_LIGHT = "The light is back.",
+    ANNOUNCE_HOUNDS = "Doggo ?",
+    ANNOUNCE_HUNGRY = "Bee needs food.",
+    ANNOUNCE_HUNT_BEAST_NEARBY = "It's just around here.",
+    ANNOUNCE_HUNT_LOST_TRAIL = "I lost the trail.",
+    ANNOUNCE_HUNT_LOST_TRAIL_SPRING = "The trail has been washed away.",
+    ANNOUNCE_INV_FULL = "Burdened bacpack.",
+    ANNOUNCE_PECKED = "Ouch!!! Bad bird!!!",
+    ANNOUNCE_TORCH_OUT = "I need another torch.",
+    ANNOUNCE_FAN_OUT = "I overused it...",
+    ANNOUNCE_THURIBLE_OUT = "It has run out of fuel.",
+    ANNOUNCE_COMPASS_OUT = "My compass has broken!",
+    ANNOUNCE_WORMHOLE = "Disgusting!",
+    ANNOUNCE_TOWNPORTALTELEPORT = "Now you see me.",
+    ANNOUNCE_TRAP_WENT_OFF = "Ack! Do not surprise me!",
+    ANNOUNCE_QUAKE = "What is this tremor ?",
+    ANNOUNCE_NODANGERSLEEP = "I'd better fight, not sleep.",
+    ANNOUNCE_UNIMPLEMENTED = "It's not ready.",
+    ANNOUNCE_NOHUNGERSLEEP = "My stomach is empty, I cannot sleep now.",
+    ANNOUNCE_FREEDOM = "I am free! Strong freedom!",
+    ANNOUNCE_RESEARCH = "Hmm hmm I don't understand anything.",
+    ANNOUNCE_NO_TRAP = "Easy as eating cake.",
+    ANNOUNCE_HIGHRESEARCH = "I just blow my mind!",
+    ANNOUNCE_THORNS = "Ouch! That's hurt, rosy!",
+    ANNOUNCE_NODAYSLEEP_CAVE = "I'm not comfortable with this cave.",
+    ANNOUNCE_BEES = "Oh nasty relatives!",
+    ANNOUNCE_KNOCKEDOUT = "Who am I ? Where are we ?",
+    ANNOUNCE_LOWRESEARCH = "I get it, a little bit tho.",
+    ANNOUNCE_DEERCLOPS = "Cyclops is coming! X-Men assemble!.",
+    ANNOUNCE_CAVEIN = "The roof is collapsing.",
+    ANNOUNCE_MOSQUITOS = "I have no blood, get away!",
+    ANNOUNCE_NODAYSLEEP = "Bee must hard work, bee must not sleep at day.",
+    ANNOUNCE_CANFIX = "\nIt seems fixable, I will give a try.",
+    ANNOUNCE_ACCOMPLISHMENT= "Come on, bee, come on!",
+    ANNOUNCE_ACCOMPLISHMENT_DONE = "Mother must be proud of me!",   
+    ANNOUNCE_INSUFFICIENTFERTILIZER = "More poop please!",
+    ANNOUNCE_LIGHTNING_DAMAGE_AVOIDED = "Sh*t, that was close!",
+    ANNOUNCE_TOADESCAPING = "Come back here you coward frog!",
+    ANNOUNCE_TOADESCAPED = "It got away, damn it!",
+
+    ANNOUNCE_NODANGERAFK = "A bee never abandons a fight!",
+    ANNOUNCE_NODANGERGIFT = "Fight first, gift later!",
+    ANNOUNCE_NOMOUNTEDGIFT = "I should not open it on top of my sweet pet!",
+    ANNOUNCE_NOWARDROBEONFIRE = "My clothes, noooooo!!!",
+    ANNOUNCE_WORMS = "Something is raging underneath!",
+
+	DESCRIBE_SAMECHARACTER = "To bee or not to bee?",
 	
 	BATTLECRY =
 	{
-		GENERIC = "Go for the eyes!",
-		PIG = "Here piggy piggy!",
-		PREY = "I will destroy you!",
-		SPIDER = "I'm going to stomp you dead!",
-		SPIDER_WARRIOR = "Better you than me!",
+		GENERIC = "Take my sting!",
+		PIG = "Come here you filthy pig!",
+		PREY = "Your destiny is to be hunted!",
+		SPIDER = "I will kill you, web crawler!",
+		SPIDER_WARRIOR = "How dare you call yourself a warrior ?",
 	},
 	COMBAT_QUIT =
 	{
-		GENERIC = "I sure showed him!",
-		PIG = "I'll let him go. This time.",
-		PREY = "He's too fast!",
-		SPIDER = "He's too gross, anyway.",
-		SPIDER_WARRIOR = "Shoo, you nasty thing!",
+		GENERIC = "I did a good fight!",
+		PIG = "Well I will kill him later.",
+		PREY = "His destiny may come another day, let's see!",
+		SPIDER = "Spider is stronger than bee anyway.",
+		SPIDER_WARRIOR = "That spider is tough!",
 	},
 	DESCRIBE =
 	{
-		MUTANTBEEHIVE = "Buzz buzz my friends.",
+		MUTANTBEEHIVE = "My lovely and precious hive.",
+		MUTANTBEE = "My friend is doing his job!",
+		MUTANTKILLERBEE = "Oh that is the special bee force, how cool!",
 		BERNIE_INACTIVE =
 		{
-			BROKEN = "It finally fell apart.",
-			GENERIC = "It's all scorched.",
+			BROKEN = "Don't worry Teddie I will fix you.",
+			GENERIC = "I call it Teddie.",
 		},
-		BERNIE_ACTIVE = "That teddy bear is moving around. Interesting.",
+		BERNIE_ACTIVE = "Yayyy Teddie is moving!",
 		
 
         PLAYER =
         {
-            GENERIC = "It's %s!",
-            ATTACKER = "That %s looks shifty...",
-            MURDERER = "Murderer!",
-            REVIVER = "%s, friend of ghosts.",
-            GHOST = "%s could use a heart.",
+            GENERIC = "Hello %s!",
+            ATTACKER = "You dare touch me, %s?",
+            MURDERER = "Mess with the bee and you get the D!",
+            REVIVER = "Thanks %s, could we beefriend ?",
+            GHOST = "%s definitely needs a heart.",
         },
-		WILSON = 
-		{
-			GENERIC = "It's Wilson!",
-			ATTACKER = "That Wilson looks shifty...",
-			MURDERER = "Murderer!",
-			REVIVER = "Wilson, friend of ghosts.",
-			GHOST = "Wilson could use a heart.",
-		},
-		WOLFGANG = 
-		{
-			GENERIC = "It's Wolfgang!",
-			ATTACKER = "That Wolfgang looks shifty...",
-			MURDERER = "Murderer!",
-			REVIVER = "Wolfgang, friend of ghosts.",
-			GHOST = "Wolfgang could use a heart.",
-		},
-		WAXWELL = 
-		{
-			GENERIC = "It's Maxwell!",
-			ATTACKER = "That Maxwell looks shifty...",
-			MURDERER = "Murderer!",
-			REVIVER = "Maxwell, friend of ghosts.",
-			GHOST = "Maxwell could use a heart.",
-		},
-		WX78 = 
-		{
-			GENERIC = "It's WX-78!",
-			ATTACKER = "That WX-78 looks shifty...",
-			MURDERER = "Murderer!",
-			REVIVER = "WX-78, friend of ghosts.",
-			GHOST = "WX-78 could use a heart.",
-		},
-		WILLOW = 
-		{
-			GENERIC = "It's Willow!",
-			ATTACKER = "That Willow looks shifty...",
-			MURDERER = "Murderer!",
-			REVIVER = "Willow, friend of ghosts.",
-			GHOST = "Willow could use a heart.",
-		},
-		WENDY = 
-		{
-			GENERIC = "It's Wendy!",
-			ATTACKER = "That Wendy looks shifty...",
-			MURDERER = "Murderer!",
-			REVIVER = "Wendy, friend of ghosts.",
-			GHOST = "Wendy could use a heart.",
-		},
-		WOODIE = 
-		{
-			GENERIC = "It's Woodie!",
-			ATTACKER = "That Woodie looks shifty...",
-			MURDERER = "Murderer!",
-			REVIVER = "Woodie, friend of ghosts.",
-			GHOST = "Woodie could use a heart.",
-		},
-		WICKERBOTTOM = 
-		{
-			GENERIC = "It's Wickerbottom!",
-			ATTACKER = "That Wickerbottom looks shifty...",
-			MURDERER = "Murderer!",
-			REVIVER = "Wickerbottom, friend of ghosts.",
-			GHOST = "Wickerbottom could use a heart.",
-		},
-		WES = 
-		{
-			GENERIC = "It's Wes!",
-			ATTACKER = "That Wes looks shifty...",
-			MURDERER = "Murderer!",
-			REVIVER = "Wes, friend of ghosts.",
-			GHOST = "Wes could use a heart.",
-		},
+		-- WILSON = 
+		-- {
+		-- 	GENERIC = "It's Wilson!",
+		-- 	ATTACKER = "That Wilson looks shifty...",
+		-- 	MURDERER = "Murderer!",
+		-- 	REVIVER = "Wilson, friend of ghosts.",
+		-- 	GHOST = "Wilson could use a heart.",
+		-- },
+		-- WOLFGANG = 
+		-- {
+		-- 	GENERIC = "It's Wolfgang!",
+		-- 	ATTACKER = "That Wolfgang looks shifty...",
+		-- 	MURDERER = "Murderer!",
+		-- 	REVIVER = "Wolfgang, friend of ghosts.",
+		-- 	GHOST = "Wolfgang could use a heart.",
+		-- },
+		-- WAXWELL = 
+		-- {
+		-- 	GENERIC = "It's Maxwell!",
+		-- 	ATTACKER = "That Maxwell looks shifty...",
+		-- 	MURDERER = "Murderer!",
+		-- 	REVIVER = "Maxwell, friend of ghosts.",
+		-- 	GHOST = "Maxwell could use a heart.",
+		-- },
+		-- WX78 = 
+		-- {
+		-- 	GENERIC = "It's WX-78!",
+		-- 	ATTACKER = "That WX-78 looks shifty...",
+		-- 	MURDERER = "Murderer!",
+		-- 	REVIVER = "WX-78, friend of ghosts.",
+		-- 	GHOST = "WX-78 could use a heart.",
+		-- },
+		-- WILLOW = 
+		-- {
+		-- 	GENERIC = "It's Willow!",
+		-- 	ATTACKER = "That Willow looks shifty...",
+		-- 	MURDERER = "Murderer!",
+		-- 	REVIVER = "Willow, friend of ghosts.",
+		-- 	GHOST = "Willow could use a heart.",
+		-- },
+		-- WENDY = 
+		-- {
+		-- 	GENERIC = "It's Wendy!",
+		-- 	ATTACKER = "That Wendy looks shifty...",
+		-- 	MURDERER = "Murderer!",
+		-- 	REVIVER = "Wendy, friend of ghosts.",
+		-- 	GHOST = "Wendy could use a heart.",
+		-- },
+		-- WOODIE = 
+		-- {
+		-- 	GENERIC = "It's Woodie!",
+		-- 	ATTACKER = "That Woodie looks shifty...",
+		-- 	MURDERER = "Murderer!",
+		-- 	REVIVER = "Woodie, friend of ghosts.",
+		-- 	GHOST = "Woodie could use a heart.",
+		-- },
+		-- WICKERBOTTOM = 
+		-- {
+		-- 	GENERIC = "It's Wickerbottom!",
+		-- 	ATTACKER = "That Wickerbottom looks shifty...",
+		-- 	MURDERER = "Murderer!",
+		-- 	REVIVER = "Wickerbottom, friend of ghosts.",
+		-- 	GHOST = "Wickerbottom could use a heart.",
+		-- },
+		-- WES = 
+		-- {
+		-- 	GENERIC = "It's Wes!",
+		-- 	ATTACKER = "That Wes looks shifty...",
+		-- 	MURDERER = "Murderer!",
+		-- 	REVIVER = "Wes, friend of ghosts.",
+		-- 	GHOST = "Wes could use a heart.",
+		-- },
 		MULTIPLAYER_PORTAL = "It's rickety, but it appears to function. After a fashion...",
         MIGRATION_PORTAL = {
             GENERIC = "If I had any friends, this could take me to them.",

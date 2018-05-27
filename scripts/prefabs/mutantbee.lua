@@ -22,6 +22,7 @@ local prefabs =
 {
     "stinger",
     "honey",
+    "explosive_small",
 }
 
 local workersounds =
@@ -42,6 +43,7 @@ local killersounds =
     death = "dontstarve/bee/killerbee_death",
 }
 
+-- /* Mutant effects
 local function DoPoisonDamage(inst)
     if inst._poisonticks <= 0 or inst.components.health:IsDead() then
         inst._poisontask:Cancel()
@@ -62,7 +64,7 @@ local function DoPoisonDamage(inst)
     end
 end
 
-local function OnAttackOther(inst, data)
+local function OnAttackOtherWithPoison(inst, data)
     if data.target and data.target.components.health and not data.target.components.health:IsDead() then
         -- No target players.
         if not data.target:HasTag("player") then
@@ -73,6 +75,59 @@ local function OnAttackOther(inst, data)
         end
     end
 end
+
+local function OnDeathExplosive(inst)
+    inst.components.combat:DoAreaAttack(inst, TUNING.MUTANT_BEE_EXPLOSIVE_RANGE, nil, nil, nil, { "INLIMBO", "mutant" })
+    SpawnPrefab("explode_small").Transform:SetPosition(inst.Transform:GetWorldPosition())    
+    inst:Remove()
+end
+
+local function OnBurtnExplosive(inst)
+    inst.components.combat:DoAreaAttack(inst, TUNING.MUTANT_BEE_EXPLOSIVE_RANGE, nil, nil, nil, { "INLIMBO", "mutant" })
+    SpawnPrefab("explode_small").Transform:SetPosition(inst.Transform:GetWorldPosition())    
+end
+
+local function OnAttackOtherWithFrostbite(inst, data)
+    if data.target and data.target.components.locomotor and not data.target.components.health:IsDead() then
+        if not data.target:HasTag("player") then
+            data.target._frostbite_expire = GetTime() + 4.5
+            data.target.AnimState:SetAddColour(82 / 255, 115 / 255, 124 / 255, 0)
+            local x, y, z = data.target.Transform:GetWorldPosition()
+            local ground = TheWorld.Map:GetTileAtPoint(x, 0, z)
+
+            if data.target.components.locomotor.enablegroundspeedmultiplier then
+                if not data.target._frostbite_task then
+                    data.target._frostbite_task = data.target:DoPeriodicTask(0, 
+                        function (inst)                                           
+                            inst.components.locomotor:PushTempGroundSpeedMultiplier(TUNING.MUTANT_BEE_FROSTBITE_SPEED_PENALTY, ground)
+                        end)
+                end
+                data.target:DoTaskInTime(5.0,
+                    function (inst)
+                        if GetTime() >= inst._frostbite_expire then
+                            inst.AnimState:SetAddColour(0, 0, 0, 0)
+                            inst._frostbite_task:Cancel()   
+                            inst._frostbite_task = nil                         
+                        end
+                    end)
+            else
+                if not data.target._currentspeed then
+                    data.target._currentspeed = data.target.components.locomotor.groundspeedmultiplier
+                end
+                data.target.components.locomotor.groundspeedmultiplier = TUNING.MUTANT_BEE_FROSTBITE_SPEED_PENALTY
+                data.target:DoTaskInTime(5.0,
+                    function (inst)
+                        if GetTime() >= inst._frostbite_expire then
+                            inst.AnimState:SetAddColour(0, 0, 0, 0)
+                            inst.components.locomotor.groundspeedmultiplier = inst._currentspeed
+                            inst._currentspeed = nil
+                        end
+                    end)
+            end
+        end
+    end        
+end
+-- Mutant effects */
 
 local function OnWorked(inst, worker)
     inst:PushEvent("detachchild")
@@ -170,6 +225,23 @@ local function MutantBeeRetarget(inst)
     return FindTarget(inst, TUNING.MUTANT_BEE_TARGET_DIST / 2)
 end
 
+local function ChangeMutantOnSeason(inst)
+    if TheWorld.state.isspring then
+        inst:ListenForEvent("onattackother", OnAttackOtherWithPoison)
+    elseif TheWorld.state.issummer then
+        inst.components.health:SetMaxHealth(TUNING.MUTANT_BEE_HEALTH / 2)
+        inst.components.combat.areahitdamagepercent = TUNING.MUTANT_BEE_EXPLOSIVE_DAMAGE_MULTIPLIER
+        inst:ListenForEvent("death", OnDeathExplosive)
+        inst:ListenForEvent("onburnt", OnBurtnExplosive)
+    elseif TheWorld.state.isautumn then
+        print("AUTUMN")
+    else
+        inst.components.locomotor.groundspeedmultiplier = 0.6
+        inst.components.combat:SetAttackPeriod(TUNING.MUTANT_BEE_ATTACK_PERIOD * 2)
+        inst:ListenForEvent("onattackother", OnAttackOtherWithFrostbite)
+    end
+end
+
 local function commonfn(build, tags)
     local inst = CreateEntity()
 
@@ -243,8 +315,7 @@ local function commonfn(build, tags)
     inst:AddComponent("combat")
     inst.components.combat:SetRange(TUNING.BEE_ATTACK_RANGE)
     inst.components.combat.hiteffectsymbol = "body"
-    inst.components.combat:SetPlayerStunlock(PLAYERSTUNLOCK.RARELY)
-    inst:ListenForEvent("onattackother", OnAttackOther)
+    inst.components.combat:SetPlayerStunlock(PLAYERSTUNLOCK.RARELY)    
 
     ------------------
 
@@ -259,14 +330,13 @@ local function commonfn(build, tags)
 
     ------------------
 
-    -- inst:AddComponent("tradable")
-
-    inst:ListenForEvent("attacked", beecommon.OnAttacked)
+    -- inst:AddComponent("tradable")    
     -- inst:ListenForEvent("worked", beecommon.OnWorked)
-
     -- MakeFeedableSmallLivestock(inst, TUNING.TOTAL_DAY_TIME * 2, OnPickedUp, OnDropped)
+
+    inst:ListenForEvent("attacked", beecommon.OnAttacked)    
     inst.Transform:SetScale(1.2, 1.2, 1.2)
-    inst.AnimState:SetMultColour(0.7, 0.7, 0.7, 1)
+    inst.AnimState:SetMultColour(0.7, 0.7, 0.7, 1)    
 
     inst.buzzing = true
     inst.EnableBuzz = EnableBuzz
@@ -279,19 +349,6 @@ end
 local workerbrain = require("brains/mutantbeebrain")
 local killerbrain = require("brains/mutantkillerbeebrain")
 
-local function ChangeMutantOnSeason(inst)
-    -- if TheWorld.state.isspring then
-    --     -- inst.AnimState:SetBuild("bee_angry_build")
-    --     inst.AnimState:SetMultColour(1.0, 0, 1.0, 1)
-    -- elseif TheWorld.state.issummer then
-    --     inst.AnimState:SetMultColour(1.0, 0.5, 0, 1)
-    -- elseif TheWorld.state.isautumn then
-    --     inst.AnimState:SetMultColour(0, 1.0, 0, 1)
-    -- else
-    --     inst.AnimState:SetMultColour(0, 1.0, 1.0, 1)
-    -- end
-end
-
 local function workerbee()
     --pollinator (from pollinator component) added to pristine state for optimization
     --for searching: inst:AddTag("pollinator")
@@ -299,9 +356,7 @@ local function workerbee()
 
     if not TheWorld.ismastersim then
         return inst
-    end
-
-    ChangeMutantOnSeason(inst)    
+    end    
 
     inst.components.health:SetMaxHealth(TUNING.MUTANT_BEE_HEALTH)
     inst.components.combat:SetDefaultDamage(TUNING.MUTANT_BEE_DAMAGE)
@@ -312,6 +367,8 @@ local function workerbee()
     inst.sounds = workersounds
 
     MakeHauntableChangePrefab(inst, "mutantkillerbee")
+
+    ChangeMutantOnSeason(inst)
 
     return inst
 end
@@ -327,19 +384,19 @@ local function killerbee()
 
     if not TheWorld.ismastersim then
         return inst
-    end
-
-    ChangeMutantOnSeason(inst)    
+    end    
 
     inst.components.health:SetMaxHealth(TUNING.MUTANT_BEE_HEALTH)
     inst.components.combat:SetDefaultDamage(TUNING.MUTANT_BEE_DAMAGE)
     inst.components.combat:SetAttackPeriod(TUNING.MUTANT_BEE_ATTACK_PERIOD)
-    inst.components.combat:SetRetargetFunction(2, KillerRetarget)
+    inst.components.combat:SetRetargetFunction(1, KillerRetarget)
     inst:SetBrain(killerbrain)
     inst.sounds = killersounds
 
     MakeHauntablePanic(inst)
     inst:ListenForEvent("spawnedfromhaunt", OnSpawnedFromHaunt)
+
+    ChangeMutantOnSeason(inst)
 
     return inst
 end

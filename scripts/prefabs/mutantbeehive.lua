@@ -273,7 +273,7 @@ local function fn()
     inst.AnimState:SetBank("beehive")
     inst.AnimState:SetBuild("beehive")
     inst.AnimState:PlayAnimation("cocoon_small", true)
-    inst.AnimState:SetMultColour(0.5, 0.3, 0.5, 1)
+    inst.AnimState:SetMultColour(0.7, 0.5, 0.7, 1)
 
     inst:AddTag("structure")    
     inst:AddTag("hive")
