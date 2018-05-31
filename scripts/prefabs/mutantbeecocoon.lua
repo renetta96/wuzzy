@@ -13,17 +13,95 @@ local prefabs =
     "mutantbeehive",
 }
 
-local function ondeploy(inst, pt)
-    inst.SoundEmitter:PlaySound("dontstarve/bee/beehive_hit")
-    local tree = SpawnPrefab("mutantbeehive")
-    if tree ~= nil then
-        tree.Transform:SetPosition(pt:Get())
-        inst.components.stackable:Get():Remove()
+local function UnlinkPlayer(inst)
+    local owner = inst._owner
+    inst._ownerid = nil
+    inst._owner = nil
+    if owner ~= nil then
+        owner._cocoon = nil
     end
 end
 
-local function onpickup(inst)
-    inst.SoundEmitter:PlaySound("dontstarve/creatures/spider/spider_egg_sack")
+local function OnRemoveEntity(inst)
+    UnlinkPlayer(inst)
+    inst:RemoveEventCallback("ms_playerjoined", inst._onplayerjoined, TheWorld)
+end
+
+local function ondeploy(inst, pt)
+    inst.SoundEmitter:PlaySound("dontstarve/bee/beehive_hit")
+    local hive = SpawnPrefab("mutantbeehive")
+    if hive ~= nil then
+        local owner = inst._owner
+        UnlinkPlayer(inst)        
+        hive:LinkToPlayer(owner)
+        hive.Transform:SetPosition(pt:Get())        
+        inst:Remove()
+    end
+end
+
+local function Drop(inst)
+    local owner = inst.components.inventoryitem:GetGrandOwner()
+    if owner == nil or owner.components.inventory == nil then
+        return
+    end
+    owner.components.inventory:DropItem(inst, true, true)
+end
+
+local function IsValidOwner(inst, owner)
+    if not owner then
+        return false
+    end
+
+    if inst._ownerid then
+        return owner.userid and owner.userid == inst._ownerid
+            and owner:HasTag("beemaster") and not (owner._cocoon and owner._cocoon ~= inst)
+            and not owner._hive
+    else
+        return owner.userid and owner:HasTag("beemaster") and not (owner._cocoon and owner._cocoon ~= inst)
+            and not owner._hive
+    end
+end
+
+local function LinkToPlayer(inst, owner)
+    -- A bit redundant check
+    if IsValidOwner(inst, owner) then
+        inst._ownerid = owner.userid
+        inst._owner = owner
+        owner._cocoon = inst
+        return true
+    end
+
+    return false
+end
+
+local function OnPutInInventory(inst, owner)    
+    local linksuccess = LinkToPlayer(inst, owner)
+    if not linksuccess then
+        inst:DoTaskInTime(0, Drop)        
+    end
+end
+
+local function OnSave(inst, data)
+    if inst._ownerid then
+        data._ownerid = inst._ownerid
+    end
+end
+
+local function OnPlayerJoined(inst, player)
+    print("PLAYER JOINED COCOON", player)    
+    local linksuccess = LinkToPlayer(inst, player)
+    if not linksuccess then
+        if inst._ownerid and player.userid and player.userid == inst._ownerid then
+            print("SAME PLAYER, DIFFERENT CHARACTER")
+            inst:DoTaskInTime(0, function(inst) inst:Remove() end)
+        end
+    end
+end
+
+local function OnLoad(inst, data)
+    if data and data._ownerid then
+        inst._ownerid = data._ownerid        
+    end    
 end
 
 local function fn()
@@ -33,41 +111,44 @@ local function fn()
     inst.entity:AddAnimState()
     inst.entity:AddSoundEmitter()
     inst.entity:AddNetwork()
+    inst.entity:AddMiniMapEntity()
 
     MakeInventoryPhysics(inst)
 
     inst.AnimState:SetBank("mutantbeecocoon")
     inst.AnimState:SetBuild("mutantbeecocoon")
     inst.AnimState:PlayAnimation("idle")    
+    inst.MiniMapEntity:SetIcon("mutantbeecocoon.tex")
+
+    inst:AddTag("mutant")
+    inst:AddTag("cocoon")
 
     inst.entity:SetPristine()
 
     if not TheWorld.ismastersim then
         return inst
     end
-
-    inst:AddComponent("stackable")
-    inst.components.stackable.maxsize = TUNING.STACK_SIZE_LARGEITEM    
+  
     inst:AddComponent("inspectable")
 
-    -- inst:AddComponent("fuel")
-    -- inst.components.fuel.fuelvalue = TUNING.LARGE_FUEL
-
-    -- MakeSmallBurnable(inst, TUNING.LARGE_BURNTIME)
     MakeSmallPropagator(inst)
-    -- MakeHauntableLaunchAndIgnite(inst)
 
     inst:AddComponent("inventoryitem")
     inst.components.inventoryitem.imagename = "mutantbeecocoon"
     inst.components.inventoryitem.atlasname = "images/inventoryimages/mutantbeecocoon.xml"
-    -- inst:AddComponent("tradable")
-
-    -- inst.components.inventoryitem:SetOnPickupFn(onpickup)
+    inst:ListenForEvent("onputininventory", OnPutInInventory)
 
     inst:AddComponent("deployable")
     --inst.components.deployable:SetDeployMode(DEPLOYMODE.ANYWHERE)
     inst.components.deployable:SetDeploySpacing(DEPLOYSPACING.NONE)
     inst.components.deployable.ondeploy = ondeploy
+
+    inst.OnSave = OnSave
+    inst.OnLoad = OnLoad
+    inst.OnRemoveEntity = OnRemoveEntity
+    inst.LinkToPlayer = LinkToPlayer
+    inst._onplayerjoined = function(src, player) OnPlayerJoined(inst, player) end
+    inst:ListenForEvent("ms_playerjoined", inst._onplayerjoined, TheWorld)
 
     return inst
 end

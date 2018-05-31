@@ -62,6 +62,16 @@ local function onload(inst)
     end
 end
 
+local function SeasonalChanges(inst, season)
+	if season == SEASONS.SPRING then
+		inst.components.locomotor:SetExternalSpeedMultiplier(inst, "season_speed_mod", TUNING.OZZY_SPRING_SPEED_MULTIPLIER)
+	elseif season == SEASONS.WINTER then
+		inst.components.locomotor:SetExternalSpeedMultiplier(inst, "season_speed_mod", TUNING.OZZY_WINTER_SPEED_MULTIPLIER)
+	else
+		inst.components.locomotor:SetExternalSpeedMultiplier(inst, "season_speed_mod", TUNING.OZZY_DEFAULT_SPEED_MULTIPLIER)
+	end
+end
+
 -- This initializes for both the server and client. Tags can be added here.
 local common_postinit = function(inst) 
 	-- Minimap icon
@@ -86,6 +96,10 @@ local master_postinit = function(inst)
 	inst.components.sanity:SetMax(TUNING.OZZY_MAX_SANITY)
 	inst.components.hunger.hungerrate = TUNING.WILSON_HUNGER_RATE * TUNING.OZZY_HUNGER_SCALE
 	inst.components.combat.damagemultiplier = TUNING.OZZY_DEFAULT_DAMAGE_MULTIPLIER
+	inst.components.temperature.inherentinsulation = -TUNING.INSULATION_SMALL
+
+	SeasonalChanges(inst, TheWorld.state.season)
+    inst:WatchWorldState("season", SeasonalChanges)
 
 	inst._eatenpetals = 0
 	inst:ListenForEvent("oneat", OnEat)

@@ -23,6 +23,7 @@ local prefabs =
     "stinger",
     "honey",
     "explosive_small",
+    "blowdart_walrus",
 }
 
 local workersounds =
@@ -42,6 +43,25 @@ local killersounds =
     hit = "dontstarve/bee/killerbee_hurt",
     death = "dontstarve/bee/killerbee_death",
 }
+
+local function FindTarget(inst, dist)
+    return FindEntity(inst, SpringCombatMod(dist),
+        function(guy)
+            return inst.components.combat:CanTarget(guy)
+        end,
+        { "_combat", "_health" },
+        { "insect", "INLIMBO" },
+        { "monster" })
+        or FindEntity(inst, SpringCombatMod(dist),
+        function(guy)
+            return inst.components.combat:CanTarget(guy)
+                and guy.components.combat and guy.components.combat.target
+                and guy.components.combat.target:HasTag("player")
+        end, 
+        { "_combat", "_health" },
+        { "mutant", "INLIMBO" },
+        { "monster", "insect", "animal", "character" })
+end
 
 -- /* Mutant effects
 local function DoPoisonDamage(inst)
@@ -82,32 +102,79 @@ local function OnDeathExplosive(inst)
     inst:Remove()
 end
 
-local function OnBurtnExplosive(inst)
-    inst.components.combat:DoAreaAttack(inst, TUNING.MUTANT_BEE_EXPLOSIVE_RANGE, nil, nil, nil, { "INLIMBO", "mutant" })
-    SpawnPrefab("explode_small").Transform:SetPosition(inst.Transform:GetWorldPosition())    
+local rangedworkerbrain = require("brains/rangedbeebrain")
+local rangedkillerbrain = require("brains/rangedkillerbeebrain")
+
+local function OnSuicidalAttack(inst, data)    
+    if data.projectile then
+        local delta = -inst.components.health.maxhealth * TUNING.MUTANT_BEE_RANGED_ATK_HEALTH_PENALTY
+        inst.components.health:DoDelta(delta, nil, "suicidal_attack", nil, nil, true)
+    end
+end
+
+local function RangedRetarget(inst)
+    return FindTarget(inst, TUNING.MUTANT_BEE_RANGED_TARGET_DIST)
+end
+
+local function MakeRangedWeapon(inst)
+    if not inst.components.inventory then
+        inst:AddComponent("inventory")        
+    end
+
+    inst.components.combat:SetRange(TUNING.MUTANT_BEE_WEAPON_ATK_RANGE)
+    inst.components.combat:SetAttackPeriod(TUNING.MUTANT_BEE_RANGED_ATK_PERIOD)
+    inst.components.combat:SetDefaultDamage(TUNING.MUTANT_BEE_RANGED_DAMAGE)
+    inst.components.combat:SetRetargetFunction(0.25, RangedRetarget)
+
+    if not inst.components.inventory:GetEquippedItem(EQUIPSLOTS.HANDS) then
+        local weapon = CreateEntity()
+        weapon.entity:AddTransform()
+        MakeInventoryPhysics(weapon)
+        weapon:AddComponent("weapon")
+        weapon.components.weapon:SetDamage(inst.components.combat.defaultdamage)
+        weapon.components.weapon:SetRange(inst.components.combat.attackrange)
+        weapon.components.weapon:SetProjectile("blowdart_walrus")
+        weapon:AddComponent("inventoryitem")
+        weapon.persists = false
+        weapon.components.inventoryitem:SetOnDroppedFn(weapon.Remove)
+        weapon:AddComponent("equippable")
+        inst.weapon = weapon
+        inst.components.inventory:Equip(inst.weapon)
+    end
+    
+    inst:ListenForEvent("onattackother", OnSuicidalAttack)
+
+    if inst:HasTag("worker") then
+        inst:SetBrain(rangedworkerbrain)
+    else
+        inst:SetBrain(rangedkillerbrain)
+    end
 end
 
 local function OnAttackOtherWithFrostbite(inst, data)
-    if data.target and data.target.components.locomotor and not data.target.components.health:IsDead() then
+    if data.target and data.target.components.locomotor 
+        and data.target.components.health and not data.target.components.health:IsDead() then
         if not data.target:HasTag("player") then
-            data.target._frostbite_expire = GetTime() + 4.5
+            data.target._frostbite_expire = GetTime() + 4.75
             data.target.AnimState:SetAddColour(82 / 255, 115 / 255, 124 / 255, 0)
-            local x, y, z = data.target.Transform:GetWorldPosition()
-            local ground = TheWorld.Map:GetTileAtPoint(x, 0, z)
+            if data.target.components.combat then
+                if not data.target._currentattackperiod then
+                    data.target._currentattackperiod = data.target.components.combat.min_attack_period
+                    data.target.components.combat:SetAttackPeriod(data.target._currentattackperiod * TUNING.MUTANT_BEE_FROSTBITE_ATK_PERIOD_PENALTY)
+                end
+            end
 
             if data.target.components.locomotor.enablegroundspeedmultiplier then
-                if not data.target._frostbite_task then
-                    data.target._frostbite_task = data.target:DoPeriodicTask(0, 
-                        function (inst)                                           
-                            inst.components.locomotor:PushTempGroundSpeedMultiplier(TUNING.MUTANT_BEE_FROSTBITE_SPEED_PENALTY, ground)
-                        end)
-                end
+                data.target.components.locomotor:SetExternalSpeedMultiplier(data.target, "frostbite", TUNING.MUTANT_BEE_FROSTBITE_SPEED_PENALTY)
                 data.target:DoTaskInTime(5.0,
                     function (inst)
                         if GetTime() >= inst._frostbite_expire then
                             inst.AnimState:SetAddColour(0, 0, 0, 0)
-                            inst._frostbite_task:Cancel()   
-                            inst._frostbite_task = nil                         
+                            inst.components.locomotor:RemoveExternalSpeedMultiplier(inst, "frostbite")
+                            if inst.components.combat and inst._currentattackperiod then
+                                inst.components.combat:SetAttackPeriod(inst._currentattackperiod)
+                                inst._currentattackperiod = nil
+                            end
                         end
                     end)
             else
@@ -119,8 +186,14 @@ local function OnAttackOtherWithFrostbite(inst, data)
                     function (inst)
                         if GetTime() >= inst._frostbite_expire then
                             inst.AnimState:SetAddColour(0, 0, 0, 0)
-                            inst.components.locomotor.groundspeedmultiplier = inst._currentspeed
-                            inst._currentspeed = nil
+                            if inst._currentspeed then
+                                inst.components.locomotor.groundspeedmultiplier = inst._currentspeed
+                                inst._currentspeed = nil
+                            end
+                            if inst.components.combat and inst._currentattackperiod then
+                                inst.components.combat:SetAttackPeriod(inst._currentattackperiod)
+                                inst._currentattackperiod = nil
+                            end
                         end
                     end)
             end
@@ -198,25 +271,6 @@ local function OnSleep(inst)
     inst.SoundEmitter:KillSound("buzz")
 end
 
-local function FindTarget(inst, dist)
-    return FindEntity(inst, SpringCombatMod(dist),
-        function(guy)
-            return inst.components.combat:CanTarget(guy)
-        end,
-        { "_combat", "_health" },
-        { "insect", "INLIMBO" },
-        { "monster" })
-        or FindEntity(inst, SpringCombatMod(dist),
-        function(guy)
-            return inst.components.combat:CanTarget(guy)
-                and guy.components.combat and guy.components.combat.target
-                and guy.components.combat.target:HasTag("player")
-        end, 
-        { "_combat", "_health" },
-        { "mutant", "INLIMBO" },
-        { "monster", "insect", "animal", "character" })
-end
-
 local function KillerRetarget(inst)
     return FindTarget(inst, TUNING.MUTANT_BEE_TARGET_DIST)
 end
@@ -227,16 +281,16 @@ end
 
 local function ChangeMutantOnSeason(inst)
     if TheWorld.state.isspring then
+        inst.components.locomotor.groundspeedmultiplier = 1.3
         inst:ListenForEvent("onattackother", OnAttackOtherWithPoison)
     elseif TheWorld.state.issummer then
         inst.components.health:SetMaxHealth(TUNING.MUTANT_BEE_HEALTH / 2)
         inst.components.combat.areahitdamagepercent = TUNING.MUTANT_BEE_EXPLOSIVE_DAMAGE_MULTIPLIER
-        inst:ListenForEvent("death", OnDeathExplosive)
-        inst:ListenForEvent("onburnt", OnBurtnExplosive)
+        inst:ListenForEvent("death", OnDeathExplosive)        
     elseif TheWorld.state.isautumn then
-        print("AUTUMN")
+        MakeRangedWeapon(inst)
     else
-        inst.components.locomotor.groundspeedmultiplier = 0.6
+        inst.components.locomotor.groundspeedmultiplier = 0.7
         inst.components.combat:SetAttackPeriod(TUNING.MUTANT_BEE_ATTACK_PERIOD * 2)
         inst:ListenForEvent("onattackother", OnAttackOtherWithFrostbite)
     end
@@ -299,6 +353,7 @@ local function commonfn(build, tags)
     inst.components.lootdropper:AddRandomLoot("honey", 1)
     inst.components.lootdropper:AddRandomLoot("stinger", 5)   
     inst.components.lootdropper.numrandomloot = 1
+    inst.components.lootdropper.chancerandomloot = 0.2 -- reduce number of loots
 
     ------------------
     -- inst:AddComponent("workable")
@@ -368,7 +423,7 @@ local function workerbee()
 
     MakeHauntableChangePrefab(inst, "mutantkillerbee")
 
-    ChangeMutantOnSeason(inst)
+    inst:DoTaskInTime(0, ChangeMutantOnSeason)
 
     return inst
 end
@@ -396,7 +451,7 @@ local function killerbee()
     MakeHauntablePanic(inst)
     inst:ListenForEvent("spawnedfromhaunt", OnSpawnedFromHaunt)
 
-    ChangeMutantOnSeason(inst)
+    inst:DoTaskInTime(0, ChangeMutantOnSeason)
 
     return inst
 end
