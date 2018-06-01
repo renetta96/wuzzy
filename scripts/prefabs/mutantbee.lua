@@ -276,7 +276,7 @@ local function KillerRetarget(inst)
 end
 
 local function MutantBeeRetarget(inst)
-    return FindTarget(inst, TUNING.MUTANT_BEE_TARGET_DIST / 2)
+    return FindTarget(inst, TUNING.MUTANT_BEE_TARGET_DIST)
 end
 
 local function ChangeMutantOnSeason(inst)
@@ -339,14 +339,6 @@ local function commonfn(build, tags)
     inst.components.locomotor:SetTriggersCreep(false)
     inst:SetStateGraph("SGbee")
 
-    -- inst:AddComponent("stackable")
-    -- inst:AddComponent("inventoryitem")
-    -- inst.components.inventoryitem.nobounce = true
-    -- inst.components.inventoryitem:SetOnDroppedFn(OnDropped) Done in MakeFeedableSmallLivestock
-    -- inst.components.inventoryitem:SetOnPutInInventoryFn(OnPickedUp)
-    -- inst.components.inventoryitem.canbepickedup = false
-    -- inst.components.inventoryitem.canbepickedupalive = true
-
     ---------------------
 
     inst:AddComponent("lootdropper")
@@ -356,10 +348,6 @@ local function commonfn(build, tags)
     inst.components.lootdropper.chancerandomloot = 0.2 -- reduce number of loots
 
     ------------------
-    -- inst:AddComponent("workable")
-    -- inst.components.workable:SetWorkAction(ACTIONS.NET)
-    -- inst.components.workable:SetWorkLeft(1)
-    -- inst.components.workable:SetOnFinishCallback(OnWorked)
 
     MakeSmallBurnableCharacter(inst, "body", Vector3(0, -1, 1))
     MakeTinyFreezableCharacter(inst, "body", Vector3(0, -1, 1))
@@ -384,10 +372,6 @@ local function commonfn(build, tags)
     inst:AddComponent("inspectable")
 
     ------------------
-
-    -- inst:AddComponent("tradable")    
-    -- inst:ListenForEvent("worked", beecommon.OnWorked)
-    -- MakeFeedableSmallLivestock(inst, TUNING.TOTAL_DAY_TIME * 2, OnPickedUp, OnDropped)
 
     inst:ListenForEvent("attacked", beecommon.OnAttacked)    
     inst.Transform:SetScale(1.2, 1.2, 1.2)
