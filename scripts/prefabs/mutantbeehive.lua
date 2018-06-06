@@ -355,6 +355,14 @@ local function LinkToPlayer(inst, player)
     return false
 end
 
+local function CalcSanityAura(inst, observer)    
+    if inst._ownerid and IsValidOwner(inst, observer) then
+        return TUNING.SANITYAURA_SMALL_TINY
+    end
+
+    return 0
+end
+
 local function OnSave(inst, data)
     if inst._ownerid then
         data._ownerid = inst._ownerid
@@ -481,6 +489,10 @@ local function fn()
     ---------------------
     inst:AddComponent("lootdropper")    
 
+    ---------------------
+    inst:AddComponent("sanityaura")
+    inst.components.sanityaura.aurafn = CalcSanityAura
+    
     ---------------------
     MakeLargePropagator(inst)
     MakeSnowCovered(inst)

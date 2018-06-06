@@ -343,7 +343,7 @@ local function commonfn(build, tags)
 
     inst:AddComponent("lootdropper")
     inst.components.lootdropper:AddRandomLoot("honey", 1)
-    inst.components.lootdropper:AddRandomLoot("stinger", 5)   
+    inst.components.lootdropper:AddRandomLoot("stinger", 2)   
     inst.components.lootdropper.numrandomloot = 1
     inst.components.lootdropper.chancerandomloot = 0.2 -- reduce number of loots
 

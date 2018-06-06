@@ -98,6 +98,10 @@ local master_postinit = function(inst)
 	inst.components.combat.damagemultiplier = TUNING.OZZY_DEFAULT_DAMAGE_MULTIPLIER
 	inst.components.temperature.inherentinsulation = -TUNING.INSULATION_SMALL
 
+	inst:AddComponent("beesummoner")
+	inst.components.beesummoner:SetMaxChildren(TUNING.OZZY_MAX_SUMMON_BEES)
+	inst.components.beesummoner:SetSummonChance(TUNING.OZZY_SUMMON_CHANCE)
+
 	SeasonalChanges(inst, TheWorld.state.season)
     inst:WatchWorldState("season", SeasonalChanges)
 
