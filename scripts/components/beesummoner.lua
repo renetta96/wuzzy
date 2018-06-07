@@ -23,12 +23,24 @@ local function AddChildListeners(self, child)
     self.inst:ListenForEvent("ontrapped", self._onchildkilled, child)
     self.inst:ListenForEvent("death", self._onchildkilled, child)
     self.inst:ListenForEvent("detachchild", self._onchildkilled, child)
+    self.inst:ListenForEvent("onremove", self._onchildkilled, child)
 end
 
 local function RemoveChildListeners(self, child)
     self.inst:RemoveEventCallback("ontrapped", self._onchildkilled, child)
     self.inst:RemoveEventCallback("death", self._onchildkilled, child)
     self.inst:RemoveEventCallback("detachchild", self._onchildkilled, child)
+    self.inst:RemoveEventCallback("onremove", self._onchildkilled, child)
+end
+
+local function OnPlayerLeft(self, player)
+	if self.inst.userid and self.inst.userid == player.userid then
+		self:RemoveAllChildren()
+	end
+end
+
+local function OnSummonerRemove(self, summoner)
+	self:RemoveAllChildren()
 end
 
 local BeeSummoner = Class(function(self, inst)	
@@ -43,12 +55,27 @@ local BeeSummoner = Class(function(self, inst)
 
 	self._onchildkilled = function(child) self:OnChildKilled(child) end
 	self._onattack = function(inst, data) self:SummonChild(data.target) end
+	self._onplayerleft = function(src, player) OnPlayerLeft(self, player) end
+	self._onsummonerremove = function(inst) OnSummonerRemove(self, inst) end
+
 	self.inst:ListenForEvent("onattackother", self._onattack, inst)
+	self.inst:ListenForEvent("ms_playerleft", self._onplayerleft, TheWorld)
+	self.inst:ListenForEvent("onremove", self._onsummonerremove, self.inst)
 end)
 
 function BeeSummoner:OnRemoveFromEntity()
 	for k, v in pairs(self.children) do
 		RemoveChildListeners(self, v)
+	end
+end
+
+function BeeSummoner:RemoveAllChildren()
+	for k, v in pairs(self.children) do
+		if v.components.health then
+			v.components.health:Kill()
+		else
+			v:Remove()
+		end
 	end
 end
 
