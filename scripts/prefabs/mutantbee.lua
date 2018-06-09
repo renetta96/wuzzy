@@ -71,11 +71,14 @@ local function DoPoisonDamage(inst)
         return
     end
 
-    inst.components.health:DoDelta(TUNING.MUTANT_BEE_POISON_DAMAGE, true, "poison_sting")  
+    inst.components.health:DoDelta(TUNING.MUTANT_BEE_POISON_DAMAGE, true, "poison_sting")
+
+    local c_r, c_g, c_b, c_a = inst.AnimState:GetMultColour()
     inst.AnimState:SetMultColour(0.8, 0.2, 0.8, 1)
     inst:DoTaskInTime(0.2, function(inst)
-            inst.AnimState:SetMultColour(1, 1, 1, 1)       
+            inst.AnimState:SetMultColour(c_r, c_g, c_b, c_a)       
         end)
+
     inst._poisonticks = inst._poisonticks - 1
 
     if inst._poisonticks <= 0 or inst.components.health:IsDead() then

@@ -28,7 +28,12 @@ local function OnEat(inst, data)
 end
 
 local function OnAttacked(inst, data)
-	local attacker = data.attacker
+	local attacker = data and data.attacker
+
+	if not attacker then
+		return
+	end
+	
 	if not (attacker:HasTag("mutant") or attacker:HasTag("player")) then
 		inst.components.combat:ShareTarget(attacker, TUNING.OZZY_SHARE_TARGET_DIST, 
 			function(dude)

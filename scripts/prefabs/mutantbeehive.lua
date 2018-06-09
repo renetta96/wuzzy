@@ -155,10 +155,9 @@ local function OnUnFreeze(inst)
 end
 
 local function SpawnCocoon(inst)
-    local cocoon = SpawnPrefab("mutantbeecocoon")
-    local owner = inst._owner
+    local cocoon = SpawnPrefab("mutantbeecocoon")    
+    cocoon:InheritOwner(inst)
     UnlinkPlayer(inst)
-    cocoon:LinkToPlayer(owner)
     cocoon.Transform:SetPosition(inst.Transform:GetWorldPosition())
 end
 
@@ -199,11 +198,26 @@ local function OnBurnt(inst)
     SpawnCocoon(inst)
 end
 
+local function IsValidOwner(inst, owner)
+    if not owner then
+        return false
+    end
+
+    if inst._ownerid then
+        return owner.userid and owner.userid == inst._ownerid
+            and owner:HasTag("beemaster") and not owner._cocoon
+            and not (owner._hive and owner._hive ~= inst)
+    else
+        return owner.userid and owner:HasTag("beemaster") and not owner._cocoon
+            and not (owner._hive and owner._hive ~= inst)
+    end
+end
+
 local function OnHit(inst, attacker, damage)    
-    if inst.components.childspawner ~= nil and not attacker:HasTag("beemaster") then
+    if inst.components.childspawner ~= nil and not IsValidOwner(inst, attacker) then
         inst.components.childspawner:ReleaseAllChildren(attacker, "mutantkillerbee")
     end
-    if not inst.components.health:IsDead() then        
+    if not inst.components.health:IsDead() then
         Shake(inst)
     end
 end
@@ -329,21 +343,6 @@ local function OnHaunt(inst)
     return false
 end
 
-local function IsValidOwner(inst, owner)
-    if not owner then
-        return false
-    end
-
-    if inst._ownerid then
-        return owner.userid and owner.userid == inst._ownerid
-            and owner:HasTag("beemaster") and not owner._cocoon
-            and not (owner._hive and owner._hive ~= inst)
-    else
-        return owner.userid and owner:HasTag("beemaster") and not owner._cocoon
-            and not (owner._hive and owner._hive ~= inst)
-    end
-end
-
 local function LinkToPlayer(inst, player)
     if IsValidOwner(inst, player) then
         inst._ownerid = player.userid
@@ -353,6 +352,14 @@ local function LinkToPlayer(inst, player)
     end
 
     return false
+end
+
+local function InheritOwner(inst, cocoon)
+    inst._ownerid = cocoon._ownerid
+    if cocoon._owner then
+        inst._owner = cocoon._owner
+        cocoon._owner._hive = inst
+    end
 end
 
 local function CalcSanityAura(inst, observer)    
@@ -509,7 +516,7 @@ local function fn()
     inst.OnSave = OnSave
     inst.OnLoad = OnLoad
     inst.OnRemoveEntity = OnRemoveEntity
-    inst.LinkToPlayer = LinkToPlayer
+    inst.InheritOwner = InheritOwner
     inst._onplayerjoined = function(src, player) OnPlayerJoined(inst, player) end
     inst:ListenForEvent("ms_playerjoined", inst._onplayerjoined, TheWorld)
 

@@ -30,11 +30,10 @@ end
 local function ondeploy(inst, pt)
     inst.SoundEmitter:PlaySound("dontstarve/bee/beehive_hit")
     local hive = SpawnPrefab("mutantbeehive")
-    if hive ~= nil then
-        local owner = inst._owner
-        UnlinkPlayer(inst)        
-        hive:LinkToPlayer(owner)
-        hive.Transform:SetPosition(pt:Get())        
+    if hive ~= nil then        
+        hive:InheritOwner(inst)
+        UnlinkPlayer(inst)
+        hive.Transform:SetPosition(pt:Get())
         inst:Remove()
     end
 end
@@ -72,6 +71,14 @@ local function LinkToPlayer(inst, owner)
     end
 
     return false
+end
+
+local function InheritOwner(inst, hive)
+    inst._ownerid = hive._ownerid
+    if hive._owner then
+        inst._owner = hive._owner
+        hive._owner._cocoon = inst
+    end
 end
 
 local function OnPutInInventory(inst, owner)    
@@ -146,7 +153,7 @@ local function fn()
     inst.OnSave = OnSave
     inst.OnLoad = OnLoad
     inst.OnRemoveEntity = OnRemoveEntity
-    inst.LinkToPlayer = LinkToPlayer
+    inst.InheritOwner = InheritOwner
     inst._onplayerjoined = function(src, player) OnPlayerJoined(inst, player) end
     inst:ListenForEvent("ms_playerjoined", inst._onplayerjoined, TheWorld)
 

@@ -12,6 +12,12 @@ local MAX_TARGET_SHARES = 10
 local function OnAttacked(inst, data)
     local attacker = data and data.attacker
     inst.components.combat:SetTarget(attacker)
+
+    -- If attacker has tag "mutant" or "beemaster" then don't share target
+    if attacker:HasTag("mutant") or attacker:HasTag("beemaster") then
+        return
+    end
+
     local targetshares = MAX_TARGET_SHARES
     if inst.components.homeseeker and inst.components.homeseeker.home then
         local home = inst.components.homeseeker.home
