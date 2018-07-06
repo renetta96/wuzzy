@@ -31,6 +31,99 @@ local UPGRADE_STAGES = {
     }
 }
 
+local SPEECH = 
+{
+    REJECT_SLEEPER = {
+        "SLEEP ELSEWHERE, DUDE.",
+        "YOU ARE NOT OUR MASTER!",
+        "GET OUT!!!",
+        "THIS HIVE IS NOT FOR YOU."
+    },
+    ATTACK = {
+        "LET'S KILL THEM ALL!!!",
+        "ENEMY DETECTED!!!",
+        "PROTECT MASTER!",
+        "PREPARE TO GET STINGED!",
+        "ONTO THE BATTLEFIELD!"
+    },
+    SPAWN = {
+        "TO WORK SHALL WE ?",
+        "AHHHH WE SMELL FLOWERS!",
+        "HARDWORKER WE ARE!",
+        "WE ARE HAPPY HONEYMAKER!"
+    },
+    IGNITE = {
+        "HOME IS BURNING!!!",
+        "HELP US MASTER!!!",
+        "IT'S SO HOT IN THERE!",
+        "BRING SOME WATER!"
+    },
+    FREEZE = {
+        "OUCH! IT'S COLD OUT!",
+        "WE COULD MAKE ICECREAM OUT OF THIS.",
+        "BRRRRRR!"
+    },
+    HAMMER = {
+        "WELL IF THAT'S YOUR CHOICE THEN...",
+        "BUT... WHY ?",
+        "IF DOING THIS MAY HELP, THEN JUST DO IT!",
+        "AREN'T WE GOOD ENOUGH, MASTER ?"
+    },
+    HIT = {
+        "THE HIVE IS UNDER ATTACKED!!!",
+        "PROTECT THE HIVE!",
+        "HOW DARE YOU ?",
+        "WE WILL KILL YOU INTRUDER!"
+    },
+    STAGE_ADVANCE = {
+        "BIGGER HIVE COME STRONGER BEES.",
+        "MORE BEES TO COME.",
+        "UNLIMITED POWERRRR!!!"
+    },
+    UPGRADE = {
+        "THANKS, MASTER!",
+        "WE ARE GRATEFUL OF THAT!",
+        "GIVE US MORE!"
+    },
+    WELCOME = {
+        "WELCOME BACK, MASTER!",
+        "WE ARE GLAD TO SEE YOU!",
+        "WE WERE WAITING FOR YOU!",
+        "FINALLY WE'RE UNITED!"
+    },
+    GOODNIGHT = {
+        "HAVE A GOOD SLEEP, MASTER!",
+        "GOOD NIGHT!",
+        "HAVE A NICE DREAM, SHALL WE ?",
+        "WELCOME HOME!"
+    },
+    WAKEUP = {
+        "DID YOU SLEEP WELL, MASTER ?",
+        "IS OUR HIVE COMFORTABLE ?",
+        "YOU HAVE NIGHTMARE ?",
+        "EARLY BEE GETS MORE HONEY."
+    },
+    SNORE = "Zzz...Zzz..."
+}
+
+local function Say(inst, script)
+    if not script then
+        return
+    end
+
+    if type(script) == "string" then
+        inst.components.talker:Say(script)
+    elseif type(script) == "table" then
+        math.randomseed(GetTime())
+        local i = math.random(#script)
+        inst.components.talker:Say(script[i])
+    end
+end
+
+local function GetTalkerOffset(inst)    
+    return Vector3(0, -400, 0)
+end
+
 local function SetFX(inst)
     local stage = inst.components.upgradeable.stage
     if not inst._honeyspill then
@@ -96,6 +189,7 @@ end
 local function StartSpawning(inst)
     if inst.components.childspawner ~= nil        
         and not (inst.components.freezable ~= nil and inst.components.freezable:IsFrozen()) then
+        inst:Say(SPEECH.SPAWN)
         inst.components.childspawner:StartSpawning()
     end
 end
@@ -125,6 +219,7 @@ local function OnEnterDark(inst)
 end
 
 local function OnIgnite(inst)
+    inst:Say(SPEECH.IGNITE)
     if inst.components.childspawner ~= nil then
         inst.components.childspawner:ReleaseAllChildren()
     end
@@ -132,7 +227,12 @@ local function OnIgnite(inst)
     DefaultBurnFn(inst)
 end
 
+local function onfiredamagefn(inst)
+    inst:Say(SPEECH.IGNITE)
+end
+
 local function OnFreeze(inst)
+    inst:Say(SPEECH.FREEZE)
     inst.SoundEmitter:PlaySound("dontstarve/common/freezecreature")
     inst.AnimState:PlayAnimation("frozen", true)
     inst.AnimState:OverrideSymbol("swap_frozen", "frozen", "frozen")
@@ -161,7 +261,7 @@ local function SpawnCocoon(inst)
     cocoon.Transform:SetPosition(inst.Transform:GetWorldPosition())
 end
 
-local function OnKilled(inst)
+local function OnKilled(inst)    
     inst:RemoveComponent("childspawner")
     inst.AnimState:PlayAnimation("cocoon_dead", true)
     RemovePhysicsColliders(inst)
@@ -175,7 +275,7 @@ local function OnKilled(inst)
     RemoveFX(inst)
 end
 
-local function OnHammered(inst, worker)
+local function OnHammered(inst, worker)    
     inst:RemoveComponent("childspawner")
     inst.SoundEmitter:KillSound("loop")
     inst.SoundEmitter:PlaySound("dontstarve/bee/beehive_destroy")
@@ -213,12 +313,28 @@ local function IsValidOwner(inst, owner)
     end
 end
 
-local function OnHit(inst, attacker, damage)    
+local function OnHit(inst, attacker, damage)
+    if damage ~= nil then
+        if not IsValidOwner(inst, attacker) then
+            inst:Say(SPEECH.HIT)
+        else
+            inst:Say(SPEECH.HAMMER)
+        end
+    end
+
     if inst.components.childspawner ~= nil and not IsValidOwner(inst, attacker) then
         inst.components.childspawner:ReleaseAllChildren(attacker, "mutantkillerbee")
     end
     if not inst.components.health:IsDead() then
         Shake(inst)
+    end
+end
+
+local function OnWork(inst, worker, workleft)
+    if IsValidOwner(inst, worker) then
+        inst:Say(SPEECH.HAMMER)
+    else
+        OnHit(inst, worker, 1)
     end
 end
 
@@ -251,10 +367,12 @@ local function MakeSetStageFn(stage)
 end
 
 local function OnUpgrade(inst)
+    inst:Say(SPEECH.UPGRADE)
     Shake(inst)
 end
 
 local function OnStageAdvance(inst)
+    inst:Say(SPEECH.STAGE_ADVANCE)
     inst.components.growable:DoGrowth()
     return true
 end
@@ -290,6 +408,7 @@ local function WatchEnemy(inst)
                 { "mutant", "INLIMBO" },
                 { "monster", "insect", "animal", "character" })            
     if enemy then
+        inst:Say(SPEECH.ATTACK)
         OnHit(inst, enemy)
     end
 end
@@ -345,6 +464,7 @@ end
 
 local function LinkToPlayer(inst, player)
     if IsValidOwner(inst, player) then
+        inst:Say(SPEECH.WELCOME)
         inst._ownerid = player.userid
         inst._owner = player
         player._hive = inst
@@ -369,6 +489,120 @@ local function CalcSanityAura(inst, observer)
 
     return 0
 end
+
+-- /* Sleep stuff
+local function wakeuptest(inst, phase)
+    if phase ~= inst.sleep_phase then
+        inst.components.sleepingbag:DoWakeUp()
+    end
+end
+
+local function onignite(inst)
+    inst.components.sleepingbag:DoWakeUp()
+end
+
+local function onsleeptick(inst, sleeper)
+    local isstarving = false
+
+    if sleeper.components.hunger ~= nil then
+        sleeper.components.hunger:DoDelta(inst.hunger_tick, true, true)
+        isstarving = sleeper.components.hunger:IsStarving()
+    end
+
+    if sleeper.components.sanity ~= nil and sleeper.components.sanity:GetPercentWithPenalty() < 1 then
+        sleeper.components.sanity:DoDelta(TUNING.SLEEP_SANITY_PER_TICK * TUNING.MUTANT_BEEHIVE_SLEEP_SANITY_RATE, true)
+    end
+
+    if not isstarving and sleeper.components.health ~= nil then
+        sleeper.components.health:DoDelta(TUNING.SLEEP_HEALTH_PER_TICK * 2 * TUNING.MUTANT_BEEHIVE_SLEEP_HEALTH_RATE, true, inst.prefab, true)
+    end
+
+    if sleeper.components.temperature ~= nil then
+        if inst.is_cooling then
+            if sleeper.components.temperature:GetCurrent() > TUNING.SLEEP_TARGET_TEMP_TENT then
+                sleeper.components.temperature:SetTemperature(sleeper.components.temperature:GetCurrent() - TUNING.SLEEP_TEMP_PER_TICK * TUNING.MUTANT_BEEHIVE_SLEEP_TEMP_RATE)
+            end
+        elseif sleeper.components.temperature:GetCurrent() < TUNING.SLEEP_TARGET_TEMP_TENT then
+            sleeper.components.temperature:SetTemperature(sleeper.components.temperature:GetCurrent() + TUNING.SLEEP_TEMP_PER_TICK * TUNING.MUTANT_BEEHIVE_SLEEP_TEMP_RATE)
+        end
+    end
+
+    if isstarving then
+        inst.components.sleepingbag:DoWakeUp()
+    end
+end
+
+local function onsleepreward(inst, sleeper)    
+    if sleeper and sleeper.components.inventory then
+        local honey = SpawnPrefab("honey")
+        local acceptcount = sleeper.components.inventory:CanAcceptCount(honey)
+        if acceptcount > 0 then            
+            sleeper.components.inventory:GiveItem(honey)
+        else
+            honey:Remove()
+        end
+    end
+end
+
+local function onsleep(inst, sleeper)    
+    inst:WatchWorldState("phase", wakeuptest)
+    sleeper:ListenForEvent("onignite", onignite, inst)
+
+    if inst.sleeptask ~= nil then
+        inst.sleeptask:Cancel()
+    end
+
+    inst.sleeptask = inst:DoPeriodicTask(TUNING.SLEEP_TICK_PERIOD, onsleeptick, nil, sleeper)
+    inst.rewardtask = inst:DoPeriodicTask(TUNING.MUTANT_BEEHIVE_REWARD_TICKS * TUNING.SLEEP_TICK_PERIOD, onsleepreward, nil, sleeper)
+    inst.snoretask = inst:DoPeriodicTask(3, function() inst:Say(SPEECH.SNORE) end)
+
+    if not IsValidOwner(inst, sleeper) then        
+        inst:DoTaskInTime(0, function() 
+            inst._rejectingsleeper = true 
+            inst.components.sleepingbag:DoWakeUp()
+        end)
+    else
+        inst:Say(SPEECH.GOODNIGHT)
+    end
+end
+
+local function onwake(inst, sleeper, nostatechange)    
+    if inst.sleeptask ~= nil then
+        inst.sleeptask:Cancel()
+        inst.sleeptask = nil
+    end
+
+    if inst.snoretask ~= nil then
+        inst.snoretask:Cancel()
+        inst.snoretask = nil
+    end
+
+    if inst.rewardtask ~= nil then
+        inst.rewardtask:Cancel()
+        inst.rewardtask = nil
+    end
+
+    inst:StopWatchingWorldState("phase", wakeuptest)
+    sleeper:RemoveEventCallback("onignite", onignite, inst)
+
+    if not nostatechange then
+        if not inst._rejectingsleeper then
+            inst:Say(SPEECH.WAKEUP)
+            if sleeper.sg:HasStateTag("tent") then
+                sleeper.sg.statemem.iswaking = true
+            end
+            sleeper.sg:GoToState("wakeup")
+        else
+            inst:Say(SPEECH.REJECT_SLEEPER)
+
+            sleeper.sg:GoToState("idle")
+            sleeper.AnimState:PlayAnimation("emoteXL_annoyed")
+            sleeper.AnimState:PushAnimation("idle")
+            inst._rejectingsleeper = false
+        end
+    end
+end
+-- Sleep stuff /*
 
 local function OnSave(inst, data)
     if inst._ownerid then
@@ -429,6 +663,7 @@ local function fn()
     inst:AddTag("hive")
     inst:AddTag("beehive")
     inst:AddTag("mutantbeehive")
+    inst:AddTag("tent")    
 
     MakeSnowCoveredPristine(inst)
 
@@ -491,7 +726,7 @@ local function fn()
     inst.components.workable:SetWorkAction(ACTIONS.HAMMER)
     inst.components.workable:SetWorkLeft(5)
     inst.components.workable:SetOnFinishCallback(OnHammered)
-    inst.components.workable:SetOnWorkCallback(OnHit)
+    inst.components.workable:SetOnWorkCallback(OnWork)
 
     ---------------------
     inst:AddComponent("lootdropper")    
@@ -509,6 +744,26 @@ local function fn()
     inst.components.hauntable:SetOnHauntFn(OnHaunt)
 
     ---------------------    
+
+    inst:AddComponent("sleepingbag")
+    inst.components.sleepingbag.onsleep = onsleep
+    inst.components.sleepingbag.onwake = onwake
+    inst.components.sleepingbag.dryingrate = math.max(0, -TUNING.SLEEP_WETNESS_PER_TICK / TUNING.SLEEP_TICK_PERIOD)
+    inst.sleep_phase = "night"
+    inst.hunger_tick = TUNING.SLEEP_HUNGER_PER_TICK * TUNING.MUTANT_BEEHIVE_SLEEP_HUNGER_RATE
+
+    ---------------------
+
+    inst:AddComponent("talker")
+    inst.components.talker.fontsize = 28
+    inst.components.talker.font = TALKINGFONT
+    inst.components.talker.colour = Vector3(.9, .9, .3)
+    inst.components.talker.offset_fn = GetTalkerOffset
+    inst.Say = Say
+    inst:ListenForEvent("firedamage", onfiredamagefn)
+    inst:ListenForEvent("startfiredamage", onfiredamagefn)
+
+    ---------------------
 
     inst:AddComponent("inspectable")
     inst.OnEntitySleep = OnEntitySleep

@@ -15,6 +15,8 @@ local assets =
     Asset("ANIM", "anim/bee.zip"),
     Asset("ANIM", "anim/bee_build.zip"),
     Asset("ANIM", "anim/bee_angry_build.zip"),
+    Asset("ANIM", "anim/mutantbee_build.zip"), -- New anim
+    Asset("ANIM", "anim/mutantbee_angry_build.zip"), -- New anim
     Asset("SOUND", "sound/bee.fsb"),
 }
 
@@ -378,7 +380,7 @@ local function commonfn(build, tags)
 
     inst:ListenForEvent("attacked", beecommon.OnAttacked)    
     inst.Transform:SetScale(1.2, 1.2, 1.2)
-    inst.AnimState:SetMultColour(0.7, 0.7, 0.7, 1)    
+    -- inst.AnimState:SetMultColour(0.7, 0.7, 0.7, 1)
 
     inst.buzzing = true
     inst.EnableBuzz = EnableBuzz
@@ -394,7 +396,7 @@ local killerbrain = require("brains/mutantkillerbeebrain")
 local function workerbee()
     --pollinator (from pollinator component) added to pristine state for optimization
     --for searching: inst:AddTag("pollinator")
-    local inst = commonfn("bee_build", { "worker", "pollinator" })
+    local inst = commonfn("mutantbee_build", { "worker", "pollinator" })
 
     if not TheWorld.ismastersim then
         return inst
@@ -422,7 +424,7 @@ local function OnSpawnedFromHaunt(inst)
 end
 
 local function killerbee()
-    local inst = commonfn("bee_angry_build", { "killer", "scarytoprey" })
+    local inst = commonfn("mutantbee_angry_build", { "killer", "scarytoprey" })
 
     if not TheWorld.ismastersim then
         return inst
