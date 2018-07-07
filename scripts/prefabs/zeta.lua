@@ -15,14 +15,47 @@ local start_inv = {
 	"mutantbeecocoon"
 }
 
+local HONEYED_FOODS = {
+	honey = 0.25,
+	honeynuggets = 0.5,
+	honeyham = 0.5
+}
+
 local function OnEat(inst, data)
-	if data.food 
-		and (data.food.prefab == "petals" or data.food.prefab == "petals_evil") then
+	if data.food and (data.food.prefab == "petals" or data.food.prefab == "petals_evil") then
 		inst._eatenpetals = inst._eatenpetals + 1
 		if (inst._eatenpetals >= TUNING.OZZY_NUM_PETALS_PER_HONEY) then
 			local honey = SpawnPrefab("honey")
 			honey.Transform:SetPosition(inst.Transform:GetWorldPosition())
 			inst._eatenpetals = 0
+		end
+
+		return
+	end
+
+	if data.food and HONEYED_FOODS[data.food.prefab] then		
+		local food = data.food
+		local bonus = HONEYED_FOODS[food.prefab]
+
+		if inst.components.health then
+			local delta = food.components.edible:GetHealth(inst) * inst.components.eater.healthabsorption * bonus
+			if delta > 0 then
+				inst.components.health:DoDelta(delta, nil, food.prefab)
+			end
+		end
+
+		if inst.components.hunger then
+			local delta = food.components.edible:GetHunger(inst) * inst.components.eater.hungerabsorption * bonus
+			if delta > 0 then
+				inst.components.hunger:DoDelta(delta)
+			end
+		end
+
+		if inst.components.sanity then
+			local delta = food.components.edible:GetSanity(inst) * inst.components.eater.sanityabsorption * bonus
+            if delta > 0 then
+                inst.components.sanity:DoDelta(delta)
+            end
 		end
 	end
 end
