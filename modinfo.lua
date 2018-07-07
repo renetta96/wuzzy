@@ -29,4 +29,27 @@ server_filter_tags = {
 "character",
 }
 
---configuration_options = {}
+configuration_options = 
+{
+	{
+		name = "USE_NEW_BEE_BUILD",
+		label = "Use new bee build",
+		options = {
+			{description = "Yes", data = true},
+			{description = "No", data = false}
+		},
+		default = true,
+		hover = "Whether to use my bee build or not. Default is Yes."
+	},
+
+	{
+		name = "USE_NEW_HIVE_BUILD",
+		label = "Use new beehive build",
+		options = {
+			{description = "Yes", data = true},
+			{description = "No", data = false}
+		},
+		default = true,
+		hover = "Whether to use my beehive build or not. Default is Yes."
+	}
+}

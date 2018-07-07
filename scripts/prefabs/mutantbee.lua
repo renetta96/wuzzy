@@ -301,6 +301,13 @@ local function ChangeMutantOnSeason(inst)
     end
 end
 
+local function GetBuildConfig()
+    local actualname = KnownModIndex:GetModActualName("Ozzy The Buzzy")
+    local usenewbuild = GetModConfigData("USE_NEW_BEE_BUILD", actualname)
+
+    return usenewbuild
+end
+
 local function commonfn(build, tags)
     local inst = CreateEntity()
 
@@ -380,7 +387,11 @@ local function commonfn(build, tags)
 
     inst:ListenForEvent("attacked", beecommon.OnAttacked)    
     inst.Transform:SetScale(1.2, 1.2, 1.2)
-    -- inst.AnimState:SetMultColour(0.7, 0.7, 0.7, 1)
+
+    local usenewbuild = GetBuildConfig()
+    if not usenewbuild then
+        inst.AnimState:SetMultColour(0.7, 0.7, 0.7, 1)
+    end
 
     inst.buzzing = true
     inst.EnableBuzz = EnableBuzz
@@ -396,7 +407,14 @@ local killerbrain = require("brains/mutantkillerbeebrain")
 local function workerbee()
     --pollinator (from pollinator component) added to pristine state for optimization
     --for searching: inst:AddTag("pollinator")
-    local inst = commonfn("mutantbee_build", { "worker", "pollinator" })
+    local usenewbuild = GetBuildConfig()
+    local inst = nil
+
+    if usenewbuild then
+        inst = commonfn("mutantbee_build", { "worker", "pollinator" })
+    else
+        inst = commonfn("bee_build", { "worker", "pollinator" })
+    end
 
     if not TheWorld.ismastersim then
         return inst
@@ -424,7 +442,14 @@ local function OnSpawnedFromHaunt(inst)
 end
 
 local function killerbee()
-    local inst = commonfn("mutantbee_angry_build", { "killer", "scarytoprey" })
+    local usenewbuild = GetBuildConfig()
+    local inst = nil
+
+    if usenewbuild then
+        inst = commonfn("mutantbee_angry_build", { "killer", "scarytoprey" })
+    else
+        inst = commonfn("bee_angry_build", { "killer", "scarytoprey" })
+    end
 
     if not TheWorld.ismastersim then
         return inst

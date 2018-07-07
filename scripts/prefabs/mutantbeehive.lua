@@ -13,16 +13,17 @@ local prefabs =
 local assets =
 {
     Asset("ANIM", "anim/beehive.zip"),
+    Asset("ANIM", "anim/mutantbeehive.zip"), -- New anim
     Asset("SOUND", "sound/bee.fsb"),
 }
 
 local UPGRADE_STAGES = {
     [1] = {
-        SIZE_SCALE = 1.0,
+        SIZE_SCALE = 1.2,
         HEALTH = 700
     },
     [2] = {
-        SIZE_SCALE = 1.35,
+        SIZE_SCALE = 1.45,
         HEALTH = 1100
     },
     [3] = {
@@ -640,6 +641,13 @@ local function OnInit(inst)
     inst:DoPeriodicTask(3, SelfRepair)
 end
 
+local function GetBuildConfig()
+    local actualname = KnownModIndex:GetModActualName("Ozzy The Buzzy")
+    local usenewbuild = GetModConfigData("USE_NEW_HIVE_BUILD", actualname)
+
+    return usenewbuild
+end
+
 local function fn()
     local inst = CreateEntity()
 
@@ -655,9 +663,17 @@ local function fn()
     inst.MiniMapEntity:SetIcon("beehive.png")
 
     inst.AnimState:SetBank("beehive")
-    inst.AnimState:SetBuild("beehive")
-    inst.AnimState:PlayAnimation("cocoon_small", true)
-    inst.AnimState:SetMultColour(0.7, 0.5, 0.7, 1)
+
+    local usenewbuild = GetBuildConfig()
+    if usenewbuild then
+        inst.AnimState:SetBuild("mutantbeehive")
+    else
+        inst.AnimState:SetBuild("beehive")
+        inst.AnimState:SetMultColour(0.7, 0.5, 0.7, 1)
+    end
+
+
+    inst.AnimState:PlayAnimation("cocoon_small", true)    
 
     inst:AddTag("structure")    
     inst:AddTag("hive")
