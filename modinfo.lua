@@ -2,7 +2,7 @@
 name = "Ozzy The Buzzy"
 description = "The bee master"
 author = "Zeta"
-version = "1.3.0" -- This is the version of the template. Change it to your own number.
+version = "1.3.1" -- This is the version of the template. Change it to your own number.
 
 -- This is the URL name of the mod's thread on the forum; the part after the ? and before the first & in the url
 forumthread = "/files/file/1853-ozzy-the-buzzy-dst/"

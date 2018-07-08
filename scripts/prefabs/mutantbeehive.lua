@@ -114,8 +114,7 @@ local function Say(inst, script)
 
     if type(script) == "string" then
         inst.components.talker:Say(script)
-    elseif type(script) == "table" then
-        math.randomseed(GetTime())
+    elseif type(script) == "table" then        
         local i = math.random(#script)
         inst.components.talker:Say(script[i])
     end
