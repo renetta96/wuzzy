@@ -678,7 +678,18 @@ local function fn()
     inst:AddTag("hive")
     inst:AddTag("beehive")
     inst:AddTag("mutantbeehive")
-    inst:AddTag("tent")    
+    inst:AddTag("tent")
+
+    ---------------------------
+    inst:AddComponent("talker")
+    inst.components.talker.fontsize = 28
+    inst.components.talker.font = TALKINGFONT
+    inst.components.talker.colour = Vector3(.9, .9, .3)
+    inst.components.talker.offset_fn = GetTalkerOffset
+    inst.Say = Say
+    inst:ListenForEvent("firedamage", onfiredamagefn)
+    inst:ListenForEvent("startfiredamage", onfiredamagefn)
+    ---------------------------
 
     MakeSnowCoveredPristine(inst)
 
@@ -766,17 +777,6 @@ local function fn()
     inst.components.sleepingbag.dryingrate = math.max(0, -TUNING.SLEEP_WETNESS_PER_TICK / TUNING.SLEEP_TICK_PERIOD)
     inst.sleep_phase = "night"
     inst.hunger_tick = TUNING.SLEEP_HUNGER_PER_TICK * TUNING.MUTANT_BEEHIVE_SLEEP_HUNGER_RATE
-
-    ---------------------
-
-    inst:AddComponent("talker")
-    inst.components.talker.fontsize = 28
-    inst.components.talker.font = TALKINGFONT
-    inst.components.talker.colour = Vector3(.9, .9, .3)
-    inst.components.talker.offset_fn = GetTalkerOffset
-    inst.Say = Say
-    inst:ListenForEvent("firedamage", onfiredamagefn)
-    inst:ListenForEvent("startfiredamage", onfiredamagefn)
 
     ---------------------
 
