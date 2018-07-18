@@ -16,9 +16,9 @@ local start_inv = {
 }
 
 local HONEYED_FOODS = {
-	honey = 0.25,
-	honeynuggets = 0.5,
-	honeyham = 0.5
+	honey = 0.2,
+	honeynuggets = 0.35,
+	honeyham = 0.35
 }
 
 local function OnEat(inst, data)
@@ -139,6 +139,7 @@ local master_postinit = function(inst)
 	inst:AddComponent("beesummoner")
 	inst.components.beesummoner:SetMaxChildren(TUNING.OZZY_MAX_SUMMON_BEES)
 	inst.components.beesummoner:SetSummonChance(TUNING.OZZY_SUMMON_CHANCE)
+	inst.components.beesummoner:SetMaxStore(TUNING.OZZY_MAX_BEES_STORE)
 
 	SeasonalChanges(inst, TheWorld.state.season)
     inst:WatchWorldState("season", SeasonalChanges)

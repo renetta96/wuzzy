@@ -50,7 +50,7 @@ local SPEECH =
     SPAWN = {
         "TO WORK SHALL WE ?",
         "AHHHH WE SMELL FLOWERS!",
-        "HARDWORKER WE ARE!",
+        "HARDWORKERS WE ARE!",
         "WE ARE HAPPY HONEYMAKER!"
     },
     IGNITE = {
@@ -351,7 +351,7 @@ local function MakeSetStageFn(stage)
 
         inst.components.childspawner:SetRegenPeriod(TUNING.MUTANT_BEEHIVE_DEFAULT_REGEN_TIME - (stage - 1) * TUNING.MUTANT_BEEHIVE_DELTA_REGEN_TIME)
         inst.components.childspawner:SetSpawnPeriod(TUNING.MUTANT_BEEHIVE_DEFAULT_RELEASE_TIME - (stage - 1) * TUNING.MUTANT_BEEHIVE_DELTA_RELEASE_TIME)
-        inst.components.childspawner:SetMaxChildren(TUNING.MUTANT_BEEHIVE_DEFAULT_BEES + stage * TUNING.MUTANT_BEEHIVE_DELTA_BEES)
+        inst.components.childspawner:SetMaxEmergencyChildren(TUNING.MUTANT_BEEHIVE_DEFAULT_EMERGENCY_BEES + (stage - 1) * TUNING.MUTANT_BEEHIVE_DELTA_BEES)
 
         SetFX(inst)
         inst.components.upgradeable:SetStage(stage)
@@ -709,8 +709,8 @@ local function fn()
     -- inst:WatchWorldState("season", SeasonalSpawnChanges)
     inst.components.childspawner.emergencychildname = "mutantkillerbee"
     inst.components.childspawner.emergencychildrenperplayer = TUNING.MUTANT_BEEHIVE_EMERGENCY_BEES_PER_PLAYER
-    inst.components.childspawner:SetMaxEmergencyChildren(TUNING.MUTANT_BEEHIVE_EMERGENCY_BEES)
     inst.components.childspawner:SetEmergencyRadius(TUNING.MUTANT_BEEHIVE_EMERGENCY_RADIUS)
+    inst.components.childspawner:SetMaxChildren(TUNING.MUTANT_BEEHIVE_BEES)    
 
     inst:DoTaskInTime(0, OnInit)    
 
