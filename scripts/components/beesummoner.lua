@@ -135,7 +135,7 @@ end
 
 local function DoRegenTick(inst, self)
 	self.currenttick = self.currenttick + 1
-	print("REGEN, TICK : ", self.currenttick)
+	-- print("REGEN, TICK : ", self.currenttick)
 
 	if self.currenttick >= self.maxticks then
 		self.numstore = math.min(self.numstore + 1, self.maxstore)
@@ -148,13 +148,13 @@ local function DoRegenTick(inst, self)
 	end
 	
 	local regentick = self:GetRegenTick()
-	print("REGEN, REGEN TICK : ", regentick)
+	-- print("REGEN, REGEN TICK : ", regentick)
 	self.regentask = self.inst:DoTaskInTime(regentick, DoRegenTick, self)	
 end
 
 function BeeSummoner:StopRegen()
 	if self.regentask ~= nil then
-		print("STOP REGEN")
+		-- print("STOP REGEN")
 		self.regentask:Cancel()
 		self.regentask = nil
 	end
@@ -169,7 +169,7 @@ function BeeSummoner:StartRegen(tick)
 	if not self.regentask then
 		self.currenttick = tick or 0
 		local regentick = self:GetRegenTick()
-		print("START REGEN, REGEN TICK : ", regentick)
+		-- print("START REGEN, REGEN TICK : ", regentick)
 		self.regentask = self.inst:DoTaskInTime(regentick, DoRegenTick, self)
 	end
 end
