@@ -111,7 +111,8 @@ local function SeasonalChanges(inst, season)
 end
 
 -- This initializes for both the server and client. Tags can be added here.
-local common_postinit = function(inst) 
+local common_postinit = function(inst)
+	inst.soundsname = "zeta"
 	-- Minimap icon
 	inst.MiniMapEntity:SetIcon( "zeta.tex" )
 	inst:AddTag("mutant")
@@ -122,11 +123,10 @@ end
 
 -- This initializes for the server only. Components are added here.
 local master_postinit = function(inst)
-	-- choose which sounds this character will play
-	inst.soundsname = "webber"
+	-- choose which sounds this character will play	
 	
 	-- Uncomment if "wathgrithr"(Wigfrid) or "webber" voice is used
-    inst.talker_path_override = "dontstarve_DLC001/characters/"
+    -- inst.talker_path_override = "dontstarve_DLC001/characters/"
 	
 	-- Stats	
 	inst.components.health:SetMaxHealth(TUNING.OZZY_MAX_HEALTH)

@@ -96,6 +96,10 @@ end
 function BeeSummoner:SetMaxStore(num)
 	self.maxstore = num
 	self.numstore = math.min(self.numstore, self.maxstore)
+
+	if self.numstore < self.maxstore then
+		self:StartRegen()
+	end
 end
 
 function BeeSummoner:OnChildKilled(child)

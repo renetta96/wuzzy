@@ -40,7 +40,18 @@ Assets = {
     Asset( "IMAGE", "bigportraits/zeta_none.tex" ),
     Asset( "ATLAS", "bigportraits/zeta_none.xml" ),
 
+    Asset("SOUNDPACKAGE", "sound/zeta.fev"),
+    Asset("SOUND", "sound/zeta.fsb"),
 }
+
+RemapSoundEvent( "dontstarve/characters/zeta/hurt", "zeta/zeta/hurt" )
+RemapSoundEvent( "dontstarve/characters/zeta/talk_LP", "zeta/zeta/talk_LP" )
+RemapSoundEvent( "dontstarve/characters/zeta/death_voice", "zeta/zeta/death_voice" )
+RemapSoundEvent( "dontstarve/characters/zeta/emote", "zeta/zeta/emote" ) --dst
+RemapSoundEvent( "dontstarve/characters/zeta/pose", "zeta/zeta/pose" ) --dst
+RemapSoundEvent( "dontstarve/characters/zeta/yawn", "zeta/zeta/yawn" ) --dst
+RemapSoundEvent( "dontstarve/characters/zeta/ghost_LP", "zeta/zeta/ghost_LP" ) --dst
+
 
 local require = GLOBAL.require
 local STRINGS = GLOBAL.STRINGS
