@@ -1,6 +1,6 @@
 local assets =
 {
-    Asset("ANIM", "anim/honey_trail.zip"),
+	Asset("ANIM", "anim/honey_trail.zip"),
 }
 
 -- local function OnUpdate(inst, x, y, z, rad)
@@ -53,50 +53,50 @@ local assets =
 --     onupdatefn(inst, x, y, z, scale)
 -- end
 
-local function SetVariation(inst, rand, scale)    
-    inst.Transform:SetScale(scale, scale, scale)
+local function SetVariation(inst, rand, scale)
+	inst.Transform:SetScale(scale, scale, scale)
 
-    inst.trailname = "trail"..tostring(rand)
-    -- inst.duration = duration
-    -- inst.SoundEmitter:PlaySound("dontstarve/creatures/together/bee_queen/honey_drip")
-    inst.AnimState:PlayAnimation(inst.trailname.."_pre")
-    -- inst:ListenForEvent("animover", OnAnimOver)
+	inst.trailname = "trail"..tostring(rand)
+	-- inst.duration = duration
+	-- inst.SoundEmitter:PlaySound("dontstarve/creatures/together/bee_queen/honey_drip")
+	inst.AnimState:PlayAnimation(inst.trailname.."_pre")
+	-- inst:ListenForEvent("animover", OnAnimOver)
 
-    -- OnInit(inst, scale) 
+	-- OnInit(inst, scale)
 end
 
 local function fn()
-    local inst = CreateEntity()
+	local inst = CreateEntity()
 
-    inst.entity:AddTransform()
-    inst.entity:AddAnimState()
-    inst.entity:AddSoundEmitter()
-    inst.entity:AddNetwork()
+	inst.entity:AddTransform()
+	inst.entity:AddAnimState()
+	inst.entity:AddSoundEmitter()
+	inst.entity:AddNetwork()
 
-    inst:AddTag("FX")
+	inst:AddTag("FX")
 
-    inst.AnimState:SetBank("honey_trail")
-    inst.AnimState:SetBuild("honey_trail")
-    inst.AnimState:SetLayer(LAYER_BACKGROUND)
-    inst.AnimState:SetSortOrder(3)
+	inst.AnimState:SetBank("honey_trail")
+	inst.AnimState:SetBuild("honey_trail")
+	inst.AnimState:SetLayer(LAYER_BACKGROUND)
+	inst.AnimState:SetSortOrder(3)
 
-    -- inst._isfading = net_bool(inst.GUID, "honey_trail._isfading", "isfadingdirty")
+	-- inst._isfading = net_bool(inst.GUID, "honey_trail._isfading", "isfadingdirty")
 
-    inst.entity:SetPristine()
+	inst.entity:SetPristine()
 
-    if not TheWorld.ismastersim then
-        -- inst:ListenForEvent("isfadingdirty", OnIsFadingDirty)
-        -- inst.task = inst:DoPeriodicTask(0, OnInit)
+	if not TheWorld.ismastersim then
+		-- inst:ListenForEvent("isfadingdirty", OnIsFadingDirty)
+		-- inst.task = inst:DoPeriodicTask(0, OnInit)
 
-        return inst
-    end
+		return inst
+	end
 
-    inst.SetVariation = SetVariation
+	inst.SetVariation = SetVariation
 
-    -- inst.persists = false
-    -- inst.task = inst:DoTaskInTime(0, inst.Remove)
+	-- inst.persists = false
+	-- inst.task = inst:DoTaskInTime(0, inst.Remove)
 
-    return inst
+	return inst
 end
 
 return Prefab("honeyspill", fn, assets)

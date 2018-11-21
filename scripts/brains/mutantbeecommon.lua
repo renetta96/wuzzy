@@ -10,30 +10,30 @@ local SHARE_TARGET_DIST = 30
 local MAX_TARGET_SHARES = 10
 
 local function OnAttacked(inst, data)
-    local attacker = data and data.attacker
-    inst.components.combat:SetTarget(attacker)
+	local attacker = data and data.attacker
+	inst.components.combat:SetTarget(attacker)
 
-    -- If attacker has tag "mutant" or "beemaster" then don't share target
-    if attacker:HasTag("mutant") or attacker:HasTag("beemaster") then
-        return
-    end
+	-- If attacker has tag "mutant" or "beemaster" then don't share target
+	if attacker:HasTag("mutant") or attacker:HasTag("beemaster") then
+		return
+	end
 
-    local targetshares = MAX_TARGET_SHARES
-    if inst.components.homeseeker and inst.components.homeseeker.home then
-        local home = inst.components.homeseeker.home
-        if home and home.components.childspawner then
-            targetshares = targetshares - home.components.childspawner.childreninside
-            home:OnHit(attacker)            
-        end
-    end
-    inst.components.combat:ShareTarget(attacker, SHARE_TARGET_DIST, function(dude)
-        if inst.components.homeseeker and dude.components.homeseeker then  --don't bring bees from other hives
-            if dude.components.homeseeker.home and dude.components.homeseeker.home ~= inst.components.homeseeker.home then
-                return false
-            end
-        end
-        return dude:HasTag("mutant") and not (dude:IsInLimbo() or dude.components.health:IsDead())
-    end, targetshares)
+	local targetshares = MAX_TARGET_SHARES
+	if inst.components.homeseeker and inst.components.homeseeker.home then
+		local home = inst.components.homeseeker.home
+		if home and home.components.childspawner then
+			targetshares = targetshares - home.components.childspawner.childreninside
+			home:OnHit(attacker)
+		end
+	end
+	inst.components.combat:ShareTarget(attacker, SHARE_TARGET_DIST, function(dude)
+		if inst.components.homeseeker and dude.components.homeseeker then  --don't bring bees from other hives
+			if dude.components.homeseeker.home and dude.components.homeseeker.home ~= inst.components.homeseeker.home then
+				return false
+			end
+		end
+		return dude:HasTag("mutant") and not (dude:IsInLimbo() or dude.components.health:IsDead())
+	end, targetshares)
 end
 
 local function OnWorked(inst, data)
@@ -42,14 +42,14 @@ local function OnWorked(inst, data)
 end
 
 local function GoHomeAction(inst)
-    local homeseeker = inst.components.homeseeker
-    if homeseeker
-        and homeseeker.home
-        and homeseeker.home:IsValid()
-        and homeseeker.home.components.childspawner
-        and (not homeseeker.home.components.burnable or not homeseeker.home.components.burnable:IsBurning()) then
-        return BufferedAction(inst, homeseeker.home, ACTIONS.GOHOME)
-    end
+	local homeseeker = inst.components.homeseeker
+	if homeseeker
+		and homeseeker.home
+		and homeseeker.home:IsValid()
+		and homeseeker.home.components.childspawner
+		and (not homeseeker.home.components.burnable or not homeseeker.home.components.burnable:IsBurning()) then
+		return BufferedAction(inst, homeseeker.home, ACTIONS.GOHOME)
+	end
 end
 
 return {

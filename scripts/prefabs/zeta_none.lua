@@ -16,11 +16,11 @@ local tags = {"ZETA", "CHARACTER"}
 
 return CreatePrefabSkin("zeta_none",
 {
-	base_prefab = base_prefab, 
-	skins = skins, 
+	base_prefab = base_prefab,
+	skins = skins,
 	assets = assets,
 	tags = tags,
-	
+
 	skip_item_gen = true,
 	skip_giftable_gen = true,
 })

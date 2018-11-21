@@ -3,7 +3,7 @@ local MakePlayerCharacter = require "prefabs/player_common"
 
 
 local assets = {
-    Asset("SCRIPT", "scripts/prefabs/player_common.lua"),
+	Asset("SCRIPT", "scripts/prefabs/player_common.lua"),
 }
 local prefabs = {
 	"mutantbeecocoon",
@@ -33,7 +33,7 @@ local function OnEat(inst, data)
 		return
 	end
 
-	if data.food and HONEYED_FOODS[data.food.prefab] then		
+	if data.food and HONEYED_FOODS[data.food.prefab] then
 		local food = data.food
 		local bonus = HONEYED_FOODS[food.prefab]
 
@@ -53,9 +53,9 @@ local function OnEat(inst, data)
 
 		if inst.components.sanity then
 			local delta = food.components.edible:GetSanity(inst) * inst.components.eater.sanityabsorption * bonus
-            if delta > 0 then
-                inst.components.sanity:DoDelta(delta)
-            end
+			if delta > 0 then
+				inst.components.sanity:DoDelta(delta)
+			end
 		end
 	end
 end
@@ -66,12 +66,12 @@ local function OnAttacked(inst, data)
 	if not attacker then
 		return
 	end
-	
+
 	if not (attacker:HasTag("mutant") or attacker:HasTag("player")) then
-		inst.components.combat:ShareTarget(attacker, TUNING.OZZY_SHARE_TARGET_DIST, 
+		inst.components.combat:ShareTarget(attacker, TUNING.OZZY_SHARE_TARGET_DIST,
 			function(dude)
 				return dude:HasTag("mutant") and not (dude:IsInLimbo() or dude.components.health:IsDead())
-			end, 
+			end,
 			TUNING.OZZY_MAX_SHARE_TARGETS)
 
 		local hive = GetClosestInstWithTag("mutantbeehive", inst, TUNING.OZZY_SHARE_TARGET_DIST)
@@ -85,19 +85,19 @@ end
 local function onbecamehuman(inst)
 end
 
-local function onbecameghost(inst)	
+local function onbecameghost(inst)
 end
 
 -- When loading or spawning the character
 local function onload(inst)
-    inst:ListenForEvent("ms_respawnedfromghost", onbecamehuman)
-    inst:ListenForEvent("ms_becameghost", onbecameghost)
+	inst:ListenForEvent("ms_respawnedfromghost", onbecamehuman)
+	inst:ListenForEvent("ms_becameghost", onbecameghost)
 
-    if inst:HasTag("playerghost") then
-        onbecameghost(inst)
-    else
-        onbecamehuman(inst)
-    end
+	if inst:HasTag("playerghost") then
+		onbecameghost(inst)
+	else
+		onbecamehuman(inst)
+	end
 end
 
 local function SeasonalChanges(inst, season)
@@ -123,12 +123,12 @@ end
 
 -- This initializes for the server only. Components are added here.
 local master_postinit = function(inst)
-	-- choose which sounds this character will play	
-	
+	-- choose which sounds this character will play
+
 	-- Uncomment if "wathgrithr"(Wigfrid) or "webber" voice is used
-    -- inst.talker_path_override = "dontstarve_DLC001/characters/"
-	
-	-- Stats	
+	-- inst.talker_path_override = "dontstarve_DLC001/characters/"
+
+	-- Stats
 	inst.components.health:SetMaxHealth(TUNING.OZZY_MAX_HEALTH)
 	inst.components.hunger:SetMax(TUNING.OZZY_MAX_HUNGER)
 	inst.components.sanity:SetMax(TUNING.OZZY_MAX_SANITY)
@@ -142,14 +142,14 @@ local master_postinit = function(inst)
 	inst.components.beesummoner:SetMaxStore(TUNING.OZZY_MAX_BEES_STORE)
 
 	SeasonalChanges(inst, TheWorld.state.season)
-    inst:WatchWorldState("season", SeasonalChanges)
+	inst:WatchWorldState("season", SeasonalChanges)
 
 	inst._eatenpetals = 0
 	inst:ListenForEvent("oneat", OnEat)
 	inst:ListenForEvent("attacked", OnAttacked)
-	
+
 	inst.OnLoad = onload
-    inst.OnNewSpawn = onload
+	inst.OnNewSpawn = onload
 end
 
 return MakePlayerCharacter("zeta", prefabs, assets, common_postinit, master_postinit, start_inv)
