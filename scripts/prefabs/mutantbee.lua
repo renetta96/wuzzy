@@ -419,11 +419,11 @@ end
 
 STRINGS.MUTANTBEE = "Metapis"
 STRINGS.NAMES.MUTANTBEE = "Metapis"
-STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTBEE = "That bee looks weird..."
+STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTBEE = "Meta...apis? Metabee? Like metahuman?"
 
 STRINGS.MUTANTKILLERBEE = "Metapis Soldier"
 STRINGS.NAMES.MUTANTKILLERBEE = "Metapis Soldier"
-STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTKILLERBEE = "Is it really OK to come near them ?"
+STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTKILLERBEE = "Is it really OK to come near them?"
 
 return Prefab("mutantbee", workerbee, assets, prefabs),
 		Prefab("mutantkillerbee", killerbee, assets, prefabs)

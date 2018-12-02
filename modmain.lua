@@ -13,30 +13,30 @@ Assets = {
 
     Asset( "IMAGE", "images/selectscreen_portraits/zeta.tex" ),
     Asset( "ATLAS", "images/selectscreen_portraits/zeta.xml" ),
-	
+
     Asset( "IMAGE", "images/selectscreen_portraits/zeta_silho.tex" ),
     Asset( "ATLAS", "images/selectscreen_portraits/zeta_silho.xml" ),
 
     Asset( "IMAGE", "bigportraits/zeta.tex" ),
     Asset( "ATLAS", "bigportraits/zeta.xml" ),
-	
+
 	Asset( "IMAGE", "images/map_icons/zeta.tex" ),
 	Asset( "ATLAS", "images/map_icons/zeta.xml" ),
 	Asset( "IMAGE", "images/map_icons/mutantbeecocoon.tex" ),
 	Asset( "ATLAS", "images/map_icons/mutantbeecocoon.xml" ),
-	
+
 	Asset( "IMAGE", "images/avatars/avatar_zeta.tex" ),
     Asset( "ATLAS", "images/avatars/avatar_zeta.xml" ),
-	
+
 	Asset( "IMAGE", "images/avatars/avatar_ghost_zeta.tex" ),
     Asset( "ATLAS", "images/avatars/avatar_ghost_zeta.xml" ),
-	
+
 	Asset( "IMAGE", "images/avatars/self_inspect_zeta.tex" ),
     Asset( "ATLAS", "images/avatars/self_inspect_zeta.xml" ),
-	
+
 	Asset( "IMAGE", "images/names_zeta.tex" ),
     Asset( "ATLAS", "images/names_zeta.xml" ),
-	
+
     Asset( "IMAGE", "bigportraits/zeta_none.tex" ),
     Asset( "ATLAS", "bigportraits/zeta_none.xml" ),
 
@@ -56,6 +56,9 @@ RemapSoundEvent( "dontstarve/characters/zeta/ghost_LP", "zeta/zeta/ghost_LP" ) -
 local require = GLOBAL.require
 local STRINGS = GLOBAL.STRINGS
 local TUNING = GLOBAL.TUNING
+local Ingredient = GLOBAL.Ingredient
+local RECIPETABS = GLOBAL.RECIPETABS
+local TECH = GLOBAL.TECH
 
 -- Stats
 TUNING.OZZY_MAX_HEALTH = 125
@@ -127,13 +130,13 @@ TUNING.MUTANT_BEE_RANGED_ATK_PERIOD = TUNING.MUTANT_BEE_RANGED_ATK_PERIOD - bee_
 -- The character select screen lines
 STRINGS.CHARACTER_TITLES.zeta = "The Buzzy"
 STRINGS.CHARACTER_NAMES.zeta = "Ozzy"
-STRINGS.CHARACTER_DESCRIPTIONS.zeta = "*Is a bee\n*Has his own beehive\n*Can produce honey by eating petals\n*Has chance to summon bees on attack"
-STRINGS.CHARACTER_QUOTES.zeta = "\"Let's beefriend !\""
+STRINGS.CHARACTER_DESCRIPTIONS.zeta = "*Has his own hive\n*Produces honey by eating petals\n*Summons bees by chance on attack"
+STRINGS.CHARACTER_QUOTES.zeta = "\"Let's beefriend!\""
 
 -- Custom speech strings
 STRINGS.CHARACTERS.ZETA = require "speech_zeta"
 
--- The character's name as appears in-game 
+-- The character's name as appears in-game
 STRINGS.NAMES.ZETA = "Ozzy"
 
 AddMinimapAtlas("images/map_icons/zeta.xml")
@@ -144,8 +147,22 @@ AddModCharacter("zeta", "MALE")
 
 local function MakeHoneycombUpgrader(prefab)
 	if not prefab.components.upgrader then
-		prefab:AddComponent("upgrader")		
+		prefab:AddComponent("upgrader")
 	end
 end
 
 AddPrefabPostInit("honeycomb", MakeHoneycombUpgrader)
+
+AddRecipe("mutantbeecocoon",
+	{
+		Ingredient("honeycomb", 1),
+		Ingredient("cutgrass", 4),
+		Ingredient("honey", 1)
+	},
+	RECIPETABS.SURVIVAL,
+	TECH.NONE,
+	nil, nil, nil, nil,
+	"beemaster",
+	"images/inventoryimages/mutantbeecocoon.xml",
+	"mutantbeecocoon.tex"
+)

@@ -11,6 +11,9 @@ local assets =
 local prefabs =
 {
 	"mutantbeehive",
+	"honeycomb",
+	"honey",
+	"cutgrass"
 }
 
 local function UnlinkPlayer(inst)
@@ -35,6 +38,27 @@ local function ondeploy(inst, pt)
 		UnlinkPlayer(inst)
 		hive.Transform:SetPosition(pt:Get())
 		inst:Remove()
+	end
+end
+
+local function Destroy(inst)
+	if inst.components.lootdropper then
+		inst.components.lootdropper:DropLoot(inst:GetPosition())
+	end
+
+	inst:Remove()
+end
+
+local function StopDestroyTask(inst)
+	if inst.destroytask then
+		inst.destroytask:Cancel()
+		inst.destroytask = nil
+	end
+end
+
+local function StartDestroyTask(inst)
+	if not inst.destroytask then
+		inst.destroytask = inst:DoTaskInTime(30, Destroy)
 	end
 end
 
@@ -82,10 +106,16 @@ local function InheritOwner(inst, hive)
 end
 
 local function OnPutInInventory(inst, owner)
+	StopDestroyTask(inst)
+
 	local linksuccess = LinkToPlayer(inst, owner)
 	if not linksuccess then
 		inst:DoTaskInTime(0, Drop)
 	end
+end
+
+local function OnDrop(inst)
+	StartDestroyTask(inst)
 end
 
 local function OnSave(inst, data)
@@ -108,6 +138,12 @@ end
 local function OnLoad(inst, data)
 	if data and data._ownerid then
 		inst._ownerid = data._ownerid
+	end
+end
+
+local function InitFn(inst)
+	if inst.components.inventoryitem and not inst.components.inventoryitem:IsHeld() then
+		StartDestroyTask(inst)
 	end
 end
 
@@ -144,11 +180,14 @@ local function fn()
 	inst.components.inventoryitem.imagename = "mutantbeecocoon"
 	inst.components.inventoryitem.atlasname = "images/inventoryimages/mutantbeecocoon.xml"
 	inst:ListenForEvent("onputininventory", OnPutInInventory)
+	inst:ListenForEvent("ondropped", OnDrop)
 
 	inst:AddComponent("deployable")
 	--inst.components.deployable:SetDeployMode(DEPLOYMODE.ANYWHERE)
 	inst.components.deployable:SetDeploySpacing(DEPLOYSPACING.NONE)
 	inst.components.deployable.ondeploy = ondeploy
+
+	inst:AddComponent("lootdropper")
 
 	inst.OnSave = OnSave
 	inst.OnLoad = OnLoad
@@ -157,12 +196,14 @@ local function fn()
 	inst._onplayerjoined = function(src, player) OnPlayerJoined(inst, player) end
 	inst:ListenForEvent("ms_playerjoined", inst._onplayerjoined, TheWorld)
 
+	inst:DoTaskInTime(0, InitFn)
+
 	return inst
 end
 
 STRINGS.MUTANTBEECOCOON = "Metapis Cocoon"
 STRINGS.NAMES.MUTANTBEECOCOON = "Metapis Cocoon"
-STRINGS.RECIPE_DESC.MUTANTBEECOCOON = "Build a metapis hive."
+STRINGS.RECIPE_DESC.MUTANTBEECOCOON = "The core of a Metapis hive."
 STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTBEECOCOON = "Something is screeching inside."
 
 return Prefab("mutantbeecocoon", fn, assets, prefabs),

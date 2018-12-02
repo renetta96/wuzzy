@@ -795,6 +795,6 @@ end
 
 STRINGS.MUTANTBEEHIVE = "Metapis Hive"
 STRINGS.NAMES.MUTANTBEEHIVE = "Metapis Hive"
-STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTBEEHIVE = "They will protect us."
+STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTBEEHIVE = "\"Apis\" is the Latin word for \"bee\"."
 
 return Prefab("mutantbeehive", fn, assets, prefabs)
