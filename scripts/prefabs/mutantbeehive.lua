@@ -357,7 +357,7 @@ local function MakeSetStageFn(stage)
 		inst.components.upgradeable:SetStage(stage)
 
 		local loots = {}
-		local numhoneycombs = math.floor(TUNING.MUTANT_BEEHIVE_UPGRADES_PER_STAGE * (stage - 1) / 2)
+		local numhoneycombs = math.floor(TUNING.MUTANT_BEEHIVE_UPGRADES_PER_STAGE * (stage - 1))
 		for i = 1, numhoneycombs do
 			table.insert(loots, "honeycomb")
 		end
@@ -616,7 +616,11 @@ local function OnPlayerJoined(inst, player)
 	if not linksuccess then
 		if inst._ownerid and player.userid and player.userid == inst._ownerid then
 			print("SAME PLAYER, DIFFERENT CHARACTER")
-			inst:DoTaskInTime(0, function(inst) inst:Remove() end)
+			inst:DoTaskInTime(0,
+				function(inst)
+					inst.components.lootdropper:DropLoot(inst:GetPosition())
+					inst:Remove()
+				end)
 		end
 	end
 end

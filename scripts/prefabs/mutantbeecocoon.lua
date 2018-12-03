@@ -130,7 +130,7 @@ local function OnPlayerJoined(inst, player)
 	if not linksuccess then
 		if inst._ownerid and player.userid and player.userid == inst._ownerid then
 			print("SAME PLAYER, DIFFERENT CHARACTER")
-			inst:DoTaskInTime(0, function(inst) inst:Remove() end)
+			inst:DoTaskInTime(0, function(inst) Destroy(inst) end)
 		end
 	end
 end
