@@ -5,6 +5,7 @@ PrefabFiles = {
 	"honeyspill",
 	"zeta",
 	"zeta_none",
+	"armor_honey"
 }
 
 Assets = {
