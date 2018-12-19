@@ -115,6 +115,16 @@ TUNING.MUTANT_BEEHIVE_SLEEP_HEALTH_RATE = 0.5
 TUNING.MUTANT_BEEHIVE_SLEEP_TEMP_RATE = 0.5
 TUNING.MUTANT_BEEHIVE_REWARD_TICKS = 45
 
+-- Armor honey
+TUNING.ARMORHONEY_MAX_ABSORPTION = 0.7
+TUNING.ARMORHONEY_MIN_ABSORPTION = 0.4
+TUNING.ARMORHONEY_HEAL_TICKS = 5
+TUNING.ARMORHONEY_HEAL_INTERVAL = 1
+TUNING.ARMORHONEY_MIN_HEAL_PERCENT = 0.01
+TUNING.ARMORHONEY_MAX_HEAL_PERCENT = 0.03
+TUNING.ARMORHONEY_MIN_HEAL_EXTRA = 1
+TUNING.ARMORHONEY_MAX_HEAL_EXTRA = 3
+
 -- Mod config
 local num_bees = GetModConfigData("NUM_BEES_IN_HIVE")
 TUNING.MUTANT_BEEHIVE_DEFAULT_EMERGENCY_BEES = TUNING.MUTANT_BEEHIVE_DEFAULT_EMERGENCY_BEES + num_bees * 2
@@ -166,4 +176,18 @@ AddRecipe("mutantbeecocoon",
 	"beemaster",
 	"images/inventoryimages/mutantbeecocoon.xml",
 	"mutantbeecocoon.tex"
+)
+
+AddRecipe("armorhoney",
+	{
+		Ingredient("log", 10),
+		Ingredient("rope", 1),
+		Ingredient("honey", 3)
+	},
+	RECIPETABS.WAR,
+	TECH.NONE,
+	nil, nil, nil, nil,
+	"beemaster",
+	"images/inventoryimages/armor_honey.xml",
+	"armor_honey.tex"
 )

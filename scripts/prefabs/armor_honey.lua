@@ -1,7 +1,62 @@
 local assets =
 {
     Asset("ANIM", "anim/armor_honey.zip"),
+    Asset("ATLAS", "images/inventoryimages/armor_honey.xml"),
+    Asset("IMAGE", "images/inventoryimages/armor_honey.tex"),
 }
+
+local prefabs =
+{
+    "spoiled_food",
+}
+
+local function StopHealing(inst)
+    inst._healtick = 0
+
+    if inst._healtask then
+        inst._healtask:Cancel()
+        inst._healtask = nil
+    end
+end
+
+local function DoHealing(inst)
+    local owner = nil
+
+    if inst.components.inventoryitem and inst.components.perishable then
+        owner = inst.components.inventoryitem:GetGrandOwner()
+        if owner and owner.components.health then
+            local percent = Lerp(
+                TUNING.ARMORHONEY_MIN_HEAL_PERCENT,
+                TUNING.ARMORHONEY_MAX_HEAL_PERCENT,
+                inst.components.perishable:GetPercent()
+            )
+            local extra = Lerp(
+                TUNING.ARMORHONEY_MIN_HEAL_EXTRA,
+                TUNING.ARMORHONEY_MAX_HEAL_EXTRA,
+                inst.components.perishable:GetPercent()
+            )
+            local delta = (owner.components.health.maxhealth - owner.components.health.currenthealth) * percent + extra
+            owner.components.health:DoDelta(delta, nil, "armorhoney_health")
+        end
+    end
+
+    inst._healtick = inst._healtick - 1
+    if inst._healtick <= 0 or (owner and owner.components.health and owner.components.health:IsDead()) then
+        StopHealing(inst)
+    end
+end
+
+local function StartHealing(inst)
+    inst._healtick = TUNING.ARMORHONEY_HEAL_TICKS
+
+    if inst._healtask == nil then
+        inst._healtask = inst:DoPeriodicTask(TUNING.ARMORHONEY_HEAL_INTERVAL, DoHealing)
+    end
+end
+
+local function OnTakeDamage(inst, amount)
+    StartHealing(inst)
+end
 
 local function OnBlocked(owner)
     owner.SoundEmitter:PlaySound("dontstarve/wilson/hit_armour")
@@ -16,6 +71,22 @@ end
 local function onunequip(inst, owner)
     owner.AnimState:ClearOverrideSymbol("swap_body")
     inst:RemoveEventCallback("blocked", OnBlocked, owner)
+    StopHealing(inst)
+end
+
+local function UpdateAbsorption(inst, data)
+    if inst.components.armor and inst.components.perishable then
+        local absorption = Lerp(
+            TUNING.ARMORHONEY_MIN_ABSORPTION,
+            TUNING.ARMORHONEY_MAX_ABSORPTION,
+            inst.components.perishable:GetPercent()
+        )
+        inst.components.armor:SetAbsorption(absorption)
+    end
+end
+
+local function InitFn(inst)
+    UpdateAbsorption(inst)
 end
 
 local function fn()
@@ -31,7 +102,9 @@ local function fn()
     inst.AnimState:SetBuild("armor_honey")
     inst.AnimState:PlayAnimation("anim")
 
-    inst:AddTag("honey")
+    inst:AddTag("wood")
+    inst:AddTag("show_spoilage")
+    inst:AddTag("icebox_valid")
 
     inst.foleysound = "dontstarve/movement/foley/logarmour"
 
@@ -44,26 +117,34 @@ local function fn()
     inst:AddComponent("inspectable")
 
     inst:AddComponent("inventoryitem")
-
-    inst:AddComponent("fuel")
-    inst.components.fuel.fuelvalue = TUNING.LARGE_FUEL
-
-    MakeSmallBurnable(inst, TUNING.SMALL_BURNTIME)
-    MakeSmallPropagator(inst)
+    inst.components.inventoryitem.imagename = "armor_honey"
+    inst.components.inventoryitem.atlasname = "images/inventoryimages/armor_honey.xml"
 
     inst:AddComponent("armor")
-    inst.components.armor:InitCondition(TUNING.ARMORWOOD, TUNING.ARMORWOOD_ABSORPTION)
-    inst.components.armor:AddWeakness("beaver", TUNING.BEAVER_WOOD_DAMAGE)
+    inst.components.armor:InitIndestructible(TUNING.ARMORHONEY_MAX_ABSORPTION)
+    inst.components.armor.ontakedamage = OnTakeDamage
 
     inst:AddComponent("equippable")
     inst.components.equippable.equipslot = EQUIPSLOTS.BODY
-
     inst.components.equippable:SetOnEquip(onequip)
     inst.components.equippable:SetOnUnequip(onunequip)
 
+    inst:AddComponent("perishable")
+    inst.components.perishable:SetPerishTime(TUNING.PERISH_MED)
+    inst.components.perishable:StartPerishing()
+    inst.components.perishable.onperishreplacement = "spoiled_food"
+    inst:ListenForEvent("perishchange", UpdateAbsorption)
+
     MakeHauntableLaunch(inst)
+
+    inst:DoTaskInTime(0, InitFn)
 
     return inst
 end
 
-return Prefab("armorhoney", fn, assets)
+STRINGS.ARMORHONEY = "Honey Suit"
+STRINGS.NAMES.ARMORHONEY = "Honey Suit"
+STRINGS.RECIPE_DESC.ARMORHONEY = "Protects from damage and recovers lost health, but perishable"
+STRINGS.CHARACTERS.GENERIC.DESCRIBE.ARMORHONEY = "It's so sticky wearing it."
+
+return Prefab("armorhoney", fn, assets, prefabs)
