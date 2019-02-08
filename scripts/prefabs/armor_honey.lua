@@ -144,7 +144,7 @@ end
 
 STRINGS.ARMORHONEY = "Honey Suit"
 STRINGS.NAMES.ARMORHONEY = "Honey Suit"
-STRINGS.RECIPE_DESC.ARMORHONEY = "Protects from damage and recovers lost health, but perishable"
+STRINGS.RECIPE_DESC.ARMORHONEY = "Sweet and protective"
 STRINGS.CHARACTERS.GENERIC.DESCRIBE.ARMORHONEY = "It's so sticky wearing it."
 
 return Prefab("armorhoney", fn, assets, prefabs)
