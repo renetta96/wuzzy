@@ -4,7 +4,7 @@ local prefabs =
 	"mutantkillerbee",
 	"honey",
 	"honeycomb",
-	"honeyspill",
+	-- "honeyspill",
 	"mutantbeecocoon",
 	"collapse_big",
 	"collapse_small"
@@ -125,21 +125,21 @@ local function GetTalkerOffset(inst)
 end
 
 local function SetFX(inst)
-	local stage = inst.components.upgradeable.stage
-	if not inst._honeyspill then
-		local fx = SpawnPrefab("honeyspill")
-		fx.Transform:SetPosition(inst.Transform:GetWorldPosition())
-		fx:SetVariation(7, 1.0 + 0.25 * (stage - 1))
-		inst._honeyspill = fx
-	else
-		inst._honeyspill:SetVariation(7, 1.0 + 0.25 * (stage - 1))
-	end
+	-- local stage = inst.components.upgradeable.stage
+	-- if not inst._honeyspill then
+	-- 	local fx = SpawnPrefab("honeyspill")
+	-- 	fx.Transform:SetPosition(inst.Transform:GetWorldPosition())
+	-- 	fx:SetVariation(7, 1.0 + 0.25 * (stage - 1))
+	-- 	inst._honeyspill = fx
+	-- else
+	-- 	inst._honeyspill:SetVariation(7, 1.0 + 0.25 * (stage - 1))
+	-- end
 end
 
 local function RemoveFX(inst)
-	if inst._honeyspill then
-		inst._honeyspill:Remove()
-	end
+	-- if inst._honeyspill then
+	-- 	inst._honeyspill:Remove()
+	-- end
 end
 
 local function Shake(inst, ignore_frozen)
@@ -152,7 +152,7 @@ end
 
 local function UnlinkPlayer(inst)
 	local owner = inst._owner
-	inst._ownerid = nil
+	inst.isowned = false
 	inst._owner = nil
 	if owner ~= nil then
 		owner._hive = nil
@@ -162,7 +162,6 @@ end
 local function OnRemoveEntity(inst)
 	RemoveFX(inst)
 	UnlinkPlayer(inst)
-	inst:RemoveEventCallback("ms_playerjoined", inst._onplayerjoined, TheWorld)
 
 	if inst.components.childspawner then
 		for k, v in pairs(inst.components.childspawner.childrenoutside) do
@@ -198,24 +197,6 @@ local function StopSpawning(inst)
 	if inst.components.childspawner ~= nil then
 		inst.components.childspawner:StopSpawning()
 	end
-end
-
-local function OnIsCaveDay(inst, isday)
-	if not isday then
-		StopSpawning(inst)
-	elseif inst.LightWatcher:IsInLight() then
-		StartSpawning(inst)
-	end
-end
-
-local function OnEnterLight(inst)
-	if TheWorld.state.iscaveday then
-		StartSpawning(inst)
-	end
-end
-
-local function OnEnterDark(inst)
-	StopSpawning(inst)
 end
 
 local function OnIgnite(inst)
@@ -303,14 +284,8 @@ local function IsValidOwner(inst, owner)
 		return false
 	end
 
-	if inst._ownerid then
-		return owner.userid and owner.userid == inst._ownerid
-			and owner:HasTag("beemaster") and not owner._cocoon
-			and not (owner._hive and owner._hive ~= inst)
-	else
-		return owner.userid and owner:HasTag("beemaster") and not owner._cocoon
-			and not (owner._hive and owner._hive ~= inst)
-	end
+	return owner:HasTag("beemaster") and not owner._cocoon
+		and not (owner._hive and owner._hive ~= inst)
 end
 
 local function OnHit(inst, attacker, damage)
@@ -423,49 +398,10 @@ local function SelfRepair(inst)
 	end
 end
 
-local function SeasonalSpawnChanges(inst, season)
-	if inst.components.childspawner ~= nil then
-		if season == SEASONS.SPRING then
-			inst.components.childspawner:SetRegenPeriod(TUNING.BEEBOX_REGEN_TIME / TUNING.SPRING_COMBAT_MOD)
-			inst.components.childspawner:SetSpawnPeriod(TUNING.BEEBOX_RELEASE_TIME / TUNING.SPRING_COMBAT_MOD)
-			inst.components.childspawner:SetMaxChildren(TUNING.BEEBOX_BEES * TUNING.SPRING_COMBAT_MOD)
-		else
-			inst.components.childspawner:SetRegenPeriod(TUNING.BEEBOX_REGEN_TIME)
-			inst.components.childspawner:SetSpawnPeriod(TUNING.BEEBOX_RELEASE_TIME)
-			inst.components.childspawner:SetMaxChildren(TUNING.BEEBOX_BEES)
-		end
-	end
-end
-
-local function OnHaunt(inst)
-	if inst.components.childspawner == nil or
-		not inst.components.childspawner:CanSpawn() or
-		math.random() > TUNING.HAUNT_CHANCE_HALF then
-		return false
-	end
-
-	local target = FindEntity(
-		inst,
-		25,
-		function(guy)
-			return inst.components.combat:CanTarget(guy)
-		end,
-		{ "_combat" }, --See entityreplica.lua (re: "_combat" tag)
-		{ "insect", "playerghost", "INLIMBO" },
-		{ "character", "animal", "monster" }
-	)
-
-	if target ~= nil then
-		OnHit(inst, target)
-		return true
-	end
-	return false
-end
-
 local function LinkToPlayer(inst, player)
 	if IsValidOwner(inst, player) then
 		inst:Say(SPEECH.WELCOME)
-		inst._ownerid = player.userid
+		inst.isowned = true
 		inst._owner = player
 		player._hive = inst
 		return true
@@ -475,7 +411,7 @@ local function LinkToPlayer(inst, player)
 end
 
 local function InheritOwner(inst, cocoon)
-	inst._ownerid = cocoon._ownerid
+	inst.isowned = cocoon.isowned
 	if cocoon._owner then
 		inst._owner = cocoon._owner
 		cocoon._owner._hive = inst
@@ -490,154 +426,35 @@ local function CalcSanityAura(inst, observer)
 	return 0
 end
 
--- /* Sleep stuff
-local function wakeuptest(inst, phase)
-	if phase ~= inst.sleep_phase then
-		inst.components.sleepingbag:DoWakeUp()
-	end
-end
-
-local function onignite(inst)
-	inst.components.sleepingbag:DoWakeUp()
-end
-
-local function onsleeptick(inst, sleeper)
-	local isstarving = false
-
-	if sleeper.components.hunger ~= nil then
-		sleeper.components.hunger:DoDelta(inst.hunger_tick, true, true)
-		isstarving = sleeper.components.hunger:IsStarving()
-	end
-
-	if sleeper.components.sanity ~= nil and sleeper.components.sanity:GetPercentWithPenalty() < 1 then
-		sleeper.components.sanity:DoDelta(TUNING.SLEEP_SANITY_PER_TICK * TUNING.MUTANT_BEEHIVE_SLEEP_SANITY_RATE, true)
-	end
-
-	if not isstarving and sleeper.components.health ~= nil then
-		sleeper.components.health:DoDelta(TUNING.SLEEP_HEALTH_PER_TICK * 2 * TUNING.MUTANT_BEEHIVE_SLEEP_HEALTH_RATE, true, inst.prefab, true)
-	end
-
-	if sleeper.components.temperature ~= nil then
-		if inst.is_cooling then
-			if sleeper.components.temperature:GetCurrent() > TUNING.SLEEP_TARGET_TEMP_TENT then
-				sleeper.components.temperature:SetTemperature(sleeper.components.temperature:GetCurrent() - TUNING.SLEEP_TEMP_PER_TICK * TUNING.MUTANT_BEEHIVE_SLEEP_TEMP_RATE)
-			end
-		elseif sleeper.components.temperature:GetCurrent() < TUNING.SLEEP_TARGET_TEMP_TENT then
-			sleeper.components.temperature:SetTemperature(sleeper.components.temperature:GetCurrent() + TUNING.SLEEP_TEMP_PER_TICK * TUNING.MUTANT_BEEHIVE_SLEEP_TEMP_RATE)
-		end
-	end
-
-	if isstarving then
-		inst.components.sleepingbag:DoWakeUp()
-	end
-end
-
-local function onsleepreward(inst, sleeper)
-	if sleeper and sleeper.components.inventory then
-		local honey = SpawnPrefab("honey")
-		local acceptcount = sleeper.components.inventory:CanAcceptCount(honey)
-		if acceptcount > 0 then
-			sleeper.components.inventory:GiveItem(honey)
-		else
-			honey:Remove()
-		end
-	end
-end
-
-local function onsleep(inst, sleeper)
-	inst:WatchWorldState("phase", wakeuptest)
-	sleeper:ListenForEvent("onignite", onignite, inst)
-
-	if inst.sleeptask ~= nil then
-		inst.sleeptask:Cancel()
-	end
-
-	inst.sleeptask = inst:DoPeriodicTask(TUNING.SLEEP_TICK_PERIOD, onsleeptick, nil, sleeper)
-	inst.rewardtask = inst:DoPeriodicTask(TUNING.MUTANT_BEEHIVE_REWARD_TICKS * TUNING.SLEEP_TICK_PERIOD, onsleepreward, nil, sleeper)
-	inst.snoretask = inst:DoPeriodicTask(3, function() inst:Say(SPEECH.SNORE) end)
-
-	if not IsValidOwner(inst, sleeper) then
-		inst:DoTaskInTime(0, function()
-			inst._rejectingsleeper = true
-			inst.components.sleepingbag:DoWakeUp()
-		end)
-	else
-		inst:Say(SPEECH.GOODNIGHT)
-	end
-end
-
-local function onwake(inst, sleeper, nostatechange)
-	if inst.sleeptask ~= nil then
-		inst.sleeptask:Cancel()
-		inst.sleeptask = nil
-	end
-
-	if inst.snoretask ~= nil then
-		inst.snoretask:Cancel()
-		inst.snoretask = nil
-	end
-
-	if inst.rewardtask ~= nil then
-		inst.rewardtask:Cancel()
-		inst.rewardtask = nil
-	end
-
-	inst:StopWatchingWorldState("phase", wakeuptest)
-	sleeper:RemoveEventCallback("onignite", onignite, inst)
-
-	if not nostatechange then
-		if not inst._rejectingsleeper then
-			inst:Say(SPEECH.WAKEUP)
-			if sleeper.sg:HasStateTag("tent") then
-				sleeper.sg.statemem.iswaking = true
-			end
-			sleeper.sg:GoToState("wakeup")
-		else
-			inst:Say(SPEECH.REJECT_SLEEPER)
-
-			sleeper.sg:GoToState("idle")
-			sleeper.AnimState:PlayAnimation("emoteXL_annoyed")
-			sleeper.AnimState:PushAnimation("idle")
-			inst._rejectingsleeper = false
-		end
-	end
-end
--- Sleep stuff /*
-
 local function OnSave(inst, data)
-	if inst._ownerid then
-		data._ownerid = inst._ownerid
+	if inst.isowned then
+		data.isowned = inst.isowned
 	end
 end
 
-local function OnPlayerJoined(inst, player)
-	print("PLAYER JOINED HIVE", player)
+local function OnPlayerJoined(inst)
+	local player = GetPlayer()
 	local linksuccess = LinkToPlayer(inst, player)
+
 	if not linksuccess then
-		if inst._ownerid and player.userid and player.userid == inst._ownerid then
-			print("SAME PLAYER, DIFFERENT CHARACTER")
-			inst:DoTaskInTime(0,
-				function(inst)
-					inst.components.lootdropper:DropLoot(inst:GetPosition())
-					inst:Remove()
-				end)
-		end
+		inst:DoTaskInTime(0,
+			function(inst)
+				inst.components.lootdropper:DropLoot(inst:GetPosition())
+				inst:Remove()
+			end)
 	end
 end
 
 local function OnLoad(inst, data)
-	if data and data._ownerid then
-		inst._ownerid = data._ownerid
+	if data and data.isowned then
+		inst.isowned = data.isowned
 	end
 end
 
 local function OnInit(inst)
-	inst:WatchWorldState("iscaveday", OnIsCaveDay)
-	inst:ListenForEvent("enterlight", OnEnterLight)
-	inst:ListenForEvent("enterdark", OnEnterDark)
-	if TheWorld.state.isday then
-		StartSpawning(inst)
-	end
+	StartSpawning(inst)
+	inst:ListenForEvent("dusktime", function() StopSpawning(inst) end, GetWorld())
+    inst:ListenForEvent("daytime", function() StartSpawning(inst) end , GetWorld())
 
 	inst.components.growable:SetStage(inst.components.upgradeable.stage)
 
@@ -658,7 +475,6 @@ local function fn()
 	inst.entity:AddAnimState()
 	inst.entity:AddSoundEmitter()
 	inst.entity:AddMiniMapEntity()
-	inst.entity:AddNetwork()
 	inst.entity:AddLightWatcher()
 
 	MakeObstaclePhysics(inst, .5)
@@ -695,13 +511,7 @@ local function fn()
 	inst:ListenForEvent("startfiredamage", onfiredamagefn)
 	---------------------------
 
-	MakeSnowCoveredPristine(inst)
-
-	inst.entity:SetPristine()
-
-	if not TheWorld.ismastersim then
-		return inst
-	end
+	MakeSnowCovered(inst)
 
 	-------------------
 	inst:AddComponent("health")
@@ -709,8 +519,6 @@ local function fn()
 	-------------------
 	inst:AddComponent("childspawner")
 	inst.components.childspawner.childname = "mutantbee"
-	-- SeasonalSpawnChanges(inst, TheWorld.state.season)
-	-- inst:WatchWorldState("season", SeasonalSpawnChanges)
 	inst.components.childspawner.emergencychildname = "mutantkillerbee"
 	inst.components.childspawner.emergencychildrenperplayer = TUNING.MUTANT_BEEHIVE_EMERGENCY_BEES_PER_PLAYER
 	inst.components.childspawner:SetEmergencyRadius(TUNING.MUTANT_BEEHIVE_EMERGENCY_RADIUS)
@@ -743,6 +551,7 @@ local function fn()
 	inst.components.upgradeable.onupgradefn = OnUpgrade
 	inst.components.upgradeable.onstageadvancefn = OnStageAdvance
 	inst.components.upgradeable.upgradesperstage = TUNING.MUTANT_BEEHIVE_UPGRADES_PER_STAGE
+	inst.components.upgradeable.upgradetype = "METAPIS"
 
 	---------------------
 
@@ -769,19 +578,6 @@ local function fn()
 	MakeLargePropagator(inst)
 	MakeSnowCovered(inst)
 
-	inst:AddComponent("hauntable")
-	inst.components.hauntable:SetHauntValue(TUNING.HAUNT_SMALL)
-	inst.components.hauntable:SetOnHauntFn(OnHaunt)
-
-	---------------------
-
-	inst:AddComponent("sleepingbag")
-	inst.components.sleepingbag.onsleep = onsleep
-	inst.components.sleepingbag.onwake = onwake
-	inst.components.sleepingbag.dryingrate = math.max(0, -TUNING.SLEEP_WETNESS_PER_TICK / TUNING.SLEEP_TICK_PERIOD)
-	inst.sleep_phase = "night"
-	inst.hunger_tick = TUNING.SLEEP_HUNGER_PER_TICK * TUNING.MUTANT_BEEHIVE_SLEEP_HUNGER_RATE
-
 	---------------------
 
 	inst:AddComponent("inspectable")
@@ -791,8 +587,7 @@ local function fn()
 	inst.OnLoad = OnLoad
 	inst.OnRemoveEntity = OnRemoveEntity
 	inst.InheritOwner = InheritOwner
-	inst._onplayerjoined = function(src, player) OnPlayerJoined(inst, player) end
-	inst:ListenForEvent("ms_playerjoined", inst._onplayerjoined, TheWorld)
+	OnPlayerJoined(inst)
 
 	return inst
 end

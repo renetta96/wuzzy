@@ -81,52 +81,26 @@ local function OnAttacked(inst, data)
 	end
 end
 
--- When the character is revived from human
-local function onbecamehuman(inst)
-end
+local function SeasonalChanges(inst)
+	local seasonmanager = GetSeasonManager()
 
-local function onbecameghost(inst)
-end
-
--- When loading or spawning the character
-local function onload(inst)
-	inst:ListenForEvent("ms_respawnedfromghost", onbecamehuman)
-	inst:ListenForEvent("ms_becameghost", onbecameghost)
-
-	if inst:HasTag("playerghost") then
-		onbecameghost(inst)
+	if seasonmanager:IsSpring() then
+		inst.components.locomotor:AddSpeedModifier_Mult("season_speed_mod", TUNING.OZZY_SPRING_SPEED_MULTIPLIER)
+	elseif seasonmanager:IsWinter() then
+		inst.components.locomotor:AddSpeedModifier_Mult("season_speed_mod", TUNING.OZZY_WINTER_SPEED_MULTIPLIER)
 	else
-		onbecamehuman(inst)
+		inst.components.locomotor:AddSpeedModifier_Mult("season_speed_mod", TUNING.OZZY_DEFAULT_SPEED_MULTIPLIER)
 	end
 end
 
-local function SeasonalChanges(inst, season)
-	if season == SEASONS.SPRING then
-		inst.components.locomotor:SetExternalSpeedMultiplier(inst, "season_speed_mod", TUNING.OZZY_SPRING_SPEED_MULTIPLIER)
-	elseif season == SEASONS.WINTER then
-		inst.components.locomotor:SetExternalSpeedMultiplier(inst, "season_speed_mod", TUNING.OZZY_WINTER_SPEED_MULTIPLIER)
-	else
-		inst.components.locomotor:SetExternalSpeedMultiplier(inst, "season_speed_mod", TUNING.OZZY_DEFAULT_SPEED_MULTIPLIER)
-	end
-end
-
--- This initializes for both the server and client. Tags can be added here.
-local common_postinit = function(inst)
-	inst.soundsname = "zeta"
+local postinit = function(inst)
 	-- Minimap icon
 	inst.MiniMapEntity:SetIcon( "zeta.tex" )
+	inst.soundsname = "zeta"
+
 	inst:AddTag("mutant")
 	inst:AddTag("insect")
 	inst:AddTag("beemaster")
-	inst:AddTag(UPGRADETYPES.DEFAULT.."_upgradeuser")
-end
-
--- This initializes for the server only. Components are added here.
-local master_postinit = function(inst)
-	-- choose which sounds this character will play
-
-	-- Uncomment if "wathgrithr"(Wigfrid) or "webber" voice is used
-	-- inst.talker_path_override = "dontstarve_DLC001/characters/"
 
 	-- Stats
 	inst.components.health:SetMaxHealth(TUNING.OZZY_MAX_HEALTH)
@@ -141,15 +115,12 @@ local master_postinit = function(inst)
 	inst.components.beesummoner:SetSummonChance(TUNING.OZZY_SUMMON_CHANCE)
 	inst.components.beesummoner:SetMaxStore(TUNING.OZZY_MAX_BEES_STORE)
 
-	SeasonalChanges(inst, TheWorld.state.season)
-	inst:WatchWorldState("season", SeasonalChanges)
+	SeasonalChanges(inst)
+	inst:ListenForEvent("seasonChange", SeasonalChanges)
 
 	inst._eatenpetals = 0
 	inst:ListenForEvent("oneat", OnEat)
 	inst:ListenForEvent("attacked", OnAttacked)
-
-	inst.OnLoad = onload
-	inst.OnNewSpawn = onload
 end
 
-return MakePlayerCharacter("zeta", prefabs, assets, common_postinit, master_postinit, start_inv)
+return MakePlayerCharacter("zeta", prefabs, assets, postinit, start_inv)

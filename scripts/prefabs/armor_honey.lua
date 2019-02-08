@@ -94,25 +94,18 @@ local function fn()
 
     inst.entity:AddTransform()
     inst.entity:AddAnimState()
-    inst.entity:AddNetwork()
-
     MakeInventoryPhysics(inst)
 
     inst.AnimState:SetBank("armor_honey")
     inst.AnimState:SetBuild("armor_honey")
     inst.AnimState:PlayAnimation("anim")
+    MakeInventoryFloatable(inst, "idle_water", "anim")
 
     inst:AddTag("wood")
     inst:AddTag("show_spoilage")
     inst:AddTag("icebox_valid")
 
     inst.foleysound = "dontstarve/movement/foley/logarmour"
-
-    inst.entity:SetPristine()
-
-    if not TheWorld.ismastersim then
-        return inst
-    end
 
     inst:AddComponent("inspectable")
 
@@ -124,6 +117,9 @@ local function fn()
     inst.components.armor:InitIndestructible(TUNING.ARMORHONEY_MAX_ABSORPTION)
     inst.components.armor.ontakedamage = OnTakeDamage
 
+    inst:AddComponent("appeasement")
+    inst.components.appeasement.appeasementvalue = TUNING.WRATH_SMALL
+
     inst:AddComponent("equippable")
     inst.components.equippable.equipslot = EQUIPSLOTS.BODY
     inst.components.equippable:SetOnEquip(onequip)
@@ -134,8 +130,6 @@ local function fn()
     inst.components.perishable:StartPerishing()
     inst.components.perishable.onperishreplacement = "spoiled_food"
     inst:ListenForEvent("perishchange", UpdateAbsorption)
-
-    MakeHauntableLaunch(inst)
 
     inst:DoTaskInTime(0, InitFn)
 

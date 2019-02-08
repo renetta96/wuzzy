@@ -6,7 +6,7 @@ local function AddChild(self, child)
 
 	child.persists = false
 	self.children[child] = child
-	self.numchildren = GetTableSize(self.children)	
+	self.numchildren = GetTableSize(self.children)
 end
 
 local function RemoveChild(self, child)
@@ -33,17 +33,11 @@ local function RemoveChildListeners(self, child)
     self.inst:RemoveEventCallback("onremove", self._onchildkilled, child)
 end
 
-local function OnPlayerLeft(self, player)
-	if self.inst.userid and self.inst.userid == player.userid then
-		self:RemoveAllChildren()
-	end
-end
-
 local function OnSummonerRemove(self, summoner)
 	self:RemoveAllChildren()
 end
 
-local BeeSummoner = Class(function(self, inst)	
+local BeeSummoner = Class(function(self, inst)
 	self.inst = inst
 	self.children = {}
 	self.numchildren = 0
@@ -65,7 +59,6 @@ local BeeSummoner = Class(function(self, inst)
 	self._onsummonerremove = function(inst) OnSummonerRemove(self, inst) end
 
 	self.inst:ListenForEvent("onattackother", self._onattack, inst)
-	self.inst:ListenForEvent("ms_playerleft", self._onplayerleft, TheWorld)
 	self.inst:ListenForEvent("onremove", self._onsummonerremove, self.inst)
 end)
 
@@ -89,7 +82,7 @@ function BeeSummoner:SetMaxChildren(num)
 	self.maxchildren = num
 end
 
-function BeeSummoner:SetSummonChance(chance)	
+function BeeSummoner:SetSummonChance(chance)
 	self.summonchance = math.min(math.max(chance, 0), 1.0)
 end
 
@@ -107,19 +100,15 @@ function BeeSummoner:OnChildKilled(child)
 	RemoveChild(self, child)
 end
 
-local function NoHoles(pt)
-    return not TheWorld.Map:IsPointNearHole(pt)
-end
-
 function BeeSummoner:TakeOwnership(child)
 	if child.components.knownlocations ~= nil then
         child.components.knownlocations:RememberLocation("home", self.inst:GetPosition())
     end
-    
+
 	child:AddComponent("follower")
 	child.components.follower:KeepLeaderOnAttacked()
 	child.components.follower.keepdeadleader = true
-	
+
 	if self.inst.components.leader ~= nil then
 		self.inst.components.leader:AddFollower(child)
 	end
@@ -150,10 +139,10 @@ local function DoRegenTick(inst, self)
 			return
 		end
 	end
-	
+
 	local regentick = self:GetRegenTick()
 	-- print("REGEN, REGEN TICK : ", regentick)
-	self.regentask = self.inst:DoTaskInTime(regentick, DoRegenTick, self)	
+	self.regentask = self.inst:DoTaskInTime(regentick, DoRegenTick, self)
 end
 
 function BeeSummoner:StopRegen()
@@ -179,7 +168,7 @@ function BeeSummoner:StartRegen(tick)
 end
 
 function BeeSummoner:CanSummonChild()
-	return self.numchildren < self.maxchildren 
+	return self.numchildren < self.maxchildren
 		and math.random() < self.summonchance
 		and self.numstore > 0
 end
@@ -190,22 +179,23 @@ function BeeSummoner:DoSummonChild(target)
 		return
 	end
 
-	if self:CanSummonChild() then		
-		local pos = self.inst:GetPosition()
+	if self:CanSummonChild() then
+		local pos = Vector3(self.inst.Transform:GetWorldPosition())
 		local start_angle = math.random() * PI * 2
 	    local rad = self.radius or 0.5
 	    if self.inst.Physics then
 	        rad = rad + self.inst.Physics:GetRadius()
 	    end
-	    local offset = FindWalkableOffset(pos, start_angle, rad, 8, false, true, NoHoles)
+	    local offset = FindWalkableOffset(pos, start_angle, rad, 8, false)
 	    if offset == nil then
 	        return
 	    end
 
+	    pos = pos + offset
 	    local child = SpawnPrefab(self.childname)
 
 		if child ~= nil then
-			child.Transform:SetPosition(pos.x + offset.x, 0, pos.z + offset.z)
+			child.Transform:SetPosition(pos:Get())
 			if target ~= nil and child.components.combat ~= nil then
 				child.components.combat:SetTarget(target)
 			end

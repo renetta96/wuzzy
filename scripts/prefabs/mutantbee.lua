@@ -1,4 +1,5 @@
 local beecommon = require "brains/mutantbeecommon"
+require "stategraphs/SGbee"
 
 local assets =
 {
@@ -14,7 +15,7 @@ local prefabs =
 {
 	"stinger",
 	"honey",
-	"explosive_small",
+	"explode_small",
 	"blowdart_walrus",
 }
 
@@ -160,7 +161,7 @@ local function OnAttackOtherWithFrostbite(inst, data)
 			end
 
 			if data.target.components.locomotor.enablegroundspeedmultiplier then
-				data.target.components.locomotor:SetExternalSpeedMultiplier(data.target, "frostbite", TUNING.MUTANT_BEE_FROSTBITE_SPEED_PENALTY)
+				data.target.components.locomotor:AddSpeedModifier_Mult("frostbite", TUNING.MUTANT_BEE_FROSTBITE_SPEED_PENALTY)
 				data.target:DoTaskInTime(5.0,
 					function (inst)
 						if GetTime() >= inst._frostbite_expire then
@@ -232,14 +233,16 @@ local function MutantBeeRetarget(inst)
 end
 
 local function ChangeMutantOnSeason(inst)
-	if TheWorld.state.isspring then
+	local seasonmanager = GetSeasonManager()
+
+	if seasonmanager:IsSpring() then
 		inst.components.locomotor.groundspeedmultiplier = 1.3
 		inst:ListenForEvent("onattackother", OnAttackOtherWithPoison)
-	elseif TheWorld.state.issummer then
+	elseif seasonmanager:IsSummer() then
 		inst.components.health:SetMaxHealth(TUNING.MUTANT_BEE_HEALTH / 2)
 		inst.components.combat.areahitdamagepercent = TUNING.MUTANT_BEE_EXPLOSIVE_DAMAGE_MULTIPLIER
 		inst:ListenForEvent("death", OnDeathExplosive)
-	elseif TheWorld.state.isautumn then
+	elseif seasonmanager:IsAutumn() then
 		MakeRangedWeapon(inst)
 	else
 		inst.components.locomotor.groundspeedmultiplier = 0.7
@@ -263,9 +266,14 @@ local function commonfn(build, tags)
 	inst.entity:AddSoundEmitter()
 	inst.entity:AddLightWatcher()
 	inst.entity:AddDynamicShadow()
-	inst.entity:AddNetwork()
 
+	MakePoisonableCharacter(inst)
 	MakeFlyingCharacterPhysics(inst, 1, .5)
+	inst.Physics:SetCollisionGroup(COLLISION.FLYERS)
+	inst.Physics:ClearCollisionMask()
+	inst.Physics:CollidesWith(GetWorldCollision())
+	inst.Physics:CollidesWith(COLLISION.FLYERS)
+
 
 	inst.DynamicShadow:SetSize(.8, .5)
 	inst.Transform:SetFourFaced()
@@ -284,14 +292,6 @@ local function commonfn(build, tags)
 	inst.AnimState:SetBuild(build)
 	inst.AnimState:PlayAnimation("idle", true)
 	inst.AnimState:SetRayTestOnBB(true)
-
-	MakeFeedableSmallLivestockPristine(inst)
-
-	inst.entity:SetPristine()
-
-	if not TheWorld.ismastersim then
-		return inst
-	end
 
 	inst:AddComponent("locomotor") -- locomotor must be constructed before the stategraph
 	inst.components.locomotor:EnableGroundSpeedMultiplier(false)
@@ -363,10 +363,6 @@ local function workerbee()
 		inst = commonfn("bee_build", { "worker", "pollinator" })
 	end
 
-	if not TheWorld.ismastersim then
-		return inst
-	end
-
 	inst.components.health:SetMaxHealth(TUNING.MUTANT_BEE_HEALTH)
 	inst.components.combat:SetDefaultDamage(TUNING.MUTANT_BEE_DAMAGE)
 	inst.components.combat:SetAttackPeriod(TUNING.MUTANT_BEE_ATTACK_PERIOD)
@@ -375,17 +371,9 @@ local function workerbee()
 	inst:SetBrain(workerbrain)
 	inst.sounds = workersounds
 
-	MakeHauntableChangePrefab(inst, "mutantkillerbee")
-
 	inst:DoTaskInTime(0, ChangeMutantOnSeason)
 
 	return inst
-end
-
-local function OnSpawnedFromHaunt(inst)
-	if inst.components.hauntable ~= nil then
-		inst.components.hauntable:Panic()
-	end
 end
 
 local function killerbee()
@@ -398,19 +386,12 @@ local function killerbee()
 		inst = commonfn("bee_angry_build", { "killer", "scarytoprey" })
 	end
 
-	if not TheWorld.ismastersim then
-		return inst
-	end
-
 	inst.components.health:SetMaxHealth(TUNING.MUTANT_BEE_HEALTH)
 	inst.components.combat:SetDefaultDamage(TUNING.MUTANT_BEE_DAMAGE)
 	inst.components.combat:SetAttackPeriod(TUNING.MUTANT_BEE_ATTACK_PERIOD)
 	inst.components.combat:SetRetargetFunction(1, KillerRetarget)
 	inst:SetBrain(killerbrain)
 	inst.sounds = killersounds
-
-	MakeHauntablePanic(inst)
-	inst:ListenForEvent("spawnedfromhaunt", OnSpawnedFromHaunt)
 
 	inst:DoTaskInTime(0, ChangeMutantOnSeason)
 

@@ -2,9 +2,9 @@ PrefabFiles = {
 	"mutantbeecocoon",
 	"mutantbee",
 	"mutantbeehive",
-	"honeyspill",
+	-- "honeyspill",
 	"zeta",
-	"zeta_none",
+	-- "zeta_none",
 	"armor_honey"
 }
 
@@ -43,15 +43,17 @@ Assets = {
 
     Asset("SOUNDPACKAGE", "sound/zeta.fev"),
     Asset("SOUND", "sound/zeta.fsb"),
+
+    Asset("ANIM", "anim/zeta.zip"),
 }
 
 RemapSoundEvent( "dontstarve/characters/zeta/hurt", "zeta/zeta/hurt" )
 RemapSoundEvent( "dontstarve/characters/zeta/talk_LP", "zeta/zeta/talk_LP" )
 RemapSoundEvent( "dontstarve/characters/zeta/death_voice", "zeta/zeta/death_voice" )
-RemapSoundEvent( "dontstarve/characters/zeta/emote", "zeta/zeta/emote" ) --dst
-RemapSoundEvent( "dontstarve/characters/zeta/pose", "zeta/zeta/pose" ) --dst
-RemapSoundEvent( "dontstarve/characters/zeta/yawn", "zeta/zeta/yawn" ) --dst
-RemapSoundEvent( "dontstarve/characters/zeta/ghost_LP", "zeta/zeta/ghost_LP" ) --dst
+-- RemapSoundEvent( "dontstarve/characters/zeta/emote", "zeta/zeta/emote" ) --dst
+-- RemapSoundEvent( "dontstarve/characters/zeta/pose", "zeta/zeta/pose" ) --dst
+-- RemapSoundEvent( "dontstarve/characters/zeta/yawn", "zeta/zeta/yawn" ) --dst
+-- RemapSoundEvent( "dontstarve/characters/zeta/ghost_LP", "zeta/zeta/ghost_LP" ) --dst
 
 
 local require = GLOBAL.require
@@ -70,9 +72,9 @@ TUNING.OZZY_HUNGER_SCALE = 1.1
 TUNING.OZZY_NUM_PETALS_PER_HONEY = 5
 TUNING.OZZY_SHARE_TARGET_DIST = 30
 TUNING.OZZY_MAX_SHARE_TARGETS = 20
-TUNING.OZZY_DEFAUT_SPEED_MULTIPLIER = 1.0
-TUNING.OZZY_SPRING_SPEED_MULTIPLIER = 1.15
-TUNING.OZZY_WINTER_SPEED_MULTIPLIER = 0.85
+TUNING.OZZY_DEFAUT_SPEED_MULTIPLIER = 0
+TUNING.OZZY_SPRING_SPEED_MULTIPLIER = 0.15
+TUNING.OZZY_WINTER_SPEED_MULTIPLIER = -0.15
 TUNING.OZZY_MAX_SUMMON_BEES = 3
 TUNING.OZZY_SUMMON_CHANCE = 0.3
 TUNING.OZZY_MAX_BEES_STORE = 7
@@ -87,7 +89,7 @@ TUNING.MUTANT_BEE_POISON_DAMAGE = -5
 TUNING.MUTANT_BEE_POISON_PERIOD = 0.75
 TUNING.MUTANT_BEE_EXPLOSIVE_DAMAGE_MULTIPLIER = 2.0
 TUNING.MUTANT_BEE_EXPLOSIVE_RANGE = 3
-TUNING.MUTANT_BEE_FROSTBITE_SPEED_PENALTY = 0.5
+TUNING.MUTANT_BEE_FROSTBITE_SPEED_PENALTY = -0.5
 TUNING.MUTANT_BEE_FROSTBITE_ATK_PERIOD_PENALTY = 1.65
 TUNING.MUTANT_BEE_WEAPON_ATK_RANGE = 10
 TUNING.MUTANT_BEE_RANGED_TARGET_DIST = 10
@@ -156,38 +158,38 @@ AddMinimapAtlas("images/map_icons/mutantbeecocoon.xml")
 -- Add mod character to mod character list. Also specify a gender. Possible genders are MALE, FEMALE, ROBOT, NEUTRAL, and PLURAL.
 AddModCharacter("zeta", "MALE")
 
+local function CanUpgradeMetapisHive(inst, target, doer)
+	return doer:HasTag("beemaster")
+end
+
 local function MakeHoneycombUpgrader(prefab)
 	if not prefab.components.upgrader then
 		prefab:AddComponent("upgrader")
+		prefab.components.upgrader.canupgradefn = CanUpgradeMetapisHive
+		prefab.components.upgrader.upgradetype = "METAPIS"
 	end
 end
 
 AddPrefabPostInit("honeycomb", MakeHoneycombUpgrader)
 
-AddRecipe("mutantbeecocoon",
+local Recipe = GLOBAL.Recipe
+
+Recipe("mutantbeecocoon",
 	{
 		Ingredient("honeycomb", 1),
 		Ingredient("cutgrass", 4),
 		Ingredient("honey", 1)
 	},
 	RECIPETABS.SURVIVAL,
-	TECH.NONE,
-	nil, nil, nil, nil,
-	"beemaster",
-	"images/inventoryimages/mutantbeecocoon.xml",
-	"mutantbeecocoon.tex"
+	TECH.NONE
 )
 
-AddRecipe("armorhoney",
+Recipe("armorhoney",
 	{
 		Ingredient("log", 10),
 		Ingredient("rope", 1),
 		Ingredient("honey", 3)
 	},
 	RECIPETABS.WAR,
-	TECH.NONE,
-	nil, nil, nil, nil,
-	"beemaster",
-	"images/inventoryimages/armor_honey.xml",
-	"armor_honey.tex"
+	TECH.NONE
 )

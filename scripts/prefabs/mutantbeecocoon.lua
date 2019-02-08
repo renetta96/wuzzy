@@ -18,7 +18,7 @@ local prefabs =
 
 local function UnlinkPlayer(inst)
 	local owner = inst._owner
-	inst._ownerid = nil
+	inst.isowned = false
 	inst._owner = nil
 	if owner ~= nil then
 		owner._cocoon = nil
@@ -28,6 +28,18 @@ end
 local function OnRemoveEntity(inst)
 	UnlinkPlayer(inst)
 	inst:RemoveEventCallback("ms_playerjoined", inst._onplayerjoined, TheWorld)
+end
+
+local function test_ground(inst, pt)
+    local basetile = GROUND.DIRT
+    if GetWorld():HasTag("shipwrecked") then
+        basetile = GROUND.BEACH
+    end
+    local tile = inst:GetCurrentTileType(pt.x, pt.y, pt.z)
+
+    local ground = GetWorld()
+    local onWater = ground.Map:IsWater(tile)
+    return not onWater
 end
 
 local function ondeploy(inst, pt)
@@ -75,20 +87,14 @@ local function IsValidOwner(inst, owner)
 		return false
 	end
 
-	if inst._ownerid then
-		return owner.userid and owner.userid == inst._ownerid
-			and owner:HasTag("beemaster") and not (owner._cocoon and owner._cocoon ~= inst)
-			and not owner._hive
-	else
-		return owner.userid and owner:HasTag("beemaster") and not (owner._cocoon and owner._cocoon ~= inst)
-			and not owner._hive
-	end
+	return owner:HasTag("beemaster") and not (owner._cocoon and owner._cocoon ~= inst)
+		and not owner._hive
 end
 
 local function LinkToPlayer(inst, owner)
 	-- A bit redundant check
 	if IsValidOwner(inst, owner) then
-		inst._ownerid = owner.userid
+		inst.isowned = true
 		inst._owner = owner
 		owner._cocoon = inst
 		return true
@@ -98,7 +104,7 @@ local function LinkToPlayer(inst, owner)
 end
 
 local function InheritOwner(inst, hive)
-	inst._ownerid = hive._ownerid
+	inst.isowned = hive.isowned
 	if hive._owner then
 		inst._owner = hive._owner
 		hive._owner._cocoon = inst
@@ -119,25 +125,23 @@ local function OnDrop(inst)
 end
 
 local function OnSave(inst, data)
-	if inst._ownerid then
-		data._ownerid = inst._ownerid
+	if inst.isowned then
+		data.isowned = inst.isowned
 	end
 end
 
-local function OnPlayerJoined(inst, player)
-	print("PLAYER JOINED COCOON", player)
+local function OnPlayerJoined(inst)
+	local player = GetPlayer()
 	local linksuccess = LinkToPlayer(inst, player)
+
 	if not linksuccess then
-		if inst._ownerid and player.userid and player.userid == inst._ownerid then
-			print("SAME PLAYER, DIFFERENT CHARACTER")
-			inst:DoTaskInTime(0, function(inst) Destroy(inst) end)
-		end
+		inst:DoTaskInTime(0, function(inst) Destroy(inst) end)
 	end
 end
 
 local function OnLoad(inst, data)
-	if data and data._ownerid then
-		inst._ownerid = data._ownerid
+	if data and data.isowned then
+		inst.isowned = data.isowned
 	end
 end
 
@@ -153,10 +157,10 @@ local function fn()
 	inst.entity:AddTransform()
 	inst.entity:AddAnimState()
 	inst.entity:AddSoundEmitter()
-	inst.entity:AddNetwork()
 	inst.entity:AddMiniMapEntity()
 
 	MakeInventoryPhysics(inst)
+	MakeInventoryFloatable(inst, "idle_water", "idle")
 
 	inst.AnimState:SetBank("mutantbeecocoon")
 	inst.AnimState:SetBuild("mutantbeecocoon")
@@ -165,12 +169,6 @@ local function fn()
 
 	inst:AddTag("mutant")
 	inst:AddTag("cocoon")
-
-	inst.entity:SetPristine()
-
-	if not TheWorld.ismastersim then
-		return inst
-	end
 
 	inst:AddComponent("inspectable")
 
@@ -183,9 +181,8 @@ local function fn()
 	inst:ListenForEvent("ondropped", OnDrop)
 
 	inst:AddComponent("deployable")
-	--inst.components.deployable:SetDeployMode(DEPLOYMODE.ANYWHERE)
-	inst.components.deployable:SetDeploySpacing(DEPLOYSPACING.NONE)
-	inst.components.deployable.ondeploy = ondeploy
+    inst.components.deployable.test = test_ground
+    inst.components.deployable.ondeploy = ondeploy
 
 	inst:AddComponent("lootdropper")
 
@@ -193,8 +190,7 @@ local function fn()
 	inst.OnLoad = OnLoad
 	inst.OnRemoveEntity = OnRemoveEntity
 	inst.InheritOwner = InheritOwner
-	inst._onplayerjoined = function(src, player) OnPlayerJoined(inst, player) end
-	inst:ListenForEvent("ms_playerjoined", inst._onplayerjoined, TheWorld)
+	OnPlayerJoined(inst)
 
 	inst:DoTaskInTime(0, InitFn)
 
