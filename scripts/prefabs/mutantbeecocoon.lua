@@ -27,7 +27,6 @@ end
 
 local function OnRemoveEntity(inst)
 	UnlinkPlayer(inst)
-	inst:RemoveEventCallback("ms_playerjoined", inst._onplayerjoined, TheWorld)
 end
 
 local function test_ground(inst, pt)
@@ -111,10 +110,12 @@ local function InheritOwner(inst, hive)
 	end
 end
 
-local function OnPutInInventory(inst, owner)
+local function OnPutInInventory(inst)
 	StopDestroyTask(inst)
 
+	local owner = inst.components.inventoryitem:GetGrandOwner()
 	local linksuccess = LinkToPlayer(inst, owner)
+
 	if not linksuccess then
 		inst:DoTaskInTime(0, Drop)
 	end

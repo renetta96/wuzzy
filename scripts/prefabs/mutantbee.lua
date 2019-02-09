@@ -38,20 +38,20 @@ local killersounds =
 }
 
 local function FindTarget(inst, dist)
-	return FindEntity(inst, SpringCombatMod(dist),
+	return FindEntity(inst, dist,
 		function(guy)
 			return inst.components.combat:CanTarget(guy)
 		end,
-		{ "_combat", "_health" },
+		nil,
 		{ "insect", "INLIMBO" },
 		{ "monster" })
-		or FindEntity(inst, SpringCombatMod(dist),
+		or FindEntity(inst, dist,
 		function(guy)
 			return inst.components.combat:CanTarget(guy)
 				and guy.components.combat and guy.components.combat.target
 				and guy.components.combat.target:HasTag("player")
 		end,
-		{ "_combat", "_health" },
+		nil,
 		{ "mutant", "INLIMBO" },
 		{ "monster", "insect", "animal", "character" })
 end
@@ -266,17 +266,15 @@ local function commonfn(build, tags)
 	inst.entity:AddSoundEmitter()
 	inst.entity:AddLightWatcher()
 	inst.entity:AddDynamicShadow()
+	inst.DynamicShadow:SetSize(.8, .5)
+	inst.Transform:SetFourFaced()
 
 	MakePoisonableCharacter(inst)
-	MakeFlyingCharacterPhysics(inst, 1, .5)
+	MakeCharacterPhysics(inst, 1, .5)
 	inst.Physics:SetCollisionGroup(COLLISION.FLYERS)
 	inst.Physics:ClearCollisionMask()
 	inst.Physics:CollidesWith(GetWorldCollision())
 	inst.Physics:CollidesWith(COLLISION.FLYERS)
-
-
-	inst.DynamicShadow:SetSize(.8, .5)
-	inst.Transform:SetFourFaced()
 
 	inst:AddTag("insect")
 	inst:AddTag("smallcreature")
@@ -301,10 +299,10 @@ local function commonfn(build, tags)
 	---------------------
 
 	inst:AddComponent("lootdropper")
-	inst.components.lootdropper:AddRandomLoot("honey", 1)
-	inst.components.lootdropper:AddRandomLoot("stinger", 2)
+	inst.components.lootdropper:AddRandomLoot("honey", 2)
+	inst.components.lootdropper:AddRandomLoot("stinger", 3)
 	inst.components.lootdropper.numrandomloot = 1
-	inst.components.lootdropper.chancerandomloot = 0.5
+	inst.components.lootdropper.chancerandomloot = 0.6
 
 	------------------
 
@@ -315,9 +313,7 @@ local function commonfn(build, tags)
 
 	inst:AddComponent("health")
 	inst:AddComponent("combat")
-	inst.components.combat:SetRange(TUNING.BEE_ATTACK_RANGE)
 	inst.components.combat.hiteffectsymbol = "body"
-	inst.components.combat:SetPlayerStunlock(PLAYERSTUNLOCK.RARELY)
 
 	------------------
 

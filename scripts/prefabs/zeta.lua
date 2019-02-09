@@ -4,6 +4,7 @@ local MakePlayerCharacter = require "prefabs/player_common"
 
 local assets = {
 	Asset("SCRIPT", "scripts/prefabs/player_common.lua"),
+	Asset("ANIM", "anim/zeta.zip"),
 }
 local prefabs = {
 	"mutantbeecocoon",
@@ -93,6 +94,36 @@ local function SeasonalChanges(inst)
 	end
 end
 
+local function OnEquip(inst)
+	local head = inst.components.inventory:GetEquippedItem(EQUIPSLOTS.HEAD)
+
+	if head then
+		inst.AnimState:Hide("HEAD")
+    	inst.AnimState:Show("HEAD_HAT")
+	end
+end
+
+local function OnUnequip(inst)
+	local head = inst.components.inventory:GetEquippedItem(EQUIPSLOTS.HEAD)
+
+	if not head then
+		inst.AnimState:Show("HEAD")
+        inst.AnimState:Hide("HEAD_HAT")
+	end
+end
+
+local function InitFn(inst)
+	local head = inst.components.inventory:GetEquippedItem(EQUIPSLOTS.HEAD)
+
+	if head then
+		inst.AnimState:Hide("HEAD")
+    	inst.AnimState:Show("HEAD_HAT")
+	else
+		inst.AnimState:Show("HEAD")
+        inst.AnimState:Hide("HEAD_HAT")
+	end
+end
+
 local postinit = function(inst)
 	-- Minimap icon
 	inst.MiniMapEntity:SetIcon( "zeta.tex" )
@@ -121,6 +152,11 @@ local postinit = function(inst)
 	inst._eatenpetals = 0
 	inst:ListenForEvent("oneat", OnEat)
 	inst:ListenForEvent("attacked", OnAttacked)
+
+	inst:ListenForEvent("equip", OnEquip)
+	inst:ListenForEvent("unequip", OnUnequip)
+
+	inst:DoTaskInTime(0, InitFn)
 end
 
 return MakePlayerCharacter("zeta", prefabs, assets, postinit, start_inv)

@@ -43,8 +43,6 @@ Assets = {
 
     Asset("SOUNDPACKAGE", "sound/zeta.fev"),
     Asset("SOUND", "sound/zeta.fsb"),
-
-    Asset("ANIM", "anim/zeta.zip"),
 }
 
 RemapSoundEvent( "dontstarve/characters/zeta/hurt", "zeta/zeta/hurt" )
@@ -98,10 +96,7 @@ TUNING.MUTANT_BEE_RANGED_DAMAGE = 15
 TUNING.MUTANT_BEE_RANGED_ATK_PERIOD = 2.5
 
 -- Mutant beehive stats
-TUNING.MUTANT_BEEHIVE_DEFAULT_EMERGENCY_BEES = 2
-TUNING.MUTANT_BEEHIVE_EMERGENCY_BEES_PER_PLAYER = 100
-TUNING.MUTANT_BEEHIVE_EMERGENCY_RADIUS = 30
-TUNING.MUTANT_BEEHIVE_BEES = 3
+TUNING.MUTANT_BEEHIVE_BEES = 5
 TUNING.MUTANT_BEEHIVE_DEFAULT_RELEASE_TIME = 50
 TUNING.MUTANT_BEEHIVE_DEFAULT_REGEN_TIME = 30
 TUNING.MUTANT_BEEHIVE_DELTA_BEES = 1
@@ -129,7 +124,7 @@ TUNING.ARMORHONEY_MAX_HEAL_EXTRA = 3
 
 -- Mod config
 local num_bees = GetModConfigData("NUM_BEES_IN_HIVE")
-TUNING.MUTANT_BEEHIVE_DEFAULT_EMERGENCY_BEES = TUNING.MUTANT_BEEHIVE_DEFAULT_EMERGENCY_BEES + num_bees * 2
+TUNING.MUTANT_BEEHIVE_BEES = TUNING.MUTANT_BEEHIVE_BEES + num_bees * 2
 TUNING.MUTANT_BEEHIVE_DEFAULT_REGEN_TIME = TUNING.MUTANT_BEEHIVE_DEFAULT_REGEN_TIME - num_bees * 10
 
 local bee_damage = GetModConfigData("BEE_DAMAGE")
@@ -174,7 +169,7 @@ AddPrefabPostInit("honeycomb", MakeHoneycombUpgrader)
 
 local Recipe = GLOBAL.Recipe
 
-Recipe("mutantbeecocoon",
+local myrecipe = Recipe("mutantbeecocoon",
 	{
 		Ingredient("honeycomb", 1),
 		Ingredient("cutgrass", 4),
@@ -183,8 +178,9 @@ Recipe("mutantbeecocoon",
 	RECIPETABS.SURVIVAL,
 	TECH.NONE
 )
+myrecipe.atlas = "images/inventoryimages/mutantbeecocoon.xml"
 
-Recipe("armorhoney",
+local myrecipe = Recipe("armorhoney",
 	{
 		Ingredient("log", 10),
 		Ingredient("rope", 1),
@@ -193,3 +189,4 @@ Recipe("armorhoney",
 	RECIPETABS.WAR,
 	TECH.NONE
 )
+myrecipe.atlas = "images/inventoryimages/armorhoney.xml"

@@ -24,17 +24,11 @@ local function IsHomeOnFire(inst)
 end
 
 function BeeBrain:OnStart()
+  local clock = GetClock()
+
   local root =
     PriorityNode(
     {
-      WhileNode(
-        function()
-            return self.inst.components.hauntable and self.inst.components.hauntable.panic
-        end,
-        "PanicHaunted",
-        Panic(self.inst)
-      ),
-
       WhileNode(
         function()
             return self.inst.components.health.takingfiredamage
@@ -48,7 +42,7 @@ function BeeBrain:OnStart()
             return self.inst.components.combat.target == nil or not self.inst.components.combat:InCooldown()
         end,
         "AttackMomentarily",
-        ChaseAndAttack(self.inst, SpringCombatMod(MAX_CHASE_TIME), SpringCombatMod(MAX_CHASE_DIST))
+        ChaseAndAttack(self.inst, MAX_CHASE_TIME, MAX_CHASE_DIST)
       ),
 
       WhileNode(
@@ -72,7 +66,7 @@ function BeeBrain:OnStart()
 
       IfNode(
         function()
-          return not TheWorld.state.iscaveday or not self.inst.LightWatcher:IsInLight()
+          return clock and not clock:IsDay()
         end,
         "IsNight",
         DoAction(

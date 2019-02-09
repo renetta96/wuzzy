@@ -169,11 +169,6 @@ local function OnRemoveEntity(inst)
 				v:Remove()
 			end
 		end
-		for k, v in pairs(inst.components.childspawner.emergencychildrenoutside) do
-			if v then
-				v:Remove()
-			end
-		end
 	end
 end
 
@@ -326,7 +321,7 @@ local function MakeSetStageFn(stage)
 
 		inst.components.childspawner:SetRegenPeriod(TUNING.MUTANT_BEEHIVE_DEFAULT_REGEN_TIME - (stage - 1) * TUNING.MUTANT_BEEHIVE_DELTA_REGEN_TIME)
 		inst.components.childspawner:SetSpawnPeriod(TUNING.MUTANT_BEEHIVE_DEFAULT_RELEASE_TIME - (stage - 1) * TUNING.MUTANT_BEEHIVE_DELTA_RELEASE_TIME)
-		inst.components.childspawner:SetMaxEmergencyChildren(TUNING.MUTANT_BEEHIVE_DEFAULT_EMERGENCY_BEES + (stage - 1) * TUNING.MUTANT_BEEHIVE_DELTA_BEES)
+		inst.components.childspawner:SetMaxChildren(TUNING.MUTANT_BEEHIVE_BEES + (stage - 1) * TUNING.MUTANT_BEEHIVE_DELTA_BEES)
 
 		SetFX(inst)
 		inst.components.upgradeable:SetStage(stage)
@@ -370,7 +365,7 @@ local function WatchEnemy(inst)
 			function(guy)
 				return inst.components.combat:CanTarget(guy)
 			end,
-			{ "_combat", "_health" },
+			nil,
 			{ "insect", "INLIMBO" },
 			{ "monster" })
 			or FindEntity(inst, TUNING.MUTANT_BEEHIVE_WATCH_DIST,
@@ -379,7 +374,7 @@ local function WatchEnemy(inst)
 						and guy.components.combat and guy.components.combat.target
 						and guy.components.combat.target:HasTag("player")
 				end,
-				{ "_combat", "_health" },
+				nil,
 				{ "mutant", "INLIMBO" },
 				{ "monster", "insect", "animal", "character" })
 	if enemy then
@@ -391,7 +386,7 @@ end
 local function SelfRepair(inst)
 	if inst and inst.components.childspawner and inst.components.health then
 		if not inst.components.health:IsDead() then
-			local numfixers = inst.components.childspawner.childreninside + inst.components.childspawner.emergencychildreninside
+			local numfixers = inst.components.childspawner.childreninside
 			local recover = TUNING.MUTANT_BEEHIVE_RECOVER_PER_CHILD * numfixers
 			inst.components.health:DoDelta(recover, true, "self_repair")
 		end
@@ -459,6 +454,8 @@ local function OnInit(inst)
 	inst.components.growable:SetStage(inst.components.upgradeable.stage)
 
 	inst:DoPeriodicTask(3, SelfRepair)
+
+	OnPlayerJoined(inst)
 end
 
 local function GetBuildConfig()
@@ -519,9 +516,6 @@ local function fn()
 	-------------------
 	inst:AddComponent("childspawner")
 	inst.components.childspawner.childname = "mutantbee"
-	inst.components.childspawner.emergencychildname = "mutantkillerbee"
-	inst.components.childspawner.emergencychildrenperplayer = TUNING.MUTANT_BEEHIVE_EMERGENCY_BEES_PER_PLAYER
-	inst.components.childspawner:SetEmergencyRadius(TUNING.MUTANT_BEEHIVE_EMERGENCY_RADIUS)
 	inst.components.childspawner:SetMaxChildren(TUNING.MUTANT_BEEHIVE_BEES)
 
 	inst:DoTaskInTime(0, OnInit)
@@ -587,7 +581,6 @@ local function fn()
 	inst.OnLoad = OnLoad
 	inst.OnRemoveEntity = OnRemoveEntity
 	inst.InheritOwner = InheritOwner
-	OnPlayerJoined(inst)
 
 	return inst
 end

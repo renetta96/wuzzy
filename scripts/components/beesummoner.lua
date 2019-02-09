@@ -55,7 +55,6 @@ local BeeSummoner = Class(function(self, inst)
 
 	self._onchildkilled = function(child) self:OnChildKilled(child) end
 	self._onattack = function(inst, data) self:SummonChild(data.target) end
-	self._onplayerleft = function(src, player) OnPlayerLeft(self, player) end
 	self._onsummonerremove = function(inst) OnSummonerRemove(self, inst) end
 
 	self.inst:ListenForEvent("onattackother", self._onattack, inst)
@@ -106,8 +105,6 @@ function BeeSummoner:TakeOwnership(child)
     end
 
 	child:AddComponent("follower")
-	child.components.follower:KeepLeaderOnAttacked()
-	child.components.follower.keepdeadleader = true
 
 	if self.inst.components.leader ~= nil then
 		self.inst.components.leader:AddFollower(child)

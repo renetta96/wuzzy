@@ -1,8 +1,8 @@
 local assets =
 {
     Asset("ANIM", "anim/armor_honey.zip"),
-    Asset("ATLAS", "images/inventoryimages/armor_honey.xml"),
-    Asset("IMAGE", "images/inventoryimages/armor_honey.tex"),
+    Asset("ATLAS", "images/inventoryimages/armorhoney.xml"),
+    Asset("IMAGE", "images/inventoryimages/armorhoney.tex"),
 }
 
 local prefabs =
@@ -55,6 +55,7 @@ local function StartHealing(inst)
 end
 
 local function OnTakeDamage(inst, amount)
+    inst.components.armor:SetPercent(1)
     StartHealing(inst)
 end
 
@@ -110,11 +111,11 @@ local function fn()
     inst:AddComponent("inspectable")
 
     inst:AddComponent("inventoryitem")
-    inst.components.inventoryitem.imagename = "armor_honey"
-    inst.components.inventoryitem.atlasname = "images/inventoryimages/armor_honey.xml"
+    inst.components.inventoryitem.imagename = "armorhoney"
+    inst.components.inventoryitem.atlasname = "images/inventoryimages/armorhoney.xml"
 
     inst:AddComponent("armor")
-    inst.components.armor:InitIndestructible(TUNING.ARMORHONEY_MAX_ABSORPTION)
+    inst.components.armor:InitCondition(999999, TUNING.ARMORHONEY_MAX_ABSORPTION)
     inst.components.armor.ontakedamage = OnTakeDamage
 
     inst:AddComponent("appeasement")
