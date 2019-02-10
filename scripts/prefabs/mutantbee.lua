@@ -91,7 +91,11 @@ local function OnAttackOtherWithPoison(inst, data)
 end
 
 local function OnDeathExplosive(inst)
-	inst.components.combat:DoAreaAttack(inst, TUNING.MUTANT_BEE_EXPLOSIVE_RANGE, nil, nil, nil, { "INLIMBO", "mutant" })
+	inst.components.combat:DoAreaAttack(inst, TUNING.MUTANT_BEE_EXPLOSIVE_RANGE, nil,
+		function(target)
+			return not target:HasTag("mutant")
+		end
+	)
 	SpawnPrefab("explode_small").Transform:SetPosition(inst.Transform:GetWorldPosition())
 	inst:Remove()
 end
@@ -102,7 +106,7 @@ local rangedkillerbrain = require("brains/rangedkillerbeebrain")
 local function OnSuicidalAttack(inst, data)
 	if data.projectile then
 		local delta = -inst.components.health.maxhealth * TUNING.MUTANT_BEE_RANGED_ATK_HEALTH_PENALTY
-		inst.components.health:DoDelta(delta, nil, "suicidal_attack", nil, nil, true)
+		inst.components.health:DoDelta(delta, nil, "suicidal_attack", nil, nil)
 	end
 end
 
@@ -145,71 +149,99 @@ local function MakeRangedWeapon(inst)
 	end
 end
 
-local function AddFrostbiteColor(inst)
-	if not inst.components.highlight then
-		inst:AddComponent("highlight")
+local function GetFreezePercent(inst)
+	local percent = 1
+	if inst.components.freezable then
+		percent = inst.components.freezable.coldness / inst.components.freezable.resistance
 	end
 
-	inst.components.highlight:SetAddColour(Vector3(82/255, 115/255, 124/255))
+	return percent
 end
 
-local function RemoveFrostbiteColor(inst)
-	if not inst.components.highlight then
-		inst:AddComponent("highlight")
+local function TryRemoveFrostbite(inst)
+	local shouldEnd = false
+
+	if inst.components.freezable then
+		shouldEnd = inst.components.freezable.coldness == 0
+	else
+		shouldEnd = GetTime() >= inst._frostbite_expire
 	end
 
-	inst.components.highlight:SetAddColour(Vector3(0, 0, 0))
+	if shouldEnd then
+		inst.components.locomotor:RemoveSpeedModifier_Mult("frostbite")
+		if inst.components.combat then
+			inst.components.combat:RemovePeriodModifier("frostbite")
+		end
+		inst._frostbiteTask:Cancel()
+		inst._frostbiteTask = nil
+	end
 end
 
 local function OnAttackOtherWithFrostbite(inst, data)
-	if data.target and data.target.components.locomotor
-		and data.target.components.health and not data.target.components.health:IsDead() then
-		if not data.target:HasTag("player") then
-			data.target._frostbite_expire = GetTime() + 4.75
-			AddFrostbiteColor(data.target)
+	local target = data.target
 
-			if data.target.components.combat then
-				if not data.target._currentattackperiod then
-					data.target._currentattackperiod = data.target.components.combat.min_attack_period
-					data.target.components.combat:SetAttackPeriod(data.target._currentattackperiod * TUNING.MUTANT_BEE_FROSTBITE_ATK_PERIOD_PENALTY)
-				end
-			end
-
-			if data.target.components.locomotor.enablegroundspeedmultiplier then
-				data.target.components.locomotor:AddSpeedModifier_Mult("frostbite", -TUNING.MUTANT_BEE_FROSTBITE_SPEED_PENALTY)
-				data.target:DoTaskInTime(5.0,
-					function (inst)
-						if GetTime() >= inst._frostbite_expire then
-							RemoveFrostbiteColor(inst)
-							inst.components.locomotor:RemoveSpeedModifier_Mult("frostbite")
-							if inst.components.combat and inst._currentattackperiod then
-								inst.components.combat:SetAttackPeriod(inst._currentattackperiod)
-								inst._currentattackperiod = nil
-							end
-						end
-					end)
-			else
-				if not data.target._currentspeed then
-					data.target._currentspeed = data.target.components.locomotor.groundspeedmultiplier
-				end
-				data.target.components.locomotor.groundspeedmultiplier = 1 - TUNING.MUTANT_BEE_FROSTBITE_SPEED_PENALTY
-				data.target:DoTaskInTime(5.0,
-					function (inst)
-						if GetTime() >= inst._frostbite_expire then
-							RemoveFrostbiteColor(inst)
-							if inst._currentspeed then
-								inst.components.locomotor.groundspeedmultiplier = inst._currentspeed
-								inst._currentspeed = nil
-							end
-							if inst.components.combat and inst._currentattackperiod then
-								inst.components.combat:SetAttackPeriod(inst._currentattackperiod)
-								inst._currentattackperiod = nil
-							end
-						end
-					end)
-			end
-		end
+	if not target or not target.components.locomotor then
+		return
 	end
+
+	if not target.components.health or target.components.health:IsDead() or target:HasTag("player") then
+		return
+	end
+
+	target._frostbite_expire = GetTime() + 4.75
+	local percent = GetFreezePercent(target)
+
+	if target.components.combat then
+		local scale = Lerp(
+			TUNING.MUTANT_BEE_FROSTBITE_ATK_PERIOD_PENALTY_MIN,
+			TUNING.MUTANT_BEE_FROSTBITE_ATK_PERIOD_PENALTY_MAX,
+			percent
+		)
+		target.components.combat:AddPeriodModifier("frostbite", scale)
+	end
+
+	local scale = Lerp(
+		TUNING.MUTANT_BEE_FROSTBITE_SPEED_PENALTY_MIN,
+		TUNING.MUTANT_BEE_FROSTBITE_SPEED_PENALTY_MAX,
+		percent
+	)
+
+	target.components.locomotor:AddSpeedModifier_Mult("frostbite", -scale)
+
+	if target._frostbiteTask == nil then
+		target._frostbiteTask = target:DoPeriodicTask(1, TryRemoveFrostbite)
+	end
+end
+
+local function OnFreezingAttack(inst, data)
+	local target = data.target
+
+	if not target or not target.components.health or target.components.health:IsDead() then
+		return
+	end
+
+	if target.components.burnable then
+        if target.components.burnable:IsBurning() then
+            target.components.burnable:Extinguish()
+        elseif target.components.burnable:IsSmoldering() then
+            target.components.burnable:SmotherSmolder()
+        end
+    end
+
+    if target.components.freezable and target.components.freezable:IsFrozen() then
+    	local dmg = (target.components.freezable.resistance / TUNING.MUTANT_BEE_COLDNESS_ADD) * TUNING.MUTANT_BEE_DAMAGE / 2
+		target.components.health:DoDelta(-dmg, nil, "unfreeze_damage")
+		target:PushEvent("attacked", {attacker = inst, damage = dmg})
+	end
+
+	if not target:HasTag("player") then
+		if target.components.freezable then
+	        target.components.freezable:AddColdness(TUNING.MUTANT_BEE_COLDNESS_ADD)
+	        target.components.freezable:SpawnShatterFX()
+	    end
+	end
+
+	OnAttackOtherWithFrostbite(inst, data)
 end
 -- Mutant effects */
 
@@ -262,7 +294,8 @@ local function ChangeMutantOnSeason(inst)
 	else
 		inst.components.locomotor.groundspeedmultiplier = 0.7
 		inst.components.combat:SetAttackPeriod(TUNING.MUTANT_BEE_ATTACK_PERIOD * 2)
-		inst:ListenForEvent("onattackother", OnAttackOtherWithFrostbite)
+		inst.components.combat:SetDefaultDamage(0)
+		inst:ListenForEvent("onattackother", OnFreezingAttack)
 	end
 end
 

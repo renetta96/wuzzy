@@ -226,6 +226,10 @@ local function SpawnCocoon(inst)
 	cocoon.Transform:SetPosition(inst.Transform:GetWorldPosition())
 end
 
+local function OnDeath(inst)
+	SpawnCocoon(inst)
+end
+
 local function OnKilled(inst)
 	inst:RemoveComponent("childspawner")
 	inst.AnimState:PlayAnimation("cocoon_dead", true)
@@ -235,7 +239,6 @@ local function OnKilled(inst)
 
 	inst.SoundEmitter:PlaySound("dontstarve/bee/beehive_destroy")
 	inst.components.lootdropper:DropLoot(inst:GetPosition())
-	SpawnCocoon(inst)
 
 	RemoveFX(inst)
 end
@@ -251,16 +254,9 @@ local function OnHammered(inst, worker)
 	local collapse = inst.components.upgradeable.stage >= 2 and "collapse_big" or "collapse_small"
 	local fx = SpawnPrefab(collapse)
 	fx.Transform:SetPosition(inst.Transform:GetWorldPosition())
-	fx:SetMaterial("straw")
+	inst.SoundEmitter:PlaySound("dontstarve/common/destroy_straw")
 
 	inst:Remove()
-end
-
-local function OnBurnt(inst)
-	RemoveFX(inst)
-
-	-- To make sure a cocoon is still spawned after the hive is burnt
-	SpawnCocoon(inst)
 end
 
 local function IsValidOwner(owner)
@@ -476,6 +472,11 @@ local function fn()
 	---------------------
 	MakeLargeBurnable(inst)
 	inst.components.burnable:SetOnIgniteFn(OnIgnite)
+	local onburntfn = inst.components.burnable.onburnt
+	inst.components.burnable.onburnt = function(inst)
+		SpawnCocoon(inst)
+		onburntfn(inst)
+	end
 	---------------------
 
 	---------------------
@@ -488,9 +489,10 @@ local function fn()
 	inst:AddComponent("combat")
 	inst.components.combat:SetOnHit(OnHit)
 	inst:ListenForEvent("death", OnKilled)
-	inst:ListenForEvent("onburnt", OnBurnt)
 	inst:DoPeriodicTask(2, WatchEnemy)
 	inst.OnHit = OnHit
+
+	inst:ListenForEvent("death", OnDeath)
 
 	---------------------
 
