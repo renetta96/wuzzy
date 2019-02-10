@@ -32,7 +32,7 @@ local function OnAttacked(inst, data)
 				return false
 			end
 		end
-		return dude:HasTag("mutant") and not (dude:IsInLimbo() or dude.components.health:IsDead())
+		return dude:HasTag("mutant") and not dude:HasTag("player") and not (dude:IsInLimbo() or dude.components.health:IsDead())
 	end, targetshares)
 end
 

@@ -2,9 +2,7 @@ PrefabFiles = {
 	"mutantbeecocoon",
 	"mutantbee",
 	"mutantbeehive",
-	-- "honeyspill",
 	"zeta",
-	-- "zeta_none",
 	"armor_honey"
 }
 
@@ -48,10 +46,6 @@ Assets = {
 RemapSoundEvent( "dontstarve/characters/zeta/hurt", "zeta/zeta/hurt" )
 RemapSoundEvent( "dontstarve/characters/zeta/talk_LP", "zeta/zeta/talk_LP" )
 RemapSoundEvent( "dontstarve/characters/zeta/death_voice", "zeta/zeta/death_voice" )
--- RemapSoundEvent( "dontstarve/characters/zeta/emote", "zeta/zeta/emote" ) --dst
--- RemapSoundEvent( "dontstarve/characters/zeta/pose", "zeta/zeta/pose" ) --dst
--- RemapSoundEvent( "dontstarve/characters/zeta/yawn", "zeta/zeta/yawn" ) --dst
--- RemapSoundEvent( "dontstarve/characters/zeta/ghost_LP", "zeta/zeta/ghost_LP" ) --dst
 
 
 local require = GLOBAL.require
@@ -87,7 +81,7 @@ TUNING.MUTANT_BEE_POISON_DAMAGE = -5
 TUNING.MUTANT_BEE_POISON_PERIOD = 0.75
 TUNING.MUTANT_BEE_EXPLOSIVE_DAMAGE_MULTIPLIER = 2.0
 TUNING.MUTANT_BEE_EXPLOSIVE_RANGE = 3
-TUNING.MUTANT_BEE_FROSTBITE_SPEED_PENALTY = -0.5
+TUNING.MUTANT_BEE_FROSTBITE_SPEED_PENALTY = 0.5
 TUNING.MUTANT_BEE_FROSTBITE_ATK_PERIOD_PENALTY = 1.65
 TUNING.MUTANT_BEE_WEAPON_ATK_RANGE = 10
 TUNING.MUTANT_BEE_RANGED_TARGET_DIST = 10

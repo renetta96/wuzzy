@@ -26,28 +26,6 @@ server_filter_tags = {
 configuration_options =
 {
 	{
-		name = "USE_NEW_BEE_BUILD",
-		label = "Use new bee build",
-		options = {
-			{description = "Yes", data = true},
-			{description = "No", data = false}
-		},
-		default = true,
-		hover = "Whether to use custom bee build or not."
-	},
-
-	{
-		name = "USE_NEW_HIVE_BUILD",
-		label = "Use new beehive build",
-		options = {
-			{description = "Yes", data = true},
-			{description = "No", data = false}
-		},
-		default = true,
-		hover = "Whether to use custom beehive build or not."
-	},
-
-	{
 		name = "NUM_BEES_IN_HIVE",
 		label = "Number of bees in beehive",
 		options = {

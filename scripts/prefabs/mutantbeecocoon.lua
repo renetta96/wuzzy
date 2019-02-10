@@ -16,19 +16,6 @@ local prefabs =
 	"cutgrass"
 }
 
-local function UnlinkPlayer(inst)
-	local owner = inst._owner
-	inst.isowned = false
-	inst._owner = nil
-	if owner ~= nil then
-		owner._cocoon = nil
-	end
-end
-
-local function OnRemoveEntity(inst)
-	UnlinkPlayer(inst)
-end
-
 local function test_ground(inst, pt)
     local basetile = GROUND.DIRT
     if GetWorld():HasTag("shipwrecked") then
@@ -38,15 +25,18 @@ local function test_ground(inst, pt)
 
     local ground = GetWorld()
     local onWater = ground.Map:IsWater(tile)
-    return not onWater
+
+    local player = GetPlayer()
+    local hasHive = player._hive
+
+    return not (onWater or hasHive)
 end
 
 local function ondeploy(inst, pt)
 	inst.SoundEmitter:PlaySound("dontstarve/bee/beehive_hit")
 	local hive = SpawnPrefab("mutantbeehive")
 	if hive ~= nil then
-		hive:InheritOwner(inst)
-		UnlinkPlayer(inst)
+		hive.isowned = true
 		hive.Transform:SetPosition(pt:Get())
 		inst:Remove()
 	end
@@ -81,69 +71,26 @@ local function Drop(inst)
 	owner.components.inventory:DropItem(inst, true, true)
 end
 
-local function IsValidOwner(inst, owner)
+local function IsValidOwner(owner)
 	if not owner then
 		return false
 	end
 
-	return owner:HasTag("beemaster") and not (owner._cocoon and owner._cocoon ~= inst)
-		and not owner._hive
-end
-
-local function LinkToPlayer(inst, owner)
-	-- A bit redundant check
-	if IsValidOwner(inst, owner) then
-		inst.isowned = true
-		inst._owner = owner
-		owner._cocoon = inst
-		return true
-	end
-
-	return false
-end
-
-local function InheritOwner(inst, hive)
-	inst.isowned = hive.isowned
-	if hive._owner then
-		inst._owner = hive._owner
-		hive._owner._cocoon = inst
-	end
+	return owner:HasTag("beemaster")
 end
 
 local function OnPutInInventory(inst)
 	StopDestroyTask(inst)
 
 	local owner = inst.components.inventoryitem:GetGrandOwner()
-	local linksuccess = LinkToPlayer(inst, owner)
 
-	if not linksuccess then
+	if not IsValidOwner(owner) then
 		inst:DoTaskInTime(0, Drop)
 	end
 end
 
 local function OnDrop(inst)
 	StartDestroyTask(inst)
-end
-
-local function OnSave(inst, data)
-	if inst.isowned then
-		data.isowned = inst.isowned
-	end
-end
-
-local function OnPlayerJoined(inst)
-	local player = GetPlayer()
-	local linksuccess = LinkToPlayer(inst, player)
-
-	if not linksuccess then
-		inst:DoTaskInTime(0, function(inst) Destroy(inst) end)
-	end
-end
-
-local function OnLoad(inst, data)
-	if data and data.isowned then
-		inst.isowned = data.isowned
-	end
 end
 
 local function InitFn(inst)
@@ -186,12 +133,6 @@ local function fn()
     inst.components.deployable.ondeploy = ondeploy
 
 	inst:AddComponent("lootdropper")
-
-	inst.OnSave = OnSave
-	inst.OnLoad = OnLoad
-	inst.OnRemoveEntity = OnRemoveEntity
-	inst.InheritOwner = InheritOwner
-	OnPlayerJoined(inst)
 
 	inst:DoTaskInTime(0, InitFn)
 

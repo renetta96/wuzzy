@@ -4,8 +4,6 @@ require "stategraphs/SGbee"
 local assets =
 {
 	Asset("ANIM", "anim/bee.zip"),
-	Asset("ANIM", "anim/bee_build.zip"),
-	Asset("ANIM", "anim/bee_angry_build.zip"),
 	Asset("ANIM", "anim/mutantbee_build.zip"), -- New anim
 	Asset("ANIM", "anim/mutantbee_angry_build.zip"), -- New anim
 	Asset("SOUND", "sound/bee.fsb"),
@@ -147,12 +145,29 @@ local function MakeRangedWeapon(inst)
 	end
 end
 
+local function AddFrostbiteColor(inst)
+	if not inst.components.highlight then
+		inst:AddComponent("highlight")
+	end
+
+	inst.components.highlight:SetAddColour(Vector3(82/255, 115/255, 124/255))
+end
+
+local function RemoveFrostbiteColor(inst)
+	if not inst.components.highlight then
+		inst:AddComponent("highlight")
+	end
+
+	inst.components.highlight:SetAddColour(Vector3(0, 0, 0))
+end
+
 local function OnAttackOtherWithFrostbite(inst, data)
 	if data.target and data.target.components.locomotor
 		and data.target.components.health and not data.target.components.health:IsDead() then
 		if not data.target:HasTag("player") then
 			data.target._frostbite_expire = GetTime() + 4.75
-			data.target.AnimState:SetAddColour(82 / 255, 115 / 255, 124 / 255, 0)
+			AddFrostbiteColor(data.target)
+
 			if data.target.components.combat then
 				if not data.target._currentattackperiod then
 					data.target._currentattackperiod = data.target.components.combat.min_attack_period
@@ -161,12 +176,12 @@ local function OnAttackOtherWithFrostbite(inst, data)
 			end
 
 			if data.target.components.locomotor.enablegroundspeedmultiplier then
-				data.target.components.locomotor:AddSpeedModifier_Mult("frostbite", TUNING.MUTANT_BEE_FROSTBITE_SPEED_PENALTY)
+				data.target.components.locomotor:AddSpeedModifier_Mult("frostbite", -TUNING.MUTANT_BEE_FROSTBITE_SPEED_PENALTY)
 				data.target:DoTaskInTime(5.0,
 					function (inst)
 						if GetTime() >= inst._frostbite_expire then
-							inst.AnimState:SetAddColour(0, 0, 0, 0)
-							inst.components.locomotor:RemoveExternalSpeedMultiplier(inst, "frostbite")
+							RemoveFrostbiteColor(inst)
+							inst.components.locomotor:RemoveSpeedModifier_Mult("frostbite")
 							if inst.components.combat and inst._currentattackperiod then
 								inst.components.combat:SetAttackPeriod(inst._currentattackperiod)
 								inst._currentattackperiod = nil
@@ -177,11 +192,11 @@ local function OnAttackOtherWithFrostbite(inst, data)
 				if not data.target._currentspeed then
 					data.target._currentspeed = data.target.components.locomotor.groundspeedmultiplier
 				end
-				data.target.components.locomotor.groundspeedmultiplier = TUNING.MUTANT_BEE_FROSTBITE_SPEED_PENALTY
+				data.target.components.locomotor.groundspeedmultiplier = 1 - TUNING.MUTANT_BEE_FROSTBITE_SPEED_PENALTY
 				data.target:DoTaskInTime(5.0,
 					function (inst)
 						if GetTime() >= inst._frostbite_expire then
-							inst.AnimState:SetAddColour(0, 0, 0, 0)
+							RemoveFrostbiteColor(inst)
 							if inst._currentspeed then
 								inst.components.locomotor.groundspeedmultiplier = inst._currentspeed
 								inst._currentspeed = nil
@@ -249,13 +264,6 @@ local function ChangeMutantOnSeason(inst)
 		inst.components.combat:SetAttackPeriod(TUNING.MUTANT_BEE_ATTACK_PERIOD * 2)
 		inst:ListenForEvent("onattackother", OnAttackOtherWithFrostbite)
 	end
-end
-
-local function GetBuildConfig()
-	local actualname = KnownModIndex:GetModActualName("Ozzy The Buzzy")
-	local usenewbuild = GetModConfigData("USE_NEW_BEE_BUILD", actualname)
-
-	return usenewbuild
 end
 
 local function commonfn(build, tags)
@@ -331,11 +339,6 @@ local function commonfn(build, tags)
 	inst:ListenForEvent("attacked", beecommon.OnAttacked)
 	inst.Transform:SetScale(1.2, 1.2, 1.2)
 
-	local usenewbuild = GetBuildConfig()
-	if not usenewbuild then
-		inst.AnimState:SetMultColour(0.7, 0.7, 0.7, 1)
-	end
-
 	inst.buzzing = true
 	inst.EnableBuzz = EnableBuzz
 	inst.OnEntityWake = OnWake
@@ -350,14 +353,7 @@ local killerbrain = require("brains/mutantkillerbeebrain")
 local function workerbee()
 	--pollinator (from pollinator component) added to pristine state for optimization
 	--for searching: inst:AddTag("pollinator")
-	local usenewbuild = GetBuildConfig()
-	local inst = nil
-
-	if usenewbuild then
-		inst = commonfn("mutantbee_build", { "worker", "pollinator" })
-	else
-		inst = commonfn("bee_build", { "worker", "pollinator" })
-	end
+	local inst = commonfn("mutantbee_build", { "worker", "pollinator" })
 
 	inst.components.health:SetMaxHealth(TUNING.MUTANT_BEE_HEALTH)
 	inst.components.combat:SetDefaultDamage(TUNING.MUTANT_BEE_DAMAGE)
@@ -373,14 +369,7 @@ local function workerbee()
 end
 
 local function killerbee()
-	local usenewbuild = GetBuildConfig()
-	local inst = nil
-
-	if usenewbuild then
-		inst = commonfn("mutantbee_angry_build", { "killer", "scarytoprey" })
-	else
-		inst = commonfn("bee_angry_build", { "killer", "scarytoprey" })
-	end
+	local inst = commonfn("mutantbee_angry_build", { "killer", "scarytoprey" })
 
 	inst.components.health:SetMaxHealth(TUNING.MUTANT_BEE_HEALTH)
 	inst.components.combat:SetDefaultDamage(TUNING.MUTANT_BEE_DAMAGE)

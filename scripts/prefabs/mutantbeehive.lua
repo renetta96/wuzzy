@@ -34,12 +34,6 @@ local UPGRADE_STAGES = {
 
 local SPEECH =
 {
-	REJECT_SLEEPER = {
-		"SLEEP ELSEWHERE, DUDE.",
-		"YOU ARE NOT OUR MASTER!",
-		"GET OUT!!!",
-		"THIS HIVE IS NOT FOR YOU."
-	},
 	ATTACK = {
 		"LET'S KILL THEM ALL!!!",
 		"ENEMY DETECTED!!!",
@@ -48,10 +42,10 @@ local SPEECH =
 		"ONTO THE BATTLEFIELD!"
 	},
 	SPAWN = {
-		"TO WORK SHALL WE ?",
+		"TO WORK SHALL WE?",
 		"AHHHH WE SMELL FLOWERS!",
 		"HARDWORKERS WE ARE!",
-		"WE ARE HAPPY HONEYMAKER!"
+		"WE ARE HAPPY HONEYMAKERS!"
 	},
 	IGNITE = {
 		"HOME IS BURNING!!!",
@@ -66,18 +60,18 @@ local SPEECH =
 	},
 	HAMMER = {
 		"WELL IF THAT'S YOUR CHOICE THEN...",
-		"BUT... WHY ?",
+		"BUT... WHY?",
 		"IF DOING THIS MAY HELP, THEN JUST DO IT!",
-		"AREN'T WE GOOD ENOUGH, MASTER ?"
+		"AREN'T WE GOOD ENOUGH, MASTER?"
 	},
 	HIT = {
 		"THE HIVE IS UNDER ATTACKED!!!",
 		"PROTECT THE HIVE!",
-		"HOW DARE YOU ?",
+		"HOW DARE YOU?",
 		"WE WILL KILL YOU INTRUDER!"
 	},
 	STAGE_ADVANCE = {
-		"BIGGER HIVE COME STRONGER BEES.",
+		"BIGGER HIVE COMES STRONGER BEES.",
 		"MORE BEES TO COME.",
 		"UNLIMITED POWERRRR!!!"
 	},
@@ -95,13 +89,13 @@ local SPEECH =
 	GOODNIGHT = {
 		"HAVE A GOOD SLEEP, MASTER!",
 		"GOOD NIGHT!",
-		"HAVE A NICE DREAM, SHALL WE ?",
+		"HAVE A NICE DREAM, SHALL WE?",
 		"WELCOME HOME!"
 	},
 	WAKEUP = {
-		"DID YOU SLEEP WELL, MASTER ?",
-		"IS OUR HIVE COMFORTABLE ?",
-		"YOU HAVE NIGHTMARE ?",
+		"DID YOU SLEEP WELL, MASTER?",
+		"IS OUR HIVE COMFORTABLE?",
+		"YOU HAVE NIGHTMARE?",
 		"EARLY BEE GETS MORE HONEY."
 	},
 	SNORE = "Zzz...Zzz..."
@@ -151,12 +145,9 @@ local function Shake(inst, ignore_frozen)
 end
 
 local function UnlinkPlayer(inst)
-	local owner = inst._owner
+	local owner = GetPlayer()
 	inst.isowned = false
-	inst._owner = nil
-	if owner ~= nil then
-		owner._hive = nil
-	end
+	owner._hive = nil
 end
 
 local function OnRemoveEntity(inst)
@@ -232,8 +223,6 @@ end
 
 local function SpawnCocoon(inst)
 	local cocoon = SpawnPrefab("mutantbeecocoon")
-	cocoon:InheritOwner(inst)
-	UnlinkPlayer(inst)
 	cocoon.Transform:SetPosition(inst.Transform:GetWorldPosition())
 end
 
@@ -274,25 +263,24 @@ local function OnBurnt(inst)
 	SpawnCocoon(inst)
 end
 
-local function IsValidOwner(inst, owner)
+local function IsValidOwner(owner)
 	if not owner then
 		return false
 	end
 
-	return owner:HasTag("beemaster") and not owner._cocoon
-		and not (owner._hive and owner._hive ~= inst)
+	return owner:HasTag("beemaster")
 end
 
 local function OnHit(inst, attacker, damage)
 	if damage ~= nil then
-		if not IsValidOwner(inst, attacker) then
+		if not IsValidOwner(attacker) then
 			inst:Say(SPEECH.HIT)
 		else
 			inst:Say(SPEECH.HAMMER)
 		end
 	end
 
-	if inst.components.childspawner ~= nil and not IsValidOwner(inst, attacker) then
+	if inst.components.childspawner ~= nil and not IsValidOwner(attacker) then
 		inst.components.childspawner:ReleaseAllChildren(attacker, "mutantkillerbee")
 	end
 	if not inst.components.health:IsDead() then
@@ -301,7 +289,7 @@ local function OnHit(inst, attacker, damage)
 end
 
 local function OnWork(inst, worker, workleft)
-	if IsValidOwner(inst, worker) then
+	if IsValidOwner(worker) then
 		inst:Say(SPEECH.HAMMER)
 	else
 		OnHit(inst, worker, 1)
@@ -394,28 +382,15 @@ local function SelfRepair(inst)
 end
 
 local function LinkToPlayer(inst, player)
-	if IsValidOwner(inst, player) then
+	if IsValidOwner(player) and inst.isowned then
 		inst:Say(SPEECH.WELCOME)
-		inst.isowned = true
-		inst._owner = player
 		player._hive = inst
-		return true
-	end
-
-	return false
-end
-
-local function InheritOwner(inst, cocoon)
-	inst.isowned = cocoon.isowned
-	if cocoon._owner then
-		inst._owner = cocoon._owner
-		cocoon._owner._hive = inst
 	end
 end
 
 local function CalcSanityAura(inst, observer)
-	if inst._ownerid and IsValidOwner(inst, observer) then
-		return TUNING.SANITYAURA_SMALL_TINY
+	if inst.isowned and IsValidOwner(observer) then
+		return TUNING.SANITYAURA_MED
 	end
 
 	return 0
@@ -427,23 +402,15 @@ local function OnSave(inst, data)
 	end
 end
 
-local function OnPlayerJoined(inst)
-	local player = GetPlayer()
-	local linksuccess = LinkToPlayer(inst, player)
-
-	if not linksuccess then
-		inst:DoTaskInTime(0,
-			function(inst)
-				inst.components.lootdropper:DropLoot(inst:GetPosition())
-				inst:Remove()
-			end)
-	end
-end
-
 local function OnLoad(inst, data)
 	if data and data.isowned then
 		inst.isowned = data.isowned
 	end
+end
+
+local function OnPlayerJoined(inst)
+	local player = GetPlayer()
+	LinkToPlayer(inst, player)
 end
 
 local function OnInit(inst)
@@ -456,13 +423,6 @@ local function OnInit(inst)
 	inst:DoPeriodicTask(3, SelfRepair)
 
 	OnPlayerJoined(inst)
-end
-
-local function GetBuildConfig()
-	local actualname = KnownModIndex:GetModActualName("Ozzy The Buzzy")
-	local usenewbuild = GetModConfigData("USE_NEW_HIVE_BUILD", actualname)
-
-	return usenewbuild
 end
 
 local function fn()
@@ -479,14 +439,7 @@ local function fn()
 	inst.MiniMapEntity:SetIcon("beehive.png")
 
 	inst.AnimState:SetBank("beehive")
-
-	local usenewbuild = GetBuildConfig()
-	if usenewbuild then
-		inst.AnimState:SetBuild("mutantbeehive")
-	else
-		inst.AnimState:SetBuild("beehive")
-		inst.AnimState:SetMultColour(0.7, 0.5, 0.7, 1)
-	end
+	inst.AnimState:SetBuild("mutantbeehive")
 
 
 	inst.AnimState:PlayAnimation("cocoon_small", true)
@@ -580,7 +533,6 @@ local function fn()
 	inst.OnSave = OnSave
 	inst.OnLoad = OnLoad
 	inst.OnRemoveEntity = OnRemoveEntity
-	inst.InheritOwner = InheritOwner
 
 	return inst
 end

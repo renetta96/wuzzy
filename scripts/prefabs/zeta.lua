@@ -6,9 +6,18 @@ local assets = {
 	Asset("SCRIPT", "scripts/prefabs/player_common.lua"),
 	Asset("ANIM", "anim/zeta.zip"),
 }
+
 local prefabs = {
 	"mutantbeecocoon",
 	"honey"
+}
+
+local opentop_hats = {
+	"eyebrellahat",
+	"gasmaskhat",
+	"earmuffshat",
+	"flowerhat",
+	"shark_teethhat",
 }
 
 -- Custom starting items
@@ -98,8 +107,21 @@ local function OnEquip(inst)
 	local head = inst.components.inventory:GetEquippedItem(EQUIPSLOTS.HEAD)
 
 	if head then
-		inst.AnimState:Hide("HEAD")
-    	inst.AnimState:Show("HEAD_HAT")
+		local isopentop = false
+		for i, hat in ipairs(opentop_hats) do
+			if head.prefab == hat then
+				isopentop = true
+				break
+			end
+		end
+
+		if isopentop then
+			inst.AnimState:Show("HEAD")
+	    	inst.AnimState:Hide("HEAD_HAT")
+		else
+			inst.AnimState:Hide("HEAD")
+	    	inst.AnimState:Show("HEAD_HAT")
+		end
 	end
 end
 
@@ -113,15 +135,8 @@ local function OnUnequip(inst)
 end
 
 local function InitFn(inst)
-	local head = inst.components.inventory:GetEquippedItem(EQUIPSLOTS.HEAD)
-
-	if head then
-		inst.AnimState:Hide("HEAD")
-    	inst.AnimState:Show("HEAD_HAT")
-	else
-		inst.AnimState:Show("HEAD")
-        inst.AnimState:Hide("HEAD_HAT")
-	end
+	OnEquip(inst)
+	OnUnequip(inst)
 end
 
 local postinit = function(inst)
@@ -147,7 +162,7 @@ local postinit = function(inst)
 	inst.components.beesummoner:SetMaxStore(TUNING.OZZY_MAX_BEES_STORE)
 
 	SeasonalChanges(inst)
-	inst:ListenForEvent("seasonChange", SeasonalChanges)
+	inst:ListenForEvent("seasonChange", function() SeasonalChanges(inst) end, GetWorld())
 
 	inst._eatenpetals = 0
 	inst:ListenForEvent("oneat", OnEat)
