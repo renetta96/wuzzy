@@ -1,4 +1,5 @@
 local beecommon = require "brains/mutantbeecommon"
+local helpers = require "helpers"
 require "stategraphs/SGbee"
 
 local assets =
@@ -279,23 +280,84 @@ local function MutantBeeRetarget(inst)
 	return FindTarget(inst, TUNING.MUTANT_BEE_TARGET_DIST)
 end
 
+local function SpringMutate(inst)
+	inst.components.locomotor.groundspeedmultiplier = 1.3
+	inst:ListenForEvent("onattackother", OnAttackOtherWithPoison)
+end
+
+local function SummerMutate(inst)
+	inst.components.health:SetMaxHealth(TUNING.MUTANT_BEE_HEALTH / 2)
+	inst.components.combat.areahitdamagepercent = TUNING.MUTANT_BEE_EXPLOSIVE_DAMAGE_MULTIPLIER
+	inst:ListenForEvent("death", OnDeathExplosive)
+end
+
+local function AutumnMutate(inst)
+	MakeRangedWeapon(inst)
+end
+
+local function WinterMutate(inst)
+	inst.components.locomotor.groundspeedmultiplier = 0.7
+	inst.components.combat:SetAttackPeriod(TUNING.MUTANT_BEE_ATTACK_PERIOD * 2)
+	inst.components.combat:SetDefaultDamage(0)
+	inst:ListenForEvent("onattackother", OnFreezingAttack)
+end
+
+local function HandleRoG(inst)
+	local seasonmanager = GetSeasonManager()
+	if seasonmanager:IsSpring() then
+		SpringMutate(inst)
+	elseif seasonmanager:IsSummer() then
+		SummerMutate(inst)
+	elseif seasonmanager:IsAutumn() then
+		AutumnMutate(inst)
+	else
+		WinterMutate(inst)
+	end
+end
+
+local function HandleHML(inst)
+	local seasonmanager = GetSeasonManager()
+	if seasonmanager:IsTemperateSeason() then
+		AutumnMutate(inst)
+	elseif seasonmanager:IsLushSeason() then
+		SpringMutate(inst)
+	elseif seasonmanager:IsHumidSeason() then
+		WinterMutate(inst)
+	elseif seasonmanager:IsAporkalypse() then
+		SummerMutate(inst)
+	end
+end
+
+local function HandleDS(inst)
+	local seasonmanager = GetSeasonManager()
+	if seasonmanager:IsSummer() then
+		if math.random() < 0.5 then
+			SpringMutate(inst)
+		else
+			SummerMutate(inst)
+		end
+	else
+		if math.random() < 0.5 then
+			AutumnMutate(inst)
+		else
+			WinterMutate(inst)
+		end
+	end
+end
+
 local function ChangeMutantOnSeason(inst)
 	local seasonmanager = GetSeasonManager()
 
-	if seasonmanager:IsSpring() then
-		inst.components.locomotor.groundspeedmultiplier = 1.3
-		inst:ListenForEvent("onattackother", OnAttackOtherWithPoison)
-	elseif seasonmanager:IsSummer() then
-		inst.components.health:SetMaxHealth(TUNING.MUTANT_BEE_HEALTH / 2)
-		inst.components.combat.areahitdamagepercent = TUNING.MUTANT_BEE_EXPLOSIVE_DAMAGE_MULTIPLIER
-		inst:ListenForEvent("death", OnDeathExplosive)
-	elseif seasonmanager:IsAutumn() then
-		MakeRangedWeapon(inst)
+	if helpers.CheckDlcEnabled("REIGN_OF_GIANTS") then
+		HandleRoG(inst)
+	elseif helpers.CheckDlcEnabled("PORKLAND_DLC") then
+		if SaveGameIndex:IsModePorkland() then
+			HandleHML(inst)
+		else
+			HandleRoG(inst)
+		end
 	else
-		inst.components.locomotor.groundspeedmultiplier = 0.7
-		inst.components.combat:SetAttackPeriod(TUNING.MUTANT_BEE_ATTACK_PERIOD * 2)
-		inst.components.combat:SetDefaultDamage(0)
-		inst:ListenForEvent("onattackother", OnFreezingAttack)
+		HandleDS(inst)
 	end
 end
 

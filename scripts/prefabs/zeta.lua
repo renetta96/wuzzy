@@ -1,5 +1,5 @@
-
 local MakePlayerCharacter = require "prefabs/player_common"
+local helpers = require "helpers"
 
 
 local assets = {
@@ -91,12 +91,46 @@ local function OnAttacked(inst, data)
 	end
 end
 
-local function SeasonalChanges(inst)
+local function IsSpringEquivalent()
 	local seasonmanager = GetSeasonManager()
 
-	if seasonmanager:IsSpring() then
+	if helpers.CheckDlcEnabled("REIGN_OF_GIANTS") then
+		return seasonmanager:IsSpring()
+	end
+
+	if helpers.CheckDlcEnabled("PORKLAND_DLC") then
+		if SaveGameIndex:IsModePorkland() then
+			return seasonmanager:IsLushSeason()
+		else
+			return seasonmanager:IsSpring()
+		end
+	end
+
+	return false
+end
+
+local function IsWinterEquivalent()
+	local seasonmanager = GetSeasonManager()
+
+	if seasonmanager:IsWinter() then
+		return true
+	end
+
+	if helpers.CheckDlcEnabled("PORKLAND_DLC") then
+		if SaveGameIndex:IsModePorkland() then
+			return seasonmanager:IsHumidSeason()
+		else
+			return seasonmanager:IsWinter()
+		end
+	end
+
+	return false
+end
+
+local function SeasonalChanges(inst)
+	if IsSpringEquivalent() then
 		inst.components.locomotor:AddSpeedModifier_Mult("season_speed_mod", TUNING.OZZY_SPRING_SPEED_MULTIPLIER)
-	elseif seasonmanager:IsWinter() then
+	elseif IsWinterEquivalent() then
 		inst.components.locomotor:AddSpeedModifier_Mult("season_speed_mod", TUNING.OZZY_WINTER_SPEED_MULTIPLIER)
 	else
 		inst.components.locomotor:AddSpeedModifier_Mult("season_speed_mod", TUNING.OZZY_DEFAULT_SPEED_MULTIPLIER)
