@@ -12,7 +12,7 @@ forumthread = ""
 api_version = 6
 
 dont_starve_compatible = false
-reign_of_giants_compatible = false
+reign_of_giants_compatible = true
 porkland_compatible = true
 
 icon_atlas = "modicon.xml"
