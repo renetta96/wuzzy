@@ -43,6 +43,13 @@ Assets = {
     Asset("SOUND", "sound/zeta.fsb"),
 }
 
+local function CheckDlcEnabled(dlc)
+	-- if the constant doesn't even exist, then they can't have the DLC
+	if not GLOBAL.rawget(GLOBAL, dlc) then return false end
+	GLOBAL.assert(GLOBAL.rawget(GLOBAL, "IsDLCEnabled"), "Old version of game, please update (IsDLCEnabled function missing)")
+	return GLOBAL.IsDLCEnabled(GLOBAL[dlc])
+end
+
 RemapSoundEvent( "dontstarve/characters/zeta/hurt", "zeta/zeta/hurt" )
 RemapSoundEvent( "dontstarve/characters/zeta/talk_LP", "zeta/zeta/talk_LP" )
 RemapSoundEvent( "dontstarve/characters/zeta/death_voice", "zeta/zeta/death_voice" )

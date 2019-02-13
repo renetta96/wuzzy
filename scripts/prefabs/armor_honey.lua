@@ -1,3 +1,5 @@
+local helpers = require "helpers"
+
 local assets =
 {
     Asset("ANIM", "anim/armor_honey.zip"),
@@ -100,6 +102,7 @@ local function fn()
     inst.AnimState:SetBank("armor_honey")
     inst.AnimState:SetBuild("armor_honey")
     inst.AnimState:PlayAnimation("anim")
+
     MakeInventoryFloatable(inst, "idle_water", "anim")
 
     inst:AddTag("wood")

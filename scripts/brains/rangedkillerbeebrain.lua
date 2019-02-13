@@ -101,7 +101,7 @@ function RangedKillerBeeBrain:OnStart()
                 function() return self.inst.components.knownlocations:GetLocation("home") end,
                 beecommon.MAX_WANDER_DIST
             )
-        }, .25)
+        }, 0.5)
 
 
     self.bt = BT(self.inst, root)

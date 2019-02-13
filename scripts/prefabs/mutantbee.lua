@@ -123,7 +123,7 @@ local function MakeRangedWeapon(inst)
 	inst.components.combat:SetRange(TUNING.MUTANT_BEE_WEAPON_ATK_RANGE)
 	inst.components.combat:SetAttackPeriod(TUNING.MUTANT_BEE_RANGED_ATK_PERIOD)
 	inst.components.combat:SetDefaultDamage(TUNING.MUTANT_BEE_RANGED_DAMAGE)
-	inst.components.combat:SetRetargetFunction(0.25, RangedRetarget)
+	inst.components.combat:SetRetargetFunction(0.5, RangedRetarget)
 
 	if not inst.components.inventory:GetEquippedItem(EQUIPSLOTS.HANDS) then
 		local weapon = CreateEntity()
@@ -328,36 +328,13 @@ local function HandleHML(inst)
 	end
 end
 
-local function HandleDS(inst)
-	local seasonmanager = GetSeasonManager()
-	if seasonmanager:IsSummer() then
-		if math.random() < 0.5 then
-			SpringMutate(inst)
-		else
-			SummerMutate(inst)
-		end
-	else
-		if math.random() < 0.5 then
-			AutumnMutate(inst)
-		else
-			WinterMutate(inst)
-		end
-	end
-end
-
 local function ChangeMutantOnSeason(inst)
 	local seasonmanager = GetSeasonManager()
 
-	if helpers.CheckDlcEnabled("REIGN_OF_GIANTS") then
-		HandleRoG(inst)
-	elseif helpers.CheckDlcEnabled("PORKLAND_DLC") then
-		if SaveGameIndex:IsModePorkland() then
-			HandleHML(inst)
-		else
-			HandleRoG(inst)
-		end
+	if SaveGameIndex:IsModePorkland() then
+		HandleHML(inst)
 	else
-		HandleDS(inst)
+		HandleRoG(inst)
 	end
 end
 
@@ -373,6 +350,7 @@ local function commonfn(build, tags)
 	inst.Transform:SetFourFaced()
 
 	MakePoisonableCharacter(inst)
+
 	MakeCharacterPhysics(inst, 1, .5)
 	inst.Physics:SetCollisionGroup(COLLISION.FLYERS)
 	inst.Physics:ClearCollisionMask()

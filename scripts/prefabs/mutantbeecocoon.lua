@@ -1,4 +1,5 @@
 require "prefabutil"
+local helpers = require "helpers"
 
 local assets =
 {
@@ -129,8 +130,9 @@ local function fn()
 	inst:ListenForEvent("ondropped", OnDrop)
 
 	inst:AddComponent("deployable")
+	inst.components.deployable.ondeploy = ondeploy
     inst.components.deployable.test = test_ground
-    inst.components.deployable.ondeploy = ondeploy
+
 
 	inst:AddComponent("lootdropper")
 
