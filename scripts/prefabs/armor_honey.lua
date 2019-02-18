@@ -65,19 +65,43 @@ local function OnBlocked(owner)
     owner.SoundEmitter:PlaySound("dontstarve/wilson/hit_armour")
 end
 
+local function CalcStoreModifier(inst)
+    if inst.components.perishable then
+        local percent = inst.components.perishable:GetPercent()
+        local mod = Lerp(
+            TUNING.ARMORHONEY_MULT_REGEN_TICK,
+            1,
+            1 - percent
+        )
+
+        return mod
+    end
+
+    return nil
+end
+
 local function onequip(inst, owner)
     owner.AnimState:OverrideSymbol("swap_body", "armor_honey", "swap_body")
-
     inst:ListenForEvent("blocked", OnBlocked, owner)
+
+    if owner.components.beesummoner then
+        owner.components.beesummoner:AddStoreModifier_Additive("armorhoney", TUNING.ARMORHONEY_ADD_STORE)
+        owner.components.beesummoner:AddRegenTickModifier_Mult("armorhoney", CalcStoreModifier(inst))
+    end
 end
 
 local function onunequip(inst, owner)
     owner.AnimState:ClearOverrideSymbol("swap_body")
     inst:RemoveEventCallback("blocked", OnBlocked, owner)
     StopHealing(inst)
+
+    if owner.components.beesummoner then
+        owner.components.beesummoner:RemoveRegenTickModifier_Mult("armorhoney")
+        owner.components.beesummoner:RemoveStoreModifier_Additive("armorhoney")
+    end
 end
 
-local function UpdateAbsorption(inst, data)
+local function OnPerishChange(inst, data)
     if inst.components.armor and inst.components.perishable then
         local absorption = Lerp(
             TUNING.ARMORHONEY_MIN_ABSORPTION,
@@ -85,11 +109,18 @@ local function UpdateAbsorption(inst, data)
             inst.components.perishable:GetPercent()
         )
         inst.components.armor:SetAbsorption(absorption)
+
+        if inst.components.inventoryitem and inst.components.equippable then
+            local owner = inst.components.inventoryitem:GetGrandOwner()
+            if inst.components.equippable:IsEquipped() then
+                owner.components.beesummoner:AddRegenTickModifier_Mult("armorhoney", CalcStoreModifier(inst))
+            end
+        end
     end
 end
 
 local function InitFn(inst)
-    UpdateAbsorption(inst)
+    OnPerishChange(inst)
 end
 
 local function fn()
@@ -133,7 +164,7 @@ local function fn()
     inst.components.perishable:SetPerishTime(TUNING.PERISH_MED)
     inst.components.perishable:StartPerishing()
     inst.components.perishable.onperishreplacement = "spoiled_food"
-    inst:ListenForEvent("perishchange", UpdateAbsorption)
+    inst:ListenForEvent("perishchange", OnPerishChange)
 
     inst:DoTaskInTime(0, InitFn)
 

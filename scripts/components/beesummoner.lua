@@ -52,6 +52,8 @@ local BeeSummoner = Class(function(self, inst)
 	self.tickscale = 3
 	self.maxticks = 6
 	self.currenttick = 0
+	self.store_modifiers_add = {}
+	self.regentick_modifiers_mult = {}
 
 	self._onchildkilled = function(child) self:OnChildKilled(child) end
 	self._onattack = function(inst, data) self:SummonChild(data.target) end
@@ -85,13 +87,17 @@ function BeeSummoner:SetSummonChance(chance)
 	self.summonchance = math.min(math.max(chance, 0), 1.0)
 end
 
-function BeeSummoner:SetMaxStore(num)
-	self.maxstore = num
-	self.numstore = math.min(self.numstore, self.maxstore)
+local function Refresh(self)
+	self.numstore = math.min(self.numstore, self:GetTotalStore())
 
-	if self.numstore < self.maxstore then
+	if self.numstore < self:GetTotalStore() then
 		self:StartRegen()
 	end
+end
+
+function BeeSummoner:SetMaxStore(num)
+	self.maxstore = num
+	Refresh(self)
 end
 
 function BeeSummoner:OnChildKilled(child)
@@ -114,13 +120,51 @@ function BeeSummoner:TakeOwnership(child)
 	AddChild(self, child)
 end
 
+function BeeSummoner:AddStoreModifier_Additive(key, mod)
+	self.store_modifiers_add[key] = mod
+	Refresh(self)
+end
+
+function BeeSummoner:RemoveStoreModifier_Additive(key)
+	self.store_modifiers_add[key] = nil
+	Refresh(self)
+end
+
+function BeeSummoner:GetTotalStore()
+	local total = self.maxstore
+
+	for k, v in pairs(self.store_modifiers_add) do
+		total = total + v
+	end
+
+	return total
+end
+
+function BeeSummoner:AddRegenTickModifier_Mult(key, mod)
+	self.regentick_modifiers_mult[key] = mod
+end
+
+function BeeSummoner:RemoveRegenTickModifier_Mult(key)
+	self.regentick_modifiers_mult[key] = nil
+end
+
+function BeeSummoner:GetRegenTickMultiplier()
+	local mult = 1
+
+	for k, v in pairs(self.regentick_modifiers_mult) do
+		mult = mult * v
+	end
+
+	return mult
+end
+
 function BeeSummoner:GetRegenTick()
 	if self.inst.components.hunger then
 		local hungerpercent = self.inst.components.hunger:GetPercent()
-		return self.regentick * (self.tickscale - (self.tickscale - 1) * hungerpercent)
+		return self.regentick * (self.tickscale - (self.tickscale - 1) * hungerpercent) * self:GetRegenTickMultiplier()
 	end
 
-	return self.regentick
+	return self.regentick * self:GetRegenTickMultiplier()
 end
 
 local function DoRegenTick(inst, self)
@@ -128,10 +172,10 @@ local function DoRegenTick(inst, self)
 	-- print("REGEN, TICK : ", self.currenttick)
 
 	if self.currenttick >= self.maxticks then
-		self.numstore = math.min(self.numstore + 1, self.maxstore)
+		self.numstore = math.min(self.numstore + 1, self:GetTotalStore())
 		self.currenttick = 0
 
-		if self.numstore == self.maxstore then
+		if self.numstore == self:GetTotalStore() then
 			self:StopRegen()
 			return
 		end
@@ -151,7 +195,7 @@ function BeeSummoner:StopRegen()
 end
 
 function BeeSummoner:StartRegen(tick)
-	if self.numstore >= self.maxstore then
+	if self.numstore >= self:GetTotalStore() then
 		self:StopRegen()
 		return
 	end
@@ -165,7 +209,7 @@ function BeeSummoner:StartRegen(tick)
 end
 
 function BeeSummoner:CanSummonChild()
-	return self.numchildren < self.maxchildren
+	return self.numchildren < self:GetTotalStore()
 		and math.random() < self.summonchance
 		and self.numstore > 0
 end
