@@ -89,6 +89,7 @@ end
 
 local function Refresh(self)
 	self.numstore = math.min(self.numstore, self:GetTotalStore())
+	self.inst:PushEvent("onnumstorechange", {numstore = self.numstore})
 
 	if self.numstore < self:GetTotalStore() then
 		self:StartRegen()
@@ -167,13 +168,20 @@ function BeeSummoner:GetRegenTick()
 	return self.regentick * self:GetRegenTickMultiplier()
 end
 
+function BeeSummoner:GetRegenTickPercent()
+	return self.currenttick / self.maxticks
+end
+
 local function DoRegenTick(inst, self)
 	self.currenttick = self.currenttick + 1
+	self.inst:PushEvent("onregentick", {currenttick = self.currenttick})
 	-- print("REGEN, TICK : ", self.currenttick)
 
 	if self.currenttick >= self.maxticks then
 		self.numstore = math.min(self.numstore + 1, self:GetTotalStore())
 		self.currenttick = 0
+		self.inst:PushEvent("onregentick", {currenttick = self.currenttick})
+		self.inst:PushEvent("onnumstorechange", {numstore = self.numstore})
 
 		if self.numstore == self:GetTotalStore() then
 			self:StopRegen()
@@ -209,7 +217,7 @@ function BeeSummoner:StartRegen(tick)
 end
 
 function BeeSummoner:CanSummonChild()
-	return self.numchildren < self:GetTotalStore()
+	return self.numchildren < self.maxchildren
 		and math.random() < self.summonchance
 		and self.numstore > 0
 end
@@ -242,6 +250,7 @@ function BeeSummoner:DoSummonChild(target)
 			end
 
 			self.numstore = self.numstore - 1
+			self.inst:PushEvent("onnumstorechange", {numstore = self.numstore})
 			self:StartRegen()
 		end
 

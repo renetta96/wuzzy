@@ -1,5 +1,6 @@
 local MakePlayerCharacter = require "prefabs/player_common"
 local helpers = require "helpers"
+local Badge = require "widgets/badge"
 
 
 local assets = {
@@ -156,6 +157,38 @@ local function OnUnequip(inst)
 	end
 end
 
+local BeeSummonerBadge = Class(Badge, function(self, owner)
+	Badge._ctor(self, "beaver_meter", owner)
+end)
+
+local function OnRegenTick(inst, data)
+	inst.HUD.controls.beesummonerbadge:SetPercent(inst.components.beesummoner:GetRegenTickPercent(), inst.components.beesummoner.maxticks)
+	inst.HUD.controls.beesummonerbadge.num:SetString(tostring(inst.components.beesummoner.numstore))
+	if data.currenttick > 0 then
+		inst.HUD.controls.beesummonerbadge:PulseGreen()
+		TheFrontEnd:GetSound():PlaySound("dontstarve/HUD/health_up")
+	end
+end
+
+local function OnNumStoreChange(inst, data)
+	inst.HUD.controls.beesummonerbadge.num:SetString(tostring(inst.components.beesummoner.numstore))
+end
+
+local function SetHUDState(inst)
+	if inst.HUD then
+		if inst.components.beesummoner and not inst.HUD.controls.beesummonerbadge then
+			inst.HUD.controls.status.brain:SetPosition(-40, -40, 0)
+			inst.HUD.controls.beesummonerbadge = GetPlayer().HUD.controls.status:AddChild(BeeSummonerBadge(inst))
+			inst.HUD.controls.beesummonerbadge:SetPosition(40, -40, 0)
+		    inst.HUD.controls.beesummonerbadge:SetPercent(inst.components.beesummoner:GetRegenTickPercent(), inst.components.beesummoner.maxticks)
+		    inst.HUD.controls.beesummonerbadge.num:SetString(tostring(inst.components.beesummoner.numstore))
+
+		    inst.HUD.controls.beesummonerbadge.inst:ListenForEvent("onregentick", OnRegenTick, inst)
+		    inst.HUD.controls.beesummonerbadge.inst:ListenForEvent("onnumstorechange", OnNumStoreChange, inst)
+		end
+	end
+end
+
 local function InitFn(inst)
 	OnEquip(inst)
 	OnUnequip(inst)
@@ -193,7 +226,8 @@ local postinit = function(inst)
 	inst:ListenForEvent("equip", OnEquip)
 	inst:ListenForEvent("unequip", OnUnequip)
 
-	inst:DoTaskInTime(0, InitFn)
+	InitFn(inst)
+	inst:DoTaskInTime(0, SetHUDState)
 end
 
 return MakePlayerCharacter("zeta", prefabs, assets, postinit, start_inv)
