@@ -41,6 +41,8 @@ Assets = {
 
     Asset("SOUNDPACKAGE", "sound/zeta.fev"),
     Asset("SOUND", "sound/zeta.fsb"),
+
+    Asset("ANIM", "anim/symbiosis.zip"),
 }
 
 local function CheckDlcEnabled(dlc)
@@ -191,3 +193,40 @@ local myrecipe = Recipe("armorhoney",
 	TECH.NONE
 )
 myrecipe.atlas = "images/inventoryimages/armorhoney.xml"
+
+local Badge = require("widgets/badge")
+
+local function OnRegenTick(inst, data, badge)
+	badge:SetPercent(inst.components.beesummoner:GetRegenTickPercent(), inst.components.beesummoner.maxticks)
+	badge.num:SetString(GLOBAL.tostring(inst.components.beesummoner.numstore))
+	if data.currenttick > 0 then
+		badge:PulseGreen()
+		GLOBAL.TheFrontEnd:GetSound():PlaySound("dontstarve/HUD/health_up")
+	end
+end
+
+local function OnNumStoreChange(inst, data, badge)
+	badge.num:SetString(GLOBAL.tostring(inst.components.beesummoner.numstore))
+end
+
+local function StatusPostConstruct(self)
+	if self.owner.components.beesummoner then
+		self.brain:SetPosition(-40, -45)
+		self.symbiosis = self:AddChild(Badge("health", self.owner))
+		self.symbiosis.anim:GetAnimState():SetBuild("symbiosis")
+		self.symbiosis:SetPosition(40, -45)
+		self.symbiosis:SetPercent(
+			self.owner.components.beesummoner:GetRegenTickPercent(),
+			self.owner.components.beesummoner.maxticks
+		)
+		self.symbiosis.num:SetString(GLOBAL.tostring(self.owner.components.beesummoner.numstore))
+		self.symbiosis.inst:ListenForEvent("onregentick",
+			function(inst, data) OnRegenTick(inst, data, self.symbiosis) end,
+			self.owner)
+		self.symbiosis.inst:ListenForEvent("onnumstorechange",
+			function(inst, data) OnNumStoreChange(inst, data, self.symbiosis) end,
+			self.owner)
+	end
+end
+
+AddClassPostConstruct("widgets/statusdisplays", StatusPostConstruct)
