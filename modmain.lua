@@ -201,7 +201,7 @@ local function OnRegenTick(inst, data, badge)
 	badge.num:SetString(GLOBAL.tostring(inst.components.beesummoner.numstore))
 	if data.currenttick > 0 then
 		badge:PulseGreen()
-		GLOBAL.TheFrontEnd:GetSound():PlaySound("dontstarve/HUD/health_up")
+		-- GLOBAL.TheFrontEnd:GetSound():PlaySound("dontstarve/HUD/health_up")
 	end
 end
 
@@ -209,23 +209,41 @@ local function OnNumStoreChange(inst, data, badge)
 	badge.num:SetString(GLOBAL.tostring(inst.components.beesummoner.numstore))
 end
 
+local function CalcSymbiosisPosition(status)
+	-- Assume that brain always stays in the middle, stomach on the left and heart on the right
+	local brainPos = status.brain:GetPosition()
+	local stomachPos = status.stomach:GetPosition()
+	local heartPos = status.heart:GetPosition()
+
+	local pos = GLOBAL.Vector3(2 * stomachPos.x - brainPos.x, brainPos.y, stomachPos.z)
+	return pos
+end
+
 local function StatusPostConstruct(self)
 	if self.owner.components.beesummoner then
-		self.brain:SetPosition(-40, -45)
+		local pos = CalcSymbiosisPosition(self)
 		self.symbiosis = self:AddChild(Badge("health", self.owner))
 		self.symbiosis.anim:GetAnimState():SetBuild("symbiosis")
-		self.symbiosis:SetPosition(40, -45)
+		self.symbiosis:SetPosition(pos:Get())
+		self.symbiosis:SetScale(self.brain:GetScale():Get())
 		self.symbiosis:SetPercent(
 			self.owner.components.beesummoner:GetRegenTickPercent(),
 			self.owner.components.beesummoner.maxticks
 		)
 		self.symbiosis.num:SetString(GLOBAL.tostring(self.owner.components.beesummoner.numstore))
+		self.symbiosis.num:Show()
 		self.symbiosis.inst:ListenForEvent("onregentick",
 			function(inst, data) OnRegenTick(inst, data, self.symbiosis) end,
 			self.owner)
 		self.symbiosis.inst:ListenForEvent("onnumstorechange",
 			function(inst, data) OnNumStoreChange(inst, data, self.symbiosis) end,
 			self.owner)
+
+		local OldOnLoseFocus = self.symbiosis.OnLoseFocus
+		self.symbiosis.OnLoseFocus = function(badge)
+			OldOnLoseFocus(badge)
+			badge.num:Show()
+		end
 	end
 end
 
