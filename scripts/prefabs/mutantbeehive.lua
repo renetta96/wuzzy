@@ -12,7 +12,6 @@ local prefabs =
 
 local assets =
 {
-	Asset("ANIM", "anim/beehive.zip"),
 	Asset("ANIM", "anim/mutantbeehive.zip"), -- New anim
 	Asset("SOUND", "sound/bee.fsb"),
 }
@@ -430,11 +429,11 @@ local function fn()
 	inst.entity:AddMiniMapEntity()
 	inst.entity:AddLightWatcher()
 
-	MakeObstaclePhysics(inst, .5)
+	MakeObstaclePhysics(inst, 3)
 
 	inst.MiniMapEntity:SetIcon("beehive.png")
 
-	inst.AnimState:SetBank("beehive")
+	inst.AnimState:SetBank("mutantbeehive")
 	inst.AnimState:SetBuild("mutantbeehive")
 
 
@@ -480,7 +479,7 @@ local function fn()
 	---------------------
 
 	---------------------
-	MakeMediumFreezableCharacter(inst)
+	MakeLargeFreezableCharacter(inst)
 	inst:ListenForEvent("freeze", OnFreeze)
 	inst:ListenForEvent("onthaw", OnThaw)
 	inst:ListenForEvent("unfreeze", OnUnFreeze)
