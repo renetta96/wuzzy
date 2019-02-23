@@ -23,6 +23,8 @@ Assets = {
 	Asset( "ATLAS", "images/map_icons/zeta.xml" ),
 	Asset( "IMAGE", "images/map_icons/mutantbeecocoon.tex" ),
 	Asset( "ATLAS", "images/map_icons/mutantbeecocoon.xml" ),
+	Asset( "IMAGE", "images/map_icons/mutantbeehive.tex" ),
+	Asset( "ATLAS", "images/map_icons/mutantbeehive.xml" ),
 
 	Asset( "IMAGE", "images/avatars/avatar_zeta.tex" ),
     Asset( "ATLAS", "images/avatars/avatar_zeta.xml" ),
@@ -152,6 +154,7 @@ STRINGS.NAMES.ZETA = "Ozzy"
 
 AddMinimapAtlas("images/map_icons/zeta.xml")
 AddMinimapAtlas("images/map_icons/mutantbeecocoon.xml")
+AddMinimapAtlas("images/map_icons/mutantbeehive.xml")
 
 -- Add mod character to mod character list. Also specify a gender. Possible genders are MALE, FEMALE, ROBOT, NEUTRAL, and PLURAL.
 AddModCharacter("zeta", "MALE")
@@ -169,6 +172,30 @@ local function MakeHoneycombUpgrader(prefab)
 end
 
 AddPrefabPostInit("honeycomb", MakeHoneycombUpgrader)
+
+local function HandleHoneyPerishingInMetapisHive(prefab)
+	if prefab.components.perishable then
+		local OldOnPutInInventory = prefab.components.inventoryitem.onputininventoryfn or function() return end
+		prefab.components.inventoryitem:SetOnPutInInventoryFn(function(inst, owner)
+			if owner.prefab == "mutantbeehive" then
+				inst.components.perishable:StopPerishing()
+			end
+
+			OldOnPutInInventory(inst, owner)
+		end)
+
+		local OldOnRemoved = prefab.components.inventoryitem.onRemovedfn or function() return end
+		prefab.components.inventoryitem:SetOnRemovedFn(function(inst, owner)
+			if owner.prefab == "mutantbeehive" then
+				inst.components.perishable:StartPerishing()
+			end
+
+			OldOnRemoved(inst, owner)
+		end)
+	end
+end
+
+AddPrefabPostInit("honey", HandleHoneyPerishingInMetapisHive)
 
 local Recipe = GLOBAL.Recipe
 

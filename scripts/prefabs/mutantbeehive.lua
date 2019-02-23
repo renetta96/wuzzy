@@ -12,21 +12,23 @@ local prefabs =
 
 local assets =
 {
+	-- Asset("ANIM", "anim/ui_chest_3x3.zip"),
+	Asset("ANIM", "anim/ui_chest_3x2.zip"),
 	Asset("ANIM", "anim/mutantbeehive.zip"), -- New anim
 	Asset("SOUND", "sound/bee.fsb"),
 }
 
 local UPGRADE_STAGES = {
 	[1] = {
-		SIZE_SCALE = 1.2,
+		SIZE_SCALE = 1.15,
 		HEALTH = 700
 	},
 	[2] = {
-		SIZE_SCALE = 1.45,
+		SIZE_SCALE = 1.3,
 		HEALTH = 1100
 	},
 	[3] = {
-		SIZE_SCALE = 1.7,
+		SIZE_SCALE = 1.45,
 		HEALTH = 1500
 	}
 }
@@ -201,7 +203,8 @@ local function OnFreeze(inst)
 	inst:Say(SPEECH.FREEZE)
 	inst.SoundEmitter:PlaySound("dontstarve/common/freezecreature")
 	inst.AnimState:PlayAnimation("frozen", true)
-	inst.AnimState:OverrideSymbol("swap_frozen", "frozen", "frozen")
+	-- inst.AnimState:OverrideSymbol("swap_frozen", "frozen", "frozen")
+	inst.AnimState:Show("frozen_fx")
 
 	StopSpawning(inst)
 end
@@ -209,13 +212,15 @@ end
 local function OnThaw(inst)
 	inst.AnimState:PlayAnimation("frozen_loop_pst", true)
 	inst.SoundEmitter:PlaySound("dontstarve/common/freezethaw", "thawing")
-	inst.AnimState:OverrideSymbol("swap_frozen", "frozen", "frozen")
+	-- inst.AnimState:OverrideSymbol("swap_frozen", "frozen", "frozen")
+	inst.AnimState:Show("frozen_fx")
 end
 
 local function OnUnFreeze(inst)
 	inst.AnimState:PlayAnimation("cocoon_small", true)
 	inst.SoundEmitter:KillSound("thawing")
-	inst.AnimState:ClearOverrideSymbol("swap_frozen")
+	-- inst.AnimState:ClearOverrideSymbol("swap_frozen")
+	inst.AnimState:Hide("frozen_fx")
 
 	StartSpawning(inst)
 end
@@ -395,17 +400,62 @@ local function OnSave(inst, data)
 	if inst.isowned then
 		data.isowned = inst.isowned
 	end
+
+	data.honey_progress = inst.honey_progress or 0
 end
 
 local function OnLoad(inst, data)
 	if data and data.isowned then
 		inst.isowned = data.isowned
 	end
+
+	if data and data.honey_progress then
+		inst.honey_progress = data.honey_progress
+	end
 end
 
 local function OnPlayerJoined(inst)
 	local player = GetPlayer()
 	LinkToPlayer(inst, player)
+end
+
+local function onopen(inst)
+	inst.SoundEmitter:PlaySound("dontstarve/wilson/chest_open")
+end
+
+local function onclose(inst)
+	inst.SoundEmitter:PlaySound("dontstarve/wilson/chest_close")
+end
+
+local function GiveHoney(inst)
+	if not inst.components.container then
+		return
+	end
+
+	local honey = SpawnPrefab("honey")
+	inst.components.container:GiveItem(honey)
+end
+
+local function AddHoneyProgress(inst)
+	inst.honey_progress = inst.honey_progress or 0
+	inst.honey_progress = inst.honey_progress + 1
+
+	if inst.honey_progress >= 5 then
+		GiveHoney(inst)
+		inst.honey_progress = 0
+	end
+end
+
+local function itemtestfn(inst, item, slot)
+	return item and item.prefab and item.prefab == "honey"
+end
+
+local function onchildgoinghome(inst, data)
+	if not inst:HasTag("burnt") then
+		if data.child and data.child.components.pollinator and data.child.components.pollinator:HasCollectedEnough() then
+		    AddHoneyProgress(inst)
+		end
+	end
 end
 
 local function OnInit(inst)
@@ -420,6 +470,14 @@ local function OnInit(inst)
 	OnPlayerJoined(inst)
 end
 
+local slotpos = {}
+
+for y = 2, 0, -1 do
+	for x = 0, 2 do
+		table.insert(slotpos, Vector3(80*x-80*2+80, 80*y-80*2+80, 0))
+	end
+end
+
 local function fn()
 	local inst = CreateEntity()
 
@@ -429,9 +487,9 @@ local function fn()
 	inst.entity:AddMiniMapEntity()
 	inst.entity:AddLightWatcher()
 
-	MakeObstaclePhysics(inst, 3)
+	MakeObstaclePhysics(inst, 1)
 
-	inst.MiniMapEntity:SetIcon("beehive.png")
+	inst.MiniMapEntity:SetIcon("mutantbeehive.tex")
 
 	inst.AnimState:SetBank("mutantbeehive")
 	inst.AnimState:SetBuild("mutantbeehive")
@@ -465,6 +523,7 @@ local function fn()
 	inst:AddComponent("childspawner")
 	inst.components.childspawner.childname = "mutantbee"
 	inst.components.childspawner:SetMaxChildren(TUNING.MUTANT_BEEHIVE_BEES)
+	inst:ListenForEvent("childgoinghome", onchildgoinghome)
 
 	inst:DoTaskInTime(0, OnInit)
 
@@ -521,6 +580,19 @@ local function fn()
 	---------------------
 	inst:AddComponent("sanityaura")
 	inst.components.sanityaura.aurafn = CalcSanityAura
+
+	---------------------
+	inst:AddComponent("container")
+	inst.components.container:SetNumSlots(#slotpos)
+	inst.components.container.onopenfn = onopen
+	inst.components.container.onclosefn = onclose
+	inst.components.container.itemtestfn = itemtestfn
+
+	inst.components.container.widgetslotpos = slotpos
+	inst.components.container.widgetanimbank = "ui_chest_3x3"
+	inst.components.container.widgetanimbuild = "ui_chest_3x3"
+	inst.components.container.widgetpos = Vector3(0, 200, 0)
+	inst.components.container.side_align_tip = 160
 
 	---------------------
 	MakeLargePropagator(inst)
