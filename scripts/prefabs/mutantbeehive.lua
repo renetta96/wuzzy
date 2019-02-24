@@ -12,8 +12,8 @@ local prefabs =
 
 local assets =
 {
-	-- Asset("ANIM", "anim/ui_chest_3x3.zip"),
-	Asset("ANIM", "anim/ui_chest_3x2.zip"),
+	Asset("ANIM", "anim/ui_chest_3x3.zip"),
+	-- Asset("ANIM", "anim/ui_chest_3x2.zip"),
 	Asset("ANIM", "anim/mutantbeehive.zip"), -- New anim
 	Asset("SOUND", "sound/bee.fsb"),
 }
@@ -36,10 +36,10 @@ local UPGRADE_STAGES = {
 local SPEECH =
 {
 	ATTACK = {
-		"LET'S KILL THEM ALL!!!",
+		"KILL THEM ALL!!!",
 		"ENEMY DETECTED!!!",
 		"PROTECT MASTER!",
-		"PREPARE TO GET STINGED!",
+		"PREPARE TO GET STUNG!",
 		"ONTO THE BATTLEFIELD!"
 	},
 	SPAWN = {
@@ -84,8 +84,8 @@ local SPEECH =
 	WELCOME = {
 		"WELCOME BACK, MASTER!",
 		"WE ARE GLAD TO SEE YOU!",
-		"WE WERE WAITING FOR YOU!",
-		"FINALLY WE'RE UNITED!"
+		"WE'VE BEEN WAITING FOR YOU!",
+		"AT LAST WE'RE UNITED!"
 	},
 	GOODNIGHT = {
 		"HAVE A GOOD SLEEP, MASTER!",

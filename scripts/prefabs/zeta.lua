@@ -1,7 +1,5 @@
 local MakePlayerCharacter = require "prefabs/player_common"
 local helpers = require "helpers"
-local Badge = require "widgets/badge"
-
 
 local assets = {
 	Asset("SCRIPT", "scripts/prefabs/player_common.lua"),
@@ -23,7 +21,10 @@ local opentop_hats = {
 
 -- Custom starting items
 local start_inv = {
-	"mutantbeecocoon"
+	"mutantbeecocoon",
+	"honey",
+	"honey",
+	"honey"
 }
 
 local HONEYED_FOODS = {

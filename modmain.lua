@@ -174,7 +174,7 @@ end
 AddPrefabPostInit("honeycomb", MakeHoneycombUpgrader)
 
 local function HandleHoneyPerishingInMetapisHive(prefab)
-	if prefab.components.perishable then
+	if prefab.components.perishable and prefab.components.inventoryitem then
 		local OldOnPutInInventory = prefab.components.inventoryitem.onputininventoryfn or function() return end
 		prefab.components.inventoryitem:SetOnPutInInventoryFn(function(inst, owner)
 			if owner.prefab == "mutantbeehive" then

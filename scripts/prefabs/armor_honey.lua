@@ -1,5 +1,3 @@
-local helpers = require "helpers"
-
 local assets =
 {
     Asset("ANIM", "anim/armor_honey.zip"),
