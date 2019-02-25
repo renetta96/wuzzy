@@ -1,3 +1,6 @@
+-- REIGN_OF_GIANTS
+-- CAPY_DLC
+-- PORKLAND_DLC
 local function CheckDlcEnabled(dlc)
 	-- if the constant doesn't even exist, then they can't have the DLC
 	if not rawget(_G, dlc) then return false end

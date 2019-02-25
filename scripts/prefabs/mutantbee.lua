@@ -328,11 +328,26 @@ local function HandleHML(inst)
 	end
 end
 
+local function HandleSW(inst)
+	local seasonmanager = GetSeasonManager()
+	if seasonmanager:IsMildSeason() then
+		AutumnMutate(inst)
+	elseif seasonmanager:IsGreenSeason() then
+		SpringMutate(inst)
+	elseif seasonmanager:IsWetSeason() then
+		WinterMutate(inst)
+	elseif seasonmanager:IsDrySeason() then
+		SummerMutate(inst)
+	end
+end
+
 local function ChangeMutantOnSeason(inst)
 	local seasonmanager = GetSeasonManager()
 
 	if SaveGameIndex:IsModePorkland() then
 		HandleHML(inst)
+	elseif SaveGameIndex:IsModeShipwrecked() then
+		HandleSW(inst)
 	else
 		HandleRoG(inst)
 	end
@@ -354,7 +369,11 @@ local function commonfn(build, tags)
 	MakeCharacterPhysics(inst, 1, .5)
 	inst.Physics:SetCollisionGroup(COLLISION.FLYERS)
 	inst.Physics:ClearCollisionMask()
-	inst.Physics:CollidesWith(GetWorldCollision())
+	if helpers.CheckDlcEnabled("PORKLAND_DLC") then
+		inst.Physics:CollidesWith(GetWorldCollision())
+	else
+		inst.Physics:CollidesWith(COLLISION.WORLD)
+	end
 	inst.Physics:CollidesWith(COLLISION.FLYERS)
 
 	inst:AddTag("insect")

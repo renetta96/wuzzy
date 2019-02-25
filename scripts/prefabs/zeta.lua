@@ -98,6 +98,8 @@ local function IsSpringEquivalent()
 
 	if SaveGameIndex:IsModePorkland() then
 		return seasonmanager:IsLushSeason()
+	elseif SaveGameIndex:IsModeShipwrecked() then
+		return seasonmanager:IsGreenSeason()
 	else
 		return seasonmanager:IsSpring()
 	end
@@ -110,6 +112,8 @@ local function IsWinterEquivalent()
 
 	if SaveGameIndex:IsModePorkland() then
 		return seasonmanager:IsHumidSeason()
+	elseif SaveGameIndex:IsModeShipwrecked() then
+		return seasonmanager:IsWetSeason()
 	else
 		return seasonmanager:IsWinter()
 	end
