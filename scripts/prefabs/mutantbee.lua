@@ -230,7 +230,7 @@ local function OnFreezingAttack(inst, data)
     end
 
     if target.components.freezable and target.components.freezable:IsFrozen() then
-    	local dmg = (target.components.freezable.resistance / TUNING.MUTANT_BEE_COLDNESS_ADD) * TUNING.MUTANT_BEE_DAMAGE / 2
+    	local dmg = (target.components.freezable.resistance / TUNING.MUTANT_BEE_COLDNESS_ADD) * TUNING.MUTANT_BEE_DAMAGE
 		target.components.health:DoDelta(-dmg, nil, "unfreeze_damage")
 		target:PushEvent("attacked", {attacker = inst, damage = dmg})
 	end

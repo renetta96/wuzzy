@@ -184,14 +184,31 @@ local function HandleHoneyPerishingInMetapisHive(prefab)
 			OldOnPutInInventory(inst, owner)
 		end)
 
-		local OldOnRemoved = prefab.components.inventoryitem.onRemovedfn or function() return end
-		prefab.components.inventoryitem:SetOnRemovedFn(function(inst, owner)
-			if owner.prefab == "mutantbeehive" then
-				inst.components.perishable:StartPerishing()
+		if CheckDlcEnabled("PORKLAND_DLC") then
+			local OldOnRemoved = prefab.components.inventoryitem.onRemovedfn or function() return end
+			prefab.components.inventoryitem:SetOnRemovedFn(function(inst, owner)
+				if owner.prefab == "mutantbeehive" then
+					inst.components.perishable:StartPerishing()
+				end
+
+				OldOnRemoved(inst, owner)
+			end)
+		else
+			local inventoryitem = prefab.components.inventoryitem
+			local OldOnRemoved = inventoryitem.OnRemoved
+			local onremovedfn = function(inst, owner)
+				if owner.prefab == "mutantbeehive" then
+					inst.components.perishable:StartPerishing()
+				end
 			end
 
-			OldOnRemoved(inst, owner)
-		end)
+			inventoryitem.OnRemoved = function(comp)
+				if comp.owner then
+					onremovedfn(comp.inst, comp.owner)
+				end
+				OldOnRemoved(comp)
+			end
+		end
 	end
 end
 

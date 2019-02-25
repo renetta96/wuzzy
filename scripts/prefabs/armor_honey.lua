@@ -110,7 +110,7 @@ local function OnPerishChange(inst, data)
 
         if inst.components.inventoryitem and inst.components.equippable then
             local owner = inst.components.inventoryitem:GetGrandOwner()
-            if inst.components.equippable:IsEquipped() then
+            if inst.components.equippable:IsEquipped() and owner.components.beesummoner then
                 owner.components.beesummoner:AddRegenTickModifier_Mult("armorhoney", CalcStoreModifier(inst))
             end
         end
