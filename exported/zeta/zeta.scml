@@ -16,7 +16,25 @@
         <file id="12" name="face/face-12.png" width="200" height="200" pivot_x="0.542747" pivot_y="0.570502"/>
         <file id="13" name="face/face-13.png" width="200" height="200" pivot_x="0.542747" pivot_y="0.570502"/>
         <file id="14" name="face/face-14.png" width="200" height="200" pivot_x="0.542747" pivot_y="0.570502"/>
-        <file id="15" name="face/face-15.png" width="200" height="200" pivot_x="0.622747" pivot_y="0.570002"/>
+        <file id="15" name="face/face-15.png" width="200" height="200" pivot_x="0.542747" pivot_y="0.570502"/>
+        <file id="16" name="face/face-16.png" width="200" height="200" pivot_x="0.542747" pivot_y="0.570502"/>
+        <file id="17" name="face/face-17.png" width="200" height="200" pivot_x="0.542747" pivot_y="0.570502"/>
+        <file id="18" name="face/face-18.png" width="200" height="200" pivot_x="0.542747" pivot_y="0.570502"/>
+        <file id="19" name="face/face-19.png" width="200" height="200" pivot_x="0.542747" pivot_y="0.570502"/>
+        <file id="20" name="face/face-20.png" width="200" height="200" pivot_x="0.542747" pivot_y="0.570502"/>
+        <file id="21" name="face/face-21.png" width="200" height="200" pivot_x="0.542747" pivot_y="0.570502"/>
+        <file id="22" name="face/face-22.png" width="200" height="200" pivot_x="0.542747" pivot_y="0.570502"/>
+        <file id="23" name="face/face-23.png" width="200" height="200" pivot_x="0.542747" pivot_y="0.570502"/>
+        <file id="24" name="face/face-24.png" width="200" height="200" pivot_x="0.542747" pivot_y="0.570502"/>
+        <file id="25" name="face/face-25.png" width="200" height="200" pivot_x="0.542747" pivot_y="0.570502"/>
+        <file id="26" name="face/face-26.png" width="200" height="200" pivot_x="0.542747" pivot_y="0.570502"/>
+        <file id="27" name="face/face-27.png" width="200" height="200" pivot_x="0.542747" pivot_y="0.570502"/>
+        <file id="28" name="face/face-28.png" width="200" height="200" pivot_x="0.542747" pivot_y="0.570502"/>
+        <file id="29" name="face/face-29.png" width="200" height="200" pivot_x="0.542747" pivot_y="0.570502"/>
+        <file id="30" name="face/face-30.png" width="200" height="200" pivot_x="0.542747" pivot_y="0.570502"/>
+        <file id="31" name="face/face-31.png" width="200" height="200" pivot_x="0.542747" pivot_y="0.570502"/>
+        <file id="32" name="face/face-32.png" width="200" height="200" pivot_x="0.542747" pivot_y="0.570502"/>
+        <file id="33" name="face/face-33.png" width="200" height="200" pivot_x="0.622747" pivot_y="0.570002" />
     </folder>
     <folder id="1" name="headbase">
         <file id="0" name="headbase/headbase-0.png" width="300" height="300" pivot_x="0.520832" pivot_y="0.186585"/>
