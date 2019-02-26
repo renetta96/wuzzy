@@ -208,6 +208,9 @@
 		<file id="9" name="paddle/paddle-9.png" width="56" height="172" pivot_x="0.50133" pivot_y="0.371805" />
 		<file id="10" name="paddle/paddle-10.png" width="48" height="180" pivot_x="0.58176" pivot_y="0.413058" />
 	</folder>
+    <folder id="21" name="lens_eye">
+        <file id="0" name="lens_eye/lens_eye-0.png" width="52" height="60" pivot_x="0.439904" pivot_y="0.5175"/>
+    </folder>
     <entity id="0" name="template">
         <animation id="0" name="BUILD_PLAYER" length="1000">
             <mainline>
