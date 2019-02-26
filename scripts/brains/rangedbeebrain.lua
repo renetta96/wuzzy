@@ -33,11 +33,15 @@ local function ShouldDodgeNow(inst)
     return IsValidTarget(inst.components.combat.target) and inst.components.combat:InCooldown()
 end
 
+local function FullyCollected(inst)
+    return inst.components.pollinator and inst.components.pollinator:HasCollectedEnough()
+end
+
 local function ShouldGoHome(inst)
     local clock = GetClock()
 
     return not IsValidTarget(inst.components.combat.target)
-        and (clock and not clock:IsDay())
+        and ((clock and not clock:IsDay()) or FullyCollected(inst))
 end
 
 local function IsHomeOnFire(inst)
