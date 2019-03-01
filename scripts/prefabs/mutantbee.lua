@@ -383,15 +383,7 @@ local function commonfn(build, tags)
 
 	MakePoisonableCharacter(inst)
 
-	MakeCharacterPhysics(inst, 1, .5)
-	inst.Physics:SetCollisionGroup(COLLISION.FLYERS)
-	inst.Physics:ClearCollisionMask()
-	if helpers.CheckDlcEnabled("PORKLAND_DLC") then
-		inst.Physics:CollidesWith(GetWorldCollision())
-	else
-		inst.Physics:CollidesWith(COLLISION.WORLD)
-	end
-	inst.Physics:CollidesWith(COLLISION.FLYERS)
+	MakeAmphibiousCharacterPhysics(inst, 1, .5)
 
 	inst:AddTag("insect")
 	inst:AddTag("smallcreature")
