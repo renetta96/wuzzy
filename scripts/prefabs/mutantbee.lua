@@ -115,6 +115,18 @@ local function RangedRetarget(inst)
 	return FindTarget(inst, TUNING.MUTANT_BEE_RANGED_TARGET_DIST)
 end
 
+local function ForceRetarget(inst)
+	if inst.components.combat.target == nil then
+		return
+	end
+
+	local target = inst.components.combat.target
+	if not inst.components.combat:CanTarget(target)
+	or (target.components.health and target.components.health:IsDead()) then
+		inst.components.combat:GiveUp()
+	end
+end
+
 local function MakeRangedWeapon(inst)
 	if not inst.components.inventory then
 		inst:AddComponent("inventory")
@@ -124,6 +136,11 @@ local function MakeRangedWeapon(inst)
 	inst.components.combat:SetAttackPeriod(TUNING.MUTANT_BEE_RANGED_ATK_PERIOD)
 	inst.components.combat:SetDefaultDamage(TUNING.MUTANT_BEE_RANGED_DAMAGE)
 	inst.components.combat:SetRetargetFunction(0.5, RangedRetarget)
+
+	-- Fix for non-Hamlet DLC, don't know why
+	if not helpers.CheckDlcEnabled("PORKLAND_DLC") then
+		inst:DoPeriodicTask(1, ForceRetarget)
+	end
 
 	if not inst.components.inventory:GetEquippedItem(EQUIPSLOTS.HANDS) then
 		local weapon = CreateEntity()
