@@ -370,6 +370,22 @@ local function ChangeMutantOnSeason(inst)
 	end
 end
 
+WAKE_TO_FOLLOW_DISTANCE = 15
+
+local function ShouldWakeUp(inst)
+	return DefaultWakeTest(inst)
+	or (inst.components.follower
+		and not inst.components.follower:IsNearLeader(WAKE_TO_FOLLOW_DISTANCE))
+end
+
+SLEEP_NEAR_LEADER_DISTANCE = 8
+
+local function ShouldSleep(inst)
+	return DefaultSleepTest(inst)
+	and (inst.components.follower == nil or
+		inst.components.follower:IsNearLeader(SLEEP_NEAR_LEADER_DISTANCE))
+end
+
 local function commonfn(build, tags)
 	local inst = CreateEntity()
 
@@ -390,6 +406,7 @@ local function commonfn(build, tags)
 	inst:AddTag("cattoyairborne")
 	inst:AddTag("flying")
 	inst:AddTag("mutant")
+	inst:AddTag("companion")
 
 	for i, v in ipairs(tags) do
 		inst:AddTag(v)
@@ -427,6 +444,8 @@ local function commonfn(build, tags)
 	------------------
 
 	inst:AddComponent("sleeper")
+	inst.components.sleeper:SetSleepTest(ShouldSleep)
+	inst.components.sleeper:SetWakeTest(ShouldWakeUp)
 	------------------
 
 	inst:AddComponent("knownlocations")

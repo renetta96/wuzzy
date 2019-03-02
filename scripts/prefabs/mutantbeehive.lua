@@ -498,10 +498,8 @@ local function fn()
 	inst.AnimState:PlayAnimation("cocoon_small", true)
 
 	inst:AddTag("structure")
-	inst:AddTag("hive")
-	inst:AddTag("beehive")
 	inst:AddTag("mutantbeehive")
-	inst:AddTag("tent")
+	inst:AddTag("companion")
 
 	---------------------------
 	inst:AddComponent("talker")
