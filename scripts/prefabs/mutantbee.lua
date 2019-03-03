@@ -399,7 +399,7 @@ local function commonfn(build, tags)
 
 	MakePoisonableCharacter(inst)
 
-	MakeAmphibiousCharacterPhysics(inst, 1, .5)
+	MakeAmphibiousCharacterPhysics(inst, 1, 0.1)
 
 	inst:AddTag("insect")
 	inst:AddTag("smallcreature")
