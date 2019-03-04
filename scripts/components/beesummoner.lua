@@ -217,7 +217,7 @@ function BeeSummoner:StopRegen()
 end
 
 function BeeSummoner:StartRegen(tick)
-	if self.numstore >= self.maxstore then
+	if self.numstore >= self:GetTotalStore() then
 		self:StopRegen()
 		return
 	end

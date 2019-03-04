@@ -12,7 +12,7 @@ local prefabs =
 {
 	"stinger",
 	"honey",
-	"explosive_small",
+	"explode_small",
 	"blowdart_walrus",
 }
 

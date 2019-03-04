@@ -19,15 +19,15 @@ local assets =
 
 local UPGRADE_STAGES = {
 	[1] = {
-		SIZE_SCALE = 1.2,
+		SIZE_SCALE = 1.0,
 		HEALTH = 700
 	},
 	[2] = {
-		SIZE_SCALE = 1.45,
+		SIZE_SCALE = 1.15,
 		HEALTH = 1100
 	},
 	[3] = {
-		SIZE_SCALE = 1.7,
+		SIZE_SCALE = 1.3,
 		HEALTH = 1500
 	}
 }
