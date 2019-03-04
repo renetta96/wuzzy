@@ -637,10 +637,10 @@ local function fn()
 
 	---------------------
 	inst:AddComponent("container")
-	inst.components.container:WidgetSetup("treasurechest")
+	inst.components.container.itemtestfn = itemtestfn
+	inst.components.container:WidgetSetup("mutantbeehive")
     inst.components.container.onopenfn = onopen
     inst.components.container.onclosefn = onclose
-    inst.components.container.itemtestfn = itemtestfn
 
 	---------------------
 

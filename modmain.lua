@@ -90,10 +90,8 @@ TUNING.MUTANT_BEE_POISON_DAMAGE = -5
 TUNING.MUTANT_BEE_POISON_PERIOD = 0.75
 TUNING.MUTANT_BEE_EXPLOSIVE_DAMAGE_MULTIPLIER = 3.0
 TUNING.MUTANT_BEE_EXPLOSIVE_RANGE = 8
-TUNING.MUTANT_BEE_FROSTBITE_SPEED_PENALTY_MIN = 0.3
-TUNING.MUTANT_BEE_FROSTBITE_SPEED_PENALTY_MAX = 0.6
-TUNING.MUTANT_BEE_FROSTBITE_ATK_PERIOD_PENALTY_MIN = 1.35
-TUNING.MUTANT_BEE_FROSTBITE_ATK_PERIOD_PENALTY_MAX = 1.65
+TUNING.MUTANT_BEE_FROSTBITE_SPEED_PENALTY = 0.5
+TUNING.MUTANT_BEE_FROSTBITE_ATK_PERIOD_PENALTY = 1.65
 TUNING.MUTANT_BEE_COLDNESS_ADD = 0.5
 TUNING.MUTANT_BEE_WEAPON_ATK_RANGE = 10
 TUNING.MUTANT_BEE_RANGED_TARGET_DIST = 10
@@ -167,6 +165,17 @@ local function MakeHoneycombUpgrader(prefab)
 end
 
 AddPrefabPostInit("honeycomb", MakeHoneycombUpgrader)
+
+local containers = GLOBAL.require("containers")
+local oldwidgetsetup = containers.widgetsetup
+local MyChests = {
+	mutantbeehive = "treasurechest",
+}
+
+containers.widgetsetup = function(container, prefab, data)
+	prefab = MyChests[prefab or container.inst.prefab] or prefab
+	oldwidgetsetup(container, prefab, data)
+end
 
 AddRecipe("mutantbeecocoon",
 	{

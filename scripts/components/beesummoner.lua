@@ -24,7 +24,6 @@ local function AddChildListeners(self, child)
     self.inst:ListenForEvent("death", self._onchildkilled, child)
     self.inst:ListenForEvent("detachchild", self._onchildkilled, child)
     self.inst:ListenForEvent("onremove", self._onchildkilled, child)
-    self.inst:ListenForEvent("stopfollowing", self._onchildkilled, child)
 end
 
 local function RemoveChildListeners(self, child)
@@ -32,7 +31,6 @@ local function RemoveChildListeners(self, child)
     self.inst:RemoveEventCallback("death", self._onchildkilled, child)
     self.inst:RemoveEventCallback("detachchild", self._onchildkilled, child)
     self.inst:RemoveEventCallback("onremove", self._onchildkilled, child)
-    self.inst:RemoveEventCallback("stopfollowing", self._onchildkilled, child)
 end
 
 local function OnPlayerLeft(self, player)
