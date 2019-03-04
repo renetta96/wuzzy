@@ -48,10 +48,10 @@ function KillerBeeBrain:OnStart()
             IfNode(function() return GetLeader(self.inst) ~= nil end, "HasLeader",
                 FaceEntity(self.inst, GetFaceTargetFn, KeepFaceTargetFn )),
             DoAction(self.inst, function() return beecommon.GoHomeAction(self.inst) end, "go home", true ),
-            Wander(self.inst, function() return self.inst.components.knownlocations:GetLocation("home") end, beecommon.MAX_WANDER_DIST)            
-        }, 0.25)
-    
-    
+            Wander(self.inst, function() return self.inst.components.knownlocations:GetLocation("home") end, beecommon.MAX_WANDER_DIST)
+        }, 0.5)
+
+
     self.bt = BT(self.inst, root)
 end
 

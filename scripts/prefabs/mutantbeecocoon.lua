@@ -41,6 +41,10 @@ local function ondeploy(inst, pt)
 	end
 end
 
+local function candeploy(inst)
+	return not inst._hive
+end
+
 local function Destroy(inst)
 	if inst.components.lootdropper then
 		inst.components.lootdropper:DropLoot(inst:GetPosition())
@@ -183,9 +187,12 @@ local function fn()
 	inst:ListenForEvent("ondropped", OnDrop)
 
 	inst:AddComponent("deployable")
-	--inst.components.deployable:SetDeployMode(DEPLOYMODE.ANYWHERE)
 	inst.components.deployable:SetDeploySpacing(DEPLOYSPACING.NONE)
 	inst.components.deployable.ondeploy = ondeploy
+	local OldCanDeploy = inst.components.deployable.CanDeploy
+	inst.components.deployable.CanDeploy = function(comp, pt, mouseover)
+		return candeploy(inst) and OldCanDeploy(comp, pt, mouseover)
+	end
 
 	inst:AddComponent("lootdropper")
 
@@ -207,4 +214,4 @@ STRINGS.RECIPE_DESC.MUTANTBEECOCOON = "The core of a Metapis hive."
 STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTBEECOCOON = "Something is screeching inside."
 
 return Prefab("mutantbeecocoon", fn, assets, prefabs),
-	MakePlacer("mutantbeecocoon_placer", "beehive", "mutantbeehive", "cocoon_small")
+	MakePlacer("mutantbeecocoon_placer", "mutantbeehive", "mutantbeehive", "cocoon_small")

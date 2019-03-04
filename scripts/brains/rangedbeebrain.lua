@@ -13,7 +13,7 @@ local RUN_STOP_DIST = 10
 local MAX_CHASE_TIME = 8
 local MAX_CHASE_DIST = 25
 
-local function ShouldRunAway(guy)    
+local function ShouldRunAway(guy)
     return guy:HasTag("monster")
         or (guy.components.combat ~= nil and guy.components.combat.target ~= nil
             and (guy.components.combat.target:HasTag("player") or guy.components.combat.target:HasTag("mutant")))
@@ -25,17 +25,22 @@ end
 
 local function CanAttackNow(inst)
     local target = inst.components.combat.target
-    return target == nil 
+    return target == nil
         or (IsValidTarget(target) and not inst.components.combat:InCooldown())
 end
 
-local function ShouldDodgeNow(inst)    
+local function ShouldDodgeNow(inst)
     return IsValidTarget(inst.components.combat.target) and inst.components.combat:InCooldown()
 end
 
-local function ShouldGoHome(inst)    
-    return not IsValidTarget(inst.components.combat.target) 
-        and (not TheWorld.state.iscaveday or not inst.LightWatcher:IsInLight())
+local function FullyCollected(inst)
+    return inst.components.pollinator and inst.components.pollinator:HasCollectedEnough()
+end
+
+local function ShouldGoHome(inst)
+    return not IsValidTarget(inst.components.combat.target)
+        and ((not TheWorld.state.iscaveday or not inst.LightWatcher:IsInLight())
+        or FullyCollected(inst))
 end
 
 local function IsHomeOnFire(inst)
@@ -55,16 +60,16 @@ function RangedBeeBrain:OnStart()
         WhileNode(function() return self.inst.components.hauntable and self.inst.components.hauntable.panic end, "PanicHaunted", Panic(self.inst)),
         WhileNode(function() return self.inst.components.health.takingfiredamage end, "OnFire", Panic(self.inst)),
 
-        WhileNode(function() return CanAttackNow(self.inst) end, "AttackMomentarily", ChaseAndAttack(self.inst, MAX_CHASE_TIME, MAX_CHASE_DIST)),           
+        WhileNode(function() return CanAttackNow(self.inst) end, "AttackMomentarily", ChaseAndAttack(self.inst, MAX_CHASE_TIME, MAX_CHASE_DIST)),
         WhileNode(function() return ShouldDodgeNow(self.inst) end, "Dodge", RunAway(self.inst, ShouldRunAway, RUN_START_DIST, RUN_STOP_DIST)),
 
         WhileNode(function() return IsHomeOnFire(self.inst) end, "HomeOnFire", Panic(self.inst)),
         IfNode(function() return ShouldGoHome(self.inst) end, "TryGoHome",
             DoAction(self.inst, function() return beecommon.GoHomeAction(self.inst) end, "go home", true )),
-        
+
         FindFlower(self.inst),
         Wander(self.inst, function() return self.inst.components.knownlocations:GetLocation("home") end, beecommon.MAX_WANDER_DIST),
-    }, .25)
+    }, .5)
 
     self.bt = BT(self.inst, root)
 end

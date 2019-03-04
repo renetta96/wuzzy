@@ -18,7 +18,7 @@ local MIN_FOLLOW_DIST = 4
 local MAX_FOLLOW_DIST = 8
 local TARGET_FOLLOW_DIST = 6
 
-local function ShouldRunAway(guy)    
+local function ShouldRunAway(guy)
     return guy:HasTag("monster")
         or (guy.components.combat ~= nil and guy.components.combat.target ~= nil
             and (guy.components.combat.target:HasTag("player") or guy.components.combat.target:HasTag("mutant")))
@@ -30,15 +30,15 @@ end
 
 local function CanAttackNow(inst)
     local target = inst.components.combat.target
-    return target == nil 
+    return target == nil
         or (IsValidTarget(target) and not inst.components.combat:InCooldown())
 end
 
-local function ShouldDodgeNow(inst)    
+local function ShouldDodgeNow(inst)
     return IsValidTarget(inst.components.combat.target) and inst.components.combat:InCooldown()
 end
 
-local function ShouldGoHome(inst)    
+local function ShouldGoHome(inst)
     return not IsValidTarget(inst.components.combat.target)
 end
 
@@ -64,20 +64,20 @@ function RangedKillerBeeBrain:OnStart()
         {
             WhileNode(function() return self.inst.components.hauntable and self.inst.components.hauntable.panic end, "PanicHaunted", Panic(self.inst)),
             WhileNode(function() return self.inst.components.health.takingfiredamage end, "OnFire", Panic(self.inst)),
-                        
-        	WhileNode(function() return CanAttackNow(self.inst) end, "AttackMomentarily", ChaseAndAttack(self.inst, MAX_CHASE_TIME, MAX_CHASE_DIST)),        	
+
+        	WhileNode(function() return CanAttackNow(self.inst) end, "AttackMomentarily", ChaseAndAttack(self.inst, MAX_CHASE_TIME, MAX_CHASE_DIST)),
             WhileNode(function() return ShouldDodgeNow(self.inst) end, "Dodge", RunAway(self.inst, ShouldRunAway, RUN_START_DIST, RUN_STOP_DIST)),
 
             Follow(self.inst, function() return GetLeader(self.inst) end, MIN_FOLLOW_DIST, TARGET_FOLLOW_DIST, MAX_FOLLOW_DIST),
             IfNode(function() return GetLeader(self.inst) ~= nil end, "HasLeader",
                 FaceEntity(self.inst, GetFaceTargetFn, KeepFaceTargetFn )),
-            
-            IfNode(function() return ShouldGoHome(self.inst) end, "TryGoHome", 
-                DoAction(self.inst, function() return beecommon.GoHomeAction(self.inst) end, "go home", true )),            
-            Wander(self.inst, function() return self.inst.components.knownlocations:GetLocation("home") end, beecommon.MAX_WANDER_DIST)            
-        }, .25)
-    
-    
+
+            IfNode(function() return ShouldGoHome(self.inst) end, "TryGoHome",
+                DoAction(self.inst, function() return beecommon.GoHomeAction(self.inst) end, "go home", true )),
+            Wander(self.inst, function() return self.inst.components.knownlocations:GetLocation("home") end, beecommon.MAX_WANDER_DIST)
+        }, .5)
+
+
     self.bt = BT(self.inst, root)
 end
 

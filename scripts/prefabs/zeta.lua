@@ -1,9 +1,9 @@
-
 local MakePlayerCharacter = require "prefabs/player_common"
 
 
 local assets = {
 	Asset("SCRIPT", "scripts/prefabs/player_common.lua"),
+	Asset("ANIM", "anim/zeta.zip"),
 }
 local prefabs = {
 	"mutantbeecocoon",
@@ -12,7 +12,10 @@ local prefabs = {
 
 -- Custom starting items
 local start_inv = {
-	"mutantbeecocoon"
+	"mutantbeecocoon",
+	"honey",
+	"honey",
+	"honey"
 }
 
 local HONEYED_FOODS = {
@@ -119,6 +122,8 @@ local common_postinit = function(inst)
 	inst:AddTag("insect")
 	inst:AddTag("beemaster")
 	inst:AddTag(UPGRADETYPES.DEFAULT.."_upgradeuser")
+
+	inst.components.talker.colour = Vector3(.9, .9, .3)
 end
 
 -- This initializes for the server only. Components are added here.

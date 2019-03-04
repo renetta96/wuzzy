@@ -3,8 +3,6 @@ local beecommon = require "brains/mutantbeecommon"
 local assets =
 {
 	Asset("ANIM", "anim/bee.zip"),
-	Asset("ANIM", "anim/bee_build.zip"),
-	Asset("ANIM", "anim/bee_angry_build.zip"),
 	Asset("ANIM", "anim/mutantbee_build.zip"), -- New anim
 	Asset("ANIM", "anim/mutantbee_angry_build.zip"), -- New anim
 	Asset("SOUND", "sound/bee.fsb"),
@@ -248,13 +246,6 @@ local function ChangeMutantOnSeason(inst)
 	end
 end
 
-local function GetBuildConfig()
-	local actualname = KnownModIndex:GetModActualName("Ozzy The Buzzy")
-	local usenewbuild = GetModConfigData("USE_NEW_BEE_BUILD", actualname)
-
-	return usenewbuild
-end
-
 local function commonfn(build, tags)
 	local inst = CreateEntity()
 
@@ -265,7 +256,7 @@ local function commonfn(build, tags)
 	inst.entity:AddDynamicShadow()
 	inst.entity:AddNetwork()
 
-	MakeFlyingCharacterPhysics(inst, 1, .5)
+	MakeFlyingCharacterPhysics(inst, 1, 0.1)
 
 	inst.DynamicShadow:SetSize(.8, .5)
 	inst.Transform:SetFourFaced()
@@ -275,6 +266,7 @@ local function commonfn(build, tags)
 	inst:AddTag("cattoyairborne")
 	inst:AddTag("flying")
 	inst:AddTag("mutant")
+	inst:AddTag("companion")
 
 	for i, v in ipairs(tags) do
 		inst:AddTag(v)
@@ -301,8 +293,8 @@ local function commonfn(build, tags)
 	---------------------
 
 	inst:AddComponent("lootdropper")
-	inst.components.lootdropper:AddRandomLoot("honey", 1)
-	inst.components.lootdropper:AddRandomLoot("stinger", 2)
+	inst.components.lootdropper:AddRandomLoot("honey", 2)
+	inst.components.lootdropper:AddRandomLoot("stinger", 3)
 	inst.components.lootdropper.numrandomloot = 1
 	inst.components.lootdropper.chancerandomloot = 0.5
 
@@ -335,11 +327,6 @@ local function commonfn(build, tags)
 	inst:ListenForEvent("attacked", beecommon.OnAttacked)
 	inst.Transform:SetScale(1.2, 1.2, 1.2)
 
-	local usenewbuild = GetBuildConfig()
-	if not usenewbuild then
-		inst.AnimState:SetMultColour(0.7, 0.7, 0.7, 1)
-	end
-
 	inst.buzzing = true
 	inst.EnableBuzz = EnableBuzz
 	inst.OnEntityWake = OnWake
@@ -354,14 +341,9 @@ local killerbrain = require("brains/mutantkillerbeebrain")
 local function workerbee()
 	--pollinator (from pollinator component) added to pristine state for optimization
 	--for searching: inst:AddTag("pollinator")
-	local usenewbuild = GetBuildConfig()
 	local inst = nil
 
-	if usenewbuild then
-		inst = commonfn("mutantbee_build", { "worker", "pollinator" })
-	else
-		inst = commonfn("bee_build", { "worker", "pollinator" })
-	end
+	inst = commonfn("mutantbee_build", { "worker", "pollinator" })
 
 	if not TheWorld.ismastersim then
 		return inst
@@ -389,14 +371,9 @@ local function OnSpawnedFromHaunt(inst)
 end
 
 local function killerbee()
-	local usenewbuild = GetBuildConfig()
 	local inst = nil
 
-	if usenewbuild then
-		inst = commonfn("mutantbee_angry_build", { "killer", "scarytoprey" })
-	else
-		inst = commonfn("bee_angry_build", { "killer", "scarytoprey" })
-	end
+	inst = commonfn("mutantbee_angry_build", { "killer", "scarytoprey" })
 
 	if not TheWorld.ismastersim then
 		return inst
