@@ -265,12 +265,11 @@ local function IsValidOwner(inst, owner)
 
 	if inst._ownerid then
 		return owner.userid and owner.userid == inst._ownerid
-			and owner:HasTag("beemaster") and not owner._cocoon
-			and not (owner._hive and owner._hive ~= inst)
-	else
-		return owner.userid and owner:HasTag("beemaster") and not owner._cocoon
+			and owner.prefab == 'zeta'
 			and not (owner._hive and owner._hive ~= inst)
 	end
+
+	return false
 end
 
 local function OnHit(inst, attacker, damage)
@@ -429,7 +428,7 @@ end
 
 local function CalcSanityAura(inst, observer)
 	if inst._ownerid and IsValidOwner(inst, observer) then
-		return TUNING.SANITYAURA_SMALL_TINY
+		return TUNING.SANITYAURA_SMALL
 	end
 
 	return 0
@@ -445,7 +444,9 @@ end
 
 local function OnPlayerJoined(inst, player)
 	print("PLAYER JOINED HIVE", player)
+
 	local linksuccess = LinkToPlayer(inst, player)
+
 	if not linksuccess then
 		if inst._ownerid and player.userid and player.userid == inst._ownerid then
 			print("SAME PLAYER, DIFFERENT CHARACTER")

@@ -17,12 +17,8 @@ local prefabs =
 }
 
 local function UnlinkPlayer(inst)
-	local owner = inst._owner
 	inst._ownerid = nil
 	inst._owner = nil
-	if owner ~= nil then
-		owner._cocoon = nil
-	end
 end
 
 local function OnRemoveEntity(inst)
@@ -30,7 +26,7 @@ local function OnRemoveEntity(inst)
 	inst:RemoveEventCallback("ms_playerjoined", inst._onplayerjoined, TheWorld)
 end
 
-local function ondeploy(inst, pt)
+local function ondeploy(inst, pt, deployer)
 	inst.SoundEmitter:PlaySound("dontstarve/bee/beehive_hit")
 	local hive = SpawnPrefab("mutantbeehive")
 	if hive ~= nil then
@@ -42,7 +38,7 @@ local function ondeploy(inst, pt)
 end
 
 local function candeploy(inst)
-	return not inst._hive
+	return inst and not inst._hive
 end
 
 local function Destroy(inst)
@@ -81,11 +77,9 @@ local function IsValidOwner(inst, owner)
 
 	if inst._ownerid then
 		return owner.userid and owner.userid == inst._ownerid
-			and owner:HasTag("beemaster") and not (owner._cocoon and owner._cocoon ~= inst)
-			and not owner._hive
+			and owner.prefab == 'zeta'
 	else
-		return owner.userid and owner:HasTag("beemaster") and not (owner._cocoon and owner._cocoon ~= inst)
-			and not owner._hive
+		return owner.userid and owner.prefab == 'zeta'
 	end
 end
 
@@ -94,7 +88,6 @@ local function LinkToPlayer(inst, owner)
 	if IsValidOwner(inst, owner) then
 		inst._ownerid = owner.userid
 		inst._owner = owner
-		owner._cocoon = inst
 		return true
 	end
 
@@ -105,7 +98,6 @@ local function InheritOwner(inst, hive)
 	inst._ownerid = hive._ownerid
 	if hive._owner then
 		inst._owner = hive._owner
-		hive._owner._cocoon = inst
 	end
 end
 
@@ -130,6 +122,11 @@ end
 
 local function OnPlayerJoined(inst, player)
 	print("PLAYER JOINED COCOON", player)
+	-- Don't link to player if this cocoon has no owner
+	if not inst._ownerid then
+		return
+	end
+
 	local linksuccess = LinkToPlayer(inst, player)
 	if not linksuccess then
 		if inst._ownerid and player.userid and player.userid == inst._ownerid then
@@ -191,7 +188,7 @@ local function fn()
 	inst.components.deployable.ondeploy = ondeploy
 	local OldCanDeploy = inst.components.deployable.CanDeploy
 	inst.components.deployable.CanDeploy = function(comp, pt, mouseover)
-		return candeploy(inst) and OldCanDeploy(comp, pt, mouseover)
+		return candeploy(inst._owner) and OldCanDeploy(comp, pt, mouseover)
 	end
 
 	inst:AddComponent("lootdropper")
