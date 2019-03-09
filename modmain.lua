@@ -300,7 +300,9 @@ end
 AddClassPostConstruct("widgets/statusdisplays", StatusPostConstruct)
 
 local function onsymbiosisdirty(inst)
-	inst.UpdateSymbiosisBadge()
+	if GLOBAL.ThePlayer and GLOBAL.ThePlayer.UpdateSymbiosisBadge then
+		GLOBAL.ThePlayer.UpdateSymbiosisBadge()
+	end
 end
 
 local function PlayerPostConstruct(inst)
