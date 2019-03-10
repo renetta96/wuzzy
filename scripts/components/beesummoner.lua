@@ -113,8 +113,10 @@ function BeeSummoner:TakeOwnership(child)
         child.components.knownlocations:RememberLocation("home", self.inst:GetPosition())
     end
 
-	child:AddComponent("follower")
-	child.components.follower:SetFollowExitDestinations({EXIT_DESTINATION.LAND, EXIT_DESTINATION.WATER})
+    if not child.components.follower then
+		child:AddComponent("follower")
+		child.components.follower:SetFollowExitDestinations({EXIT_DESTINATION.LAND, EXIT_DESTINATION.WATER})
+	end
 
 	if self.inst.components.leader ~= nil then
 		self.inst.components.leader:AddFollower(child)

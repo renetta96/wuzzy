@@ -17,6 +17,8 @@ local opentop_hats = {
 	"earmuffshat",
 	"flowerhat",
 	"shark_teethhat",
+	"double_umbrellahat",
+	"ruinshat"
 }
 
 -- Custom starting items

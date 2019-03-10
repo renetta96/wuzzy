@@ -4,7 +4,6 @@ local prefabs =
 	"mutantkillerbee",
 	"honey",
 	"honeycomb",
-	-- "honeyspill",
 	"mutantbeecocoon",
 	"collapse_big",
 	"collapse_small"
@@ -13,7 +12,6 @@ local prefabs =
 local assets =
 {
 	Asset("ANIM", "anim/ui_chest_3x3.zip"),
-	-- Asset("ANIM", "anim/ui_chest_3x2.zip"),
 	Asset("ANIM", "anim/mutantbeehive.zip"), -- New anim
 	Asset("SOUND", "sound/bee.fsb"),
 }

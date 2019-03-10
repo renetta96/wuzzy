@@ -386,6 +386,15 @@ local function ShouldSleep(inst)
 		inst.components.follower:IsNearLeader(SLEEP_NEAR_LEADER_DISTANCE))
 end
 
+local function OnStartFollowing(inst, data)
+	if data and data.leader then
+		local leader = data.leader
+		if leader.components.beesummoner then
+			leader.components.beesummoner:TakeOwnership(inst)
+		end
+	end
+end
+
 local function commonfn(build, tags)
 	local inst = CreateEntity()
 
@@ -490,6 +499,10 @@ end
 
 local function killerbee()
 	local inst = commonfn("mutantbee_angry_build", { "killer", "scarytoprey" })
+
+	inst:AddComponent("follower")
+	inst.components.follower:SetFollowExitDestinations({EXIT_DESTINATION.LAND, EXIT_DESTINATION.WATER})
+	inst:ListenForEvent("startfollowing", OnStartFollowing)
 
 	inst.components.health:SetMaxHealth(TUNING.MUTANT_BEE_HEALTH)
 	inst.components.combat:SetDefaultDamage(TUNING.MUTANT_BEE_DAMAGE)
