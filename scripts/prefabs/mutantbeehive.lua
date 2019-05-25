@@ -349,22 +349,28 @@ local growth_stages =
 -- Upgrade and Grow */
 
 local function WatchEnemy(inst)
-	local enemy = FindEntity(inst, TUNING.MUTANT_BEEHIVE_WATCH_DIST,
+	local nearbyplayer, range = FindClosestPlayerToInst(inst, TUNING.MUTANT_BEEHIVE_WATCH_DIST, true)
+
+	local enemy = (nearbyplayer and
+		FindEntity(inst, TUNING.MUTANT_BEEHIVE_WATCH_DIST,
 			function(guy)
 				return inst.components.combat:CanTarget(guy)
 			end,
 			{ "_combat", "_health" },
-			{ "insect", "INLIMBO" },
-			{ "monster" })
-			or FindEntity(inst, TUNING.MUTANT_BEEHIVE_WATCH_DIST,
-				function(guy)
-					return inst.components.combat:CanTarget(guy)
-						and guy.components.combat and guy.components.combat.target
-						and guy.components.combat.target:HasTag("player")
-				end,
-				{ "_combat", "_health" },
-				{ "mutant", "INLIMBO" },
-				{ "monster", "insect", "animal", "character" })
+			{ "insect", "INLIMBO", "player" },
+			{ "monster" }
+		)) or
+		FindEntity(inst, TUNING.MUTANT_BEEHIVE_WATCH_DIST,
+			function(guy)
+				return inst.components.combat:CanTarget(guy)
+					and guy.components.combat and guy.components.combat.target
+					and guy.components.combat.target:HasTag("player")
+			end,
+			{ "_combat", "_health" },
+			{ "mutant", "INLIMBO", "player" },
+			{ "monster", "insect", "animal", "character" }
+		)
+
 	if enemy then
 		inst:Say(SPEECH.ATTACK)
 		OnHit(inst, enemy)

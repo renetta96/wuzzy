@@ -35,13 +35,15 @@ local killersounds =
 }
 
 local function FindTarget(inst, dist)
-	return FindEntity(inst, dist,
+	local nearbyplayer, range = FindClosestPlayerToInst(inst, dist, true)
+
+	return (nearbyplayer and FindEntity(inst, dist,
 		function(guy)
 			return inst.components.combat:CanTarget(guy)
 		end,
 		{ "_combat", "_health" },
-		{ "insect", "INLIMBO" },
-		{ "monster" })
+		{ "insect", "INLIMBO", "player" },
+		{ "monster" }))
 		or FindEntity(inst, dist,
 		function(guy)
 			return inst.components.combat:CanTarget(guy)
@@ -49,7 +51,7 @@ local function FindTarget(inst, dist)
 				and guy.components.combat.target:HasTag("player")
 		end,
 		{ "_combat", "_health" },
-		{ "mutant", "INLIMBO" },
+		{ "mutant", "INLIMBO", "player" },
 		{ "monster", "insect", "animal", "character" })
 end
 
