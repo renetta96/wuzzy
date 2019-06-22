@@ -197,12 +197,21 @@ local function OnAttackOtherWithFrostbite(inst, data)
 end
 -- Mutant effects */
 
+local function IsFollowing(inst)
+	return inst.components.follower and inst.components.follower.leader ~= nil
+end
+
 local function EnableBuzz(inst, enable)
 	if enable then
+		if IsFollowing(inst) and not inst.components.combat:HasTarget() then
+			inst.buzzing = false
+			inst.SoundEmitter:KillSound("buzz")
+			return
+		end
+
 		if not inst.buzzing then
 			inst.buzzing = true
-			if not ((inst.components.inventoryitem and inst.components.inventoryitem:IsHeld())
-				or inst:IsAsleep()) then
+			if not inst:IsAsleep() then
 				inst.SoundEmitter:PlaySound(inst.sounds.buzz, "buzz")
 			end
 		end
@@ -213,14 +222,37 @@ local function EnableBuzz(inst, enable)
 end
 
 local function OnWake(inst)
-	if inst.buzzing and
-		not (inst.components.inventoryitem and inst.components.inventoryitem:IsHeld()) then
+	if inst.buzzing then
 		inst.SoundEmitter:PlaySound(inst.sounds.buzz, "buzz")
 	end
 end
 
 local function OnSleep(inst)
 	inst.SoundEmitter:KillSound("buzz")
+end
+
+local function OnNewCombatTarget(inst, data)
+	if IsFollowing(inst) then
+		EnableBuzz(inst, true)
+	end
+end
+
+local function OnDroppedTarget(inst, data)
+	if IsFollowing(inst) then
+		EnableBuzz(inst, false)
+	end
+end
+
+local function OnStartFollowing(inst)
+	EnableBuzz(inst, false)
+	inst:ListenForEvent("newcombattarget", OnNewCombatTarget)
+	inst:ListenForEvent("droppedtarget", OnDroppedTarget)
+end
+
+local function OnStopFollowing(inst)
+	EnableBuzz(inst, true)
+	inst:RemoveEventCallback("newcombattarget", OnNewCombatTarget)
+	inst:RemoveEventCallback("droppedtarget", OnDroppedTarget)
 end
 
 local function KillerRetarget(inst)
@@ -408,6 +440,8 @@ local function killerbee()
 
 	MakeHauntablePanic(inst)
 	inst:ListenForEvent("spawnedfromhaunt", OnSpawnedFromHaunt)
+	inst:ListenForEvent("startfollowing", OnStartFollowing)
+	inst:ListenForEvent("stopfollowing", OnStopFollowing)
 
 	inst:DoTaskInTime(0, ChangeMutantOnSeason)
 
