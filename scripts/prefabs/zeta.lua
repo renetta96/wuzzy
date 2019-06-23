@@ -1,4 +1,5 @@
 local MakePlayerCharacter = require "prefabs/player_common"
+local metapisutil = require "metapisutil"
 
 local assets = {
 	Asset("SCRIPT", "scripts/prefabs/player_common.lua"),
@@ -83,6 +84,11 @@ local function OnAttacked(inst, data)
 	end
 end
 
+local function OnKillOther(inst, data)
+	local victim = data.victim
+	metapisutil.SpawnParasitesOnKill(inst, victim)
+end
+
 -- When the character is revived from human
 local function onbecamehuman(inst)
 end
@@ -151,6 +157,7 @@ local master_postinit = function(inst)
 	inst._eatenpetals = 0
 	inst:ListenForEvent("oneat", OnEat)
 	inst:ListenForEvent("attacked", OnAttacked)
+	inst:ListenForEvent("killed", OnKillOther)
 
 	inst.OnLoad = onload
 	inst.OnNewSpawn = onload

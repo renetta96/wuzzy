@@ -1,4 +1,5 @@
 local beecommon = require "brains/mutantbeecommon"
+local metapisutil = require "metapisutil"
 
 local assets =
 {
@@ -63,7 +64,9 @@ local function DoPoisonDamage(inst)
 		return
 	end
 
-	inst.components.health:DoDelta(TUNING.MUTANT_BEE_POISON_DAMAGE, true, "poison_sting")
+	-- Leave at least 1 health
+	local delta = math.min(TUNING.MUTANT_BEE_POISON_DAMAGE, inst.components.health.currenthealth - 1)
+	inst.components.health:DoDelta(-delta, true, "poison_sting")
 
 	local c_r, c_g, c_b, c_a = inst.AnimState:GetMultColour()
 	inst.AnimState:SetMultColour(0.8, 0.2, 0.8, 1)
@@ -80,7 +83,7 @@ local function DoPoisonDamage(inst)
 end
 
 local function OnAttackOtherWithPoison(inst, data)
-	if data.target and data.target.components.health and not data.target.components.health:IsDead() then
+	if data.target and data.target.components.health and not data.target.components.health:IsDead() and data.target.components.combat then
 		-- No target players.
 		if not data.target:HasTag("player") then
 			data.target._poisonticks = TUNING.MUTANT_BEE_MAX_POISON_TICKS
@@ -118,7 +121,13 @@ local function MakeRangedWeapon(inst)
 
 	inst.components.combat:SetRange(TUNING.MUTANT_BEE_WEAPON_ATK_RANGE)
 	inst.components.combat:SetAttackPeriod(TUNING.MUTANT_BEE_RANGED_ATK_PERIOD)
-	inst.components.combat:SetDefaultDamage(TUNING.MUTANT_BEE_RANGED_DAMAGE)
+
+	if inst:HasTag("parasite") then
+		inst.components.combat:SetDefaultDamage(TUNING.MUTANT_BEE_RANGED_DAMAGE * TUNING.METAPIS_PARASITE_DAMAGE_RATE)
+	else
+		inst.components.combat:SetDefaultDamage(TUNING.MUTANT_BEE_RANGED_DAMAGE)
+	end
+
 	inst.components.combat:SetRetargetFunction(0.25, RangedRetarget)
 
 	if not inst.components.inventory:GetEquippedItem(EQUIPSLOTS.HANDS) then
@@ -255,6 +264,11 @@ local function OnStopFollowing(inst)
 	inst:RemoveEventCallback("droppedtarget", OnDroppedTarget)
 end
 
+local function OnKillOther(inst, data)
+	local victim = data.victim
+	metapisutil.SpawnParasitesOnKill(inst, victim)
+end
+
 local function KillerRetarget(inst)
 	return FindTarget(inst, TUNING.MUTANT_BEE_TARGET_DIST)
 end
@@ -268,8 +282,13 @@ local function ChangeMutantOnSeason(inst)
 		inst.components.locomotor.groundspeedmultiplier = 1.3
 		inst:ListenForEvent("onattackother", OnAttackOtherWithPoison)
 	elseif TheWorld.state.issummer then
-		inst.components.health:SetMaxHealth(TUNING.MUTANT_BEE_HEALTH / 2)
-		inst.components.combat.areahitdamagepercent = TUNING.MUTANT_BEE_EXPLOSIVE_DAMAGE_MULTIPLIER
+		if inst:HasTag("parasite") then
+			inst.components.health:SetMaxHealth(TUNING.MUTANT_BEE_HEALTH * TUNING.METAPIS_PARASITE_HEALTH_RATE / 2)
+			inst.components.combat.areahitdamagepercent = TUNING.MUTANT_BEE_EXPLOSIVE_DAMAGE_MULTIPLIER * TUNING.METAPIS_PARASITE_DAMAGE_RATE
+		else
+			inst.components.health:SetMaxHealth(TUNING.MUTANT_BEE_HEALTH / 2)
+			inst.components.combat.areahitdamagepercent = TUNING.MUTANT_BEE_EXPLOSIVE_DAMAGE_MULTIPLIER
+		end
 		inst:ListenForEvent("death", OnDeathExplosive)
 	elseif TheWorld.state.isautumn then
 		MakeRangedWeapon(inst)
@@ -409,6 +428,8 @@ local function workerbee()
 	inst:SetBrain(workerbrain)
 	inst.sounds = workersounds
 
+	inst:ListenForEvent("killed", OnKillOther)
+
 	MakeHauntableChangePrefab(inst, "mutantkillerbee")
 
 	inst:DoTaskInTime(0, ChangeMutantOnSeason)
@@ -438,10 +459,45 @@ local function killerbee()
 	inst:SetBrain(killerbrain)
 	inst.sounds = killersounds
 
+	inst:ListenForEvent("killed", OnKillOther)
+
 	MakeHauntablePanic(inst)
 	inst:ListenForEvent("spawnedfromhaunt", OnSpawnedFromHaunt)
 	inst:ListenForEvent("startfollowing", OnStartFollowing)
 	inst:ListenForEvent("stopfollowing", OnStopFollowing)
+
+	inst:DoTaskInTime(0, ChangeMutantOnSeason)
+
+	return inst
+end
+
+local function parasitebee()
+	local inst = nil
+
+	inst = commonfn("mutantbee_angry_build", { "killer", "parasite", "scarytoprey" })
+
+	if not TheWorld.ismastersim then
+		return inst
+	end
+
+	inst:AddComponent("follower")
+
+	inst.components.health:SetMaxHealth(TUNING.MUTANT_BEE_HEALTH * TUNING.METAPIS_PARASITE_HEALTH_RATE)
+	inst.components.combat:SetDefaultDamage(TUNING.MUTANT_BEE_DAMAGE * TUNING.METAPIS_PARASITE_DAMAGE_RATE )
+	inst.components.combat:SetAttackPeriod(TUNING.MUTANT_BEE_ATTACK_PERIOD)
+	inst.components.combat:SetRetargetFunction(1, KillerRetarget)
+
+	inst.components.lootdropper.numrandomloot = 0 -- No loot for parasite
+
+	inst:SetBrain(killerbrain)
+	inst.sounds = killersounds
+
+	MakeHauntablePanic(inst)
+	inst:ListenForEvent("spawnedfromhaunt", OnSpawnedFromHaunt)
+	inst:ListenForEvent("startfollowing", OnStartFollowing)
+	inst:ListenForEvent("stopfollowing", OnStopFollowing)
+
+	inst.Transform:SetScale(0.8, 0.8, 0.8)
 
 	inst:DoTaskInTime(0, ChangeMutantOnSeason)
 
@@ -456,5 +512,10 @@ STRINGS.MUTANTKILLERBEE = "Metapis Soldier"
 STRINGS.NAMES.MUTANTKILLERBEE = "Metapis Soldier"
 STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTKILLERBEE = "Is it really OK to come near them?"
 
+STRINGS.MUTANTPARASITEBEE = "Metapis Parasite"
+STRINGS.NAMES.MUTANTPARASITEBEE = "Metapis Parasite"
+STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTPARASITEBEE = "It spawned from the dead body of an enemy."
+
 return Prefab("mutantbee", workerbee, assets, prefabs),
-		Prefab("mutantkillerbee", killerbee, assets, prefabs)
+	Prefab("mutantkillerbee", killerbee, assets, prefabs),
+	Prefab("mutantparasitebee", parasitebee, assets, prefabs)
