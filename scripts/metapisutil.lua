@@ -4,6 +4,10 @@ local function CalcNumParasites(victim)
 		return 0
 	end
 
+	if victim.__parasites_spawned then
+		return 0
+	end
+
 	local victimhealth = victim.components.health.maxhealth
 	local numparasites = math.floor(victimhealth / TUNING.METAPIS_PARASITE_HEALTH_DIV)
 
@@ -64,7 +68,7 @@ local function SpawnParasitesOnKill(killer, victim, prefab)
 		bee._onplayerleft = function(src, player) OnPlayerLeft(bee, player, owner.userid) end
 		bee:ListenForEvent("ms_playerleft", bee._onplayerleft, TheWorld)
 		bee.Transform:SetPosition(victim.Transform:GetWorldPosition())
-		bee:DoTaskInTime(TUNING.TOTAL_DAY_TIME * 0.5, KillSelf)
+		bee:DoTaskInTime(TUNING.METAPIS_PARASITE_LIFE_SPAN, KillSelf)
 
 		if not bee.components.follower then
 			bee:AddComponent("follower")
@@ -74,6 +78,8 @@ local function SpawnParasitesOnKill(killer, victim, prefab)
 			owner.components.leader:AddFollower(bee)
 		end
 	end
+
+	victim.__parasites_spawned = true
 end
 
 return {
