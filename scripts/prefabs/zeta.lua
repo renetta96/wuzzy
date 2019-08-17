@@ -1,5 +1,6 @@
 local MakePlayerCharacter = require "prefabs/player_common"
 local helpers = require "helpers"
+local metapisutil = require "metapisutil"
 
 local assets = {
 	Asset("SCRIPT", "scripts/prefabs/player_common.lua"),
@@ -34,6 +35,11 @@ local HONEYED_FOODS = {
 	honeynuggets = 0.35,
 	honeyham = 0.35
 }
+
+local function OnKillOther(inst, data)
+	local victim = data.victim
+	metapisutil.SpawnParasitesOnKill(inst, victim)
+end
 
 local function OnEat(inst, data)
 	if data.food and (data.food.prefab == "petals" or data.food.prefab == "petals_evil") then
@@ -202,6 +208,7 @@ local postinit = function(inst)
 
 	inst:ListenForEvent("equip", OnEquip)
 	inst:ListenForEvent("unequip", OnUnequip)
+	inst:ListenForEvent("killed", OnKillOther)
 
 	InitFn(inst)
 end

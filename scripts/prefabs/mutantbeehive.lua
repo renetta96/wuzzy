@@ -347,13 +347,15 @@ local growth_stages =
 -- Upgrade and Grow */
 
 local function WatchEnemy(inst)
-	local enemy = FindEntity(inst, TUNING.MUTANT_BEEHIVE_WATCH_DIST,
+	local enemy = (GetPlayer():IsNear(inst, TUNING.MUTANT_BEEHIVE_WATCH_DIST) and
+		FindEntity(inst, TUNING.MUTANT_BEEHIVE_WATCH_DIST,
 			function(guy)
 				return inst.components.combat:CanTarget(guy)
 			end,
 			nil,
-			{ "insect", "INLIMBO" },
+			{ "insect", "INLIMBO", "player" },
 			{ "monster" })
+		)
 			or FindEntity(inst, TUNING.MUTANT_BEEHIVE_WATCH_DIST,
 				function(guy)
 					return inst.components.combat:CanTarget(guy)
@@ -361,7 +363,7 @@ local function WatchEnemy(inst)
 						and guy.components.combat.target:HasTag("player")
 				end,
 				nil,
-				{ "mutant", "INLIMBO" },
+				{ "mutant", "INLIMBO", "player" },
 				{ "monster", "insect", "animal", "character" })
 	if enemy then
 		inst:Say(SPEECH.ATTACK)
