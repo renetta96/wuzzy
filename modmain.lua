@@ -1,51 +1,51 @@
 PrefabFiles = {
-	"mutantbeecocoon",
-	"mutantbee",
-	"mutantbeehive",
-	"zeta",
-	"zeta_none",
-	"armor_honey"
+  "mutantbeecocoon",
+  "mutantbee",
+  "mutantbeehive",
+  "zeta",
+  "zeta_none",
+  "armor_honey"
 }
 
 Assets = {
-    Asset( "IMAGE", "images/saveslot_portraits/zeta.tex" ),
-    Asset( "ATLAS", "images/saveslot_portraits/zeta.xml" ),
+  Asset( "IMAGE", "images/saveslot_portraits/zeta.tex" ),
+  Asset( "ATLAS", "images/saveslot_portraits/zeta.xml" ),
 
-    Asset( "IMAGE", "images/selectscreen_portraits/zeta.tex" ),
-    Asset( "ATLAS", "images/selectscreen_portraits/zeta.xml" ),
+  Asset( "IMAGE", "images/selectscreen_portraits/zeta.tex" ),
+  Asset( "ATLAS", "images/selectscreen_portraits/zeta.xml" ),
 
-    Asset( "IMAGE", "images/selectscreen_portraits/zeta_silho.tex" ),
-    Asset( "ATLAS", "images/selectscreen_portraits/zeta_silho.xml" ),
+  Asset( "IMAGE", "images/selectscreen_portraits/zeta_silho.tex" ),
+  Asset( "ATLAS", "images/selectscreen_portraits/zeta_silho.xml" ),
 
-    Asset( "IMAGE", "bigportraits/zeta.tex" ),
-    Asset( "ATLAS", "bigportraits/zeta.xml" ),
+  Asset( "IMAGE", "bigportraits/zeta.tex" ),
+  Asset( "ATLAS", "bigportraits/zeta.xml" ),
 
-	Asset( "IMAGE", "images/map_icons/zeta.tex" ),
-	Asset( "ATLAS", "images/map_icons/zeta.xml" ),
-	Asset( "IMAGE", "images/map_icons/mutantbeecocoon.tex" ),
-	Asset( "ATLAS", "images/map_icons/mutantbeecocoon.xml" ),
-	Asset( "IMAGE", "images/map_icons/mutantbeehive.tex" ),
-	Asset( "ATLAS", "images/map_icons/mutantbeehive.xml" ),
+  Asset( "IMAGE", "images/map_icons/zeta.tex" ),
+  Asset( "ATLAS", "images/map_icons/zeta.xml" ),
+  Asset( "IMAGE", "images/map_icons/mutantbeecocoon.tex" ),
+  Asset( "ATLAS", "images/map_icons/mutantbeecocoon.xml" ),
+  Asset( "IMAGE", "images/map_icons/mutantbeehive.tex" ),
+  Asset( "ATLAS", "images/map_icons/mutantbeehive.xml" ),
 
-	Asset( "IMAGE", "images/avatars/avatar_zeta.tex" ),
-    Asset( "ATLAS", "images/avatars/avatar_zeta.xml" ),
+  Asset( "IMAGE", "images/avatars/avatar_zeta.tex" ),
+  Asset( "ATLAS", "images/avatars/avatar_zeta.xml" ),
 
-	Asset( "IMAGE", "images/avatars/avatar_ghost_zeta.tex" ),
-    Asset( "ATLAS", "images/avatars/avatar_ghost_zeta.xml" ),
+  Asset( "IMAGE", "images/avatars/avatar_ghost_zeta.tex" ),
+  Asset( "ATLAS", "images/avatars/avatar_ghost_zeta.xml" ),
 
-	Asset( "IMAGE", "images/avatars/self_inspect_zeta.tex" ),
-    Asset( "ATLAS", "images/avatars/self_inspect_zeta.xml" ),
+  Asset( "IMAGE", "images/avatars/self_inspect_zeta.tex" ),
+  Asset( "ATLAS", "images/avatars/self_inspect_zeta.xml" ),
 
-	Asset( "IMAGE", "images/names_zeta.tex" ),
-    Asset( "ATLAS", "images/names_zeta.xml" ),
+  Asset( "IMAGE", "images/names_zeta.tex" ),
+  Asset( "ATLAS", "images/names_zeta.xml" ),
 
-    Asset( "IMAGE", "bigportraits/zeta_none.tex" ),
-    Asset( "ATLAS", "bigportraits/zeta_none.xml" ),
+  Asset( "IMAGE", "bigportraits/zeta_none.tex" ),
+  Asset( "ATLAS", "bigportraits/zeta_none.xml" ),
 
-    Asset("SOUNDPACKAGE", "sound/zeta.fev"),
-    Asset("SOUND", "sound/zeta.fsb"),
+  Asset("SOUNDPACKAGE", "sound/zeta.fev"),
+  Asset("SOUND", "sound/zeta.fsb"),
 
-    Asset("ANIM", "anim/symbiosis.zip"),
+  Asset("ANIM", "anim/symbiosis.zip"),
 }
 
 RemapSoundEvent( "dontstarve/characters/zeta/hurt", "zeta/zeta/hurt" )
@@ -85,6 +85,7 @@ TUNING.MUTANT_BEE_HEALTH = 100
 TUNING.MUTANT_BEE_DAMAGE = 10
 TUNING.MUTANT_BEE_ATTACK_PERIOD = 1
 TUNING.MUTANT_BEE_TARGET_DIST = 8
+TUNING.MUTANT_BEE_WATCH_DIST = 20
 TUNING.MUTANT_BEE_MAX_POISON_TICKS = 5
 TUNING.MUTANT_BEE_POISON_DAMAGE = 5
 TUNING.MUTANT_BEE_POISON_PERIOD = 0.75
@@ -167,40 +168,40 @@ AddMinimapAtlas("images/map_icons/mutantbeehive.xml")
 AddModCharacter("zeta", "MALE")
 
 local function MakeHoneycombUpgrader(prefab)
-	if not prefab.components.upgrader then
-		prefab:AddComponent("upgrader")
-	end
+  if not prefab.components.upgrader then
+    prefab:AddComponent("upgrader")
+  end
 end
 
 AddPrefabPostInit("honeycomb", MakeHoneycombUpgrader)
 
 local function HandleHoneyPerishingInMetapisHive(prefab)
-	if prefab.components.perishable and prefab.components.inventoryitem then
-		local OldOnPutInInventory = prefab.components.inventoryitem.onputininventoryfn or function() return end
-		prefab.components.inventoryitem:SetOnPutInInventoryFn(function(inst, owner)
-			if owner.prefab == "mutantbeehive" then
-				inst.components.perishable:StopPerishing()
-			end
+  if prefab.components.perishable and prefab.components.inventoryitem then
+    local OldOnPutInInventory = prefab.components.inventoryitem.onputininventoryfn or function() return end
+    prefab.components.inventoryitem:SetOnPutInInventoryFn(function(inst, owner)
+      if owner.prefab == "mutantbeehive" then
+        inst.components.perishable:StopPerishing()
+      end
 
-			OldOnPutInInventory(inst, owner)
-		end)
+      OldOnPutInInventory(inst, owner)
+    end)
 
 
-		local inventoryitem = prefab.components.inventoryitem
-		local OldOnRemoved = inventoryitem.OnRemoved
-		local onremovedfn = function(inst, owner)
-			if owner.prefab == "mutantbeehive" then
-				inst.components.perishable:StartPerishing()
-			end
-		end
+    local inventoryitem = prefab.components.inventoryitem
+    local OldOnRemoved = inventoryitem.OnRemoved
+    local onremovedfn = function(inst, owner)
+      if owner.prefab == "mutantbeehive" then
+        inst.components.perishable:StartPerishing()
+      end
+    end
 
-		inventoryitem.OnRemoved = function(comp)
-			if comp.owner then
-				onremovedfn(comp.inst, comp.owner)
-			end
-			OldOnRemoved(comp)
-		end
-	end
+    inventoryitem.OnRemoved = function(comp)
+      if comp.owner then
+        onremovedfn(comp.inst, comp.owner)
+      end
+      OldOnRemoved(comp)
+    end
+  end
 end
 
 AddPrefabPostInit("honey", HandleHoneyPerishingInMetapisHive)
@@ -208,40 +209,40 @@ AddPrefabPostInit("honey", HandleHoneyPerishingInMetapisHive)
 local containers = GLOBAL.require("containers")
 local oldwidgetsetup = containers.widgetsetup
 local MyChests = {
-	mutantbeehive = "treasurechest",
+  mutantbeehive = "treasurechest",
 }
 
 containers.widgetsetup = function(container, prefab, data)
-	prefab = MyChests[prefab or container.inst.prefab] or prefab
-	oldwidgetsetup(container, prefab, data)
+  prefab = MyChests[prefab or container.inst.prefab] or prefab
+  oldwidgetsetup(container, prefab, data)
 end
 
 AddRecipe("mutantbeecocoon",
-	{
-		Ingredient("honeycomb", 1),
-		Ingredient("cutgrass", 4),
-		Ingredient("honey", 1)
-	},
-	RECIPETABS.SURVIVAL,
-	TECH.NONE,
-	nil, nil, nil, nil,
-	"beemaster",
-	"images/inventoryimages/mutantbeecocoon.xml",
-	"mutantbeecocoon.tex"
+  {
+    Ingredient("honeycomb", 1),
+    Ingredient("cutgrass", 4),
+    Ingredient("honey", 1)
+  },
+  RECIPETABS.SURVIVAL,
+  TECH.NONE,
+  nil, nil, nil, nil,
+  "beemaster",
+  "images/inventoryimages/mutantbeecocoon.xml",
+  "mutantbeecocoon.tex"
 )
 
 AddRecipe("armorhoney",
-	{
-		Ingredient("log", 10),
-		Ingredient("rope", 1),
-		Ingredient("honey", 3)
-	},
-	RECIPETABS.WAR,
-	TECH.NONE,
-	nil, nil, nil, nil,
-	"beemaster",
-	"images/inventoryimages/armor_honey.xml",
-	"armor_honey.tex"
+  {
+    Ingredient("log", 10),
+    Ingredient("rope", 1),
+    Ingredient("honey", 3)
+  },
+  RECIPETABS.WAR,
+  TECH.NONE,
+  nil, nil, nil, nil,
+  "beemaster",
+  "images/inventoryimages/armor_honey.xml",
+  "armor_honey.tex"
 )
 
 GLOBAL.ACTIONS.UPGRADE.priority = 1 -- To show over ACTIONS.STORE
@@ -249,91 +250,91 @@ GLOBAL.ACTIONS.UPGRADE.priority = 1 -- To show over ACTIONS.STORE
 local Badge = require("widgets/badge")
 
 local function OnRegenTick(inst, data)
-	local percent = inst.components.beesummoner:GetRegenTickPercent()
-	inst.symbiosis_percent:set(math.floor(percent * 100 + 0.5))
-	inst.symbiosis_maxval:set(inst.components.beesummoner.maxticks)
-	inst.symbiosis_numstore:set(inst.components.beesummoner.numstore)
+  local percent = inst.components.beesummoner:GetRegenTickPercent()
+  inst.symbiosis_percent:set(math.floor(percent * 100 + 0.5))
+  inst.symbiosis_maxval:set(inst.components.beesummoner.maxticks)
+  inst.symbiosis_numstore:set(inst.components.beesummoner.numstore)
 
-	if data.currenttick > 0 then
-		inst.symbiosis_pulse:set(true)
-	else
-		inst.symbiosis_pulse:set(false)
-	end
+  if data.currenttick > 0 then
+    inst.symbiosis_pulse:set(true)
+  else
+    inst.symbiosis_pulse:set(false)
+  end
 end
 
 local function OnNumStoreChange(inst, data)
-	inst.symbiosis_numstore:set(inst.components.beesummoner.numstore)
+  inst.symbiosis_numstore:set(inst.components.beesummoner.numstore)
 end
 
 local function CalcSymbiosisPosition(status)
-	-- Assume that brain always stays in the middle, stomach on the left and heart on the right
-	local brainPos = status.brain:GetPosition()
-	local stomachPos = status.stomach:GetPosition()
-	local heartPos = status.heart:GetPosition()
+  -- Assume that brain always stays in the middle, stomach on the left and heart on the right
+  local brainPos = status.brain:GetPosition()
+  local stomachPos = status.stomach:GetPosition()
+  local heartPos = status.heart:GetPosition()
 
-	local pos = GLOBAL.Vector3(2 * stomachPos.x - brainPos.x, brainPos.y, stomachPos.z)
-	return pos
+  local pos = GLOBAL.Vector3(2 * stomachPos.x - brainPos.x, brainPos.y, stomachPos.z)
+  return pos
 end
 
 local function StatusPostConstruct(self)
-	if self.owner.prefab == 'zeta' then
-		self.symbiosis = self:AddChild(Badge("health", self.owner))
-		self.symbiosis.anim:GetAnimState():SetBuild("symbiosis")
-		self.symbiosis:Hide()
-		self.symbiosis.num:Show()
-		local OldOnLoseFocus = self.symbiosis.OnLoseFocus
-		self.symbiosis.OnLoseFocus = function(badge)
-			OldOnLoseFocus(badge)
-			badge.num:Show()
-		end
+  if self.owner.prefab == 'zeta' then
+    self.symbiosis = self:AddChild(Badge("health", self.owner))
+    self.symbiosis.anim:GetAnimState():SetBuild("symbiosis")
+    self.symbiosis:Hide()
+    self.symbiosis.num:Show()
+    local OldOnLoseFocus = self.symbiosis.OnLoseFocus
+    self.symbiosis.OnLoseFocus = function(badge)
+      OldOnLoseFocus(badge)
+      badge.num:Show()
+    end
 
-		self.owner.UpdateSymbiosisBadge = function()
-			local percent = self.owner.symbiosis_percent and (self.owner.symbiosis_percent:value() / 100) or 0
-			local maxval = self.owner.symbiosis_maxval and self.owner.symbiosis_maxval:value() or 0
-			local numstore = self.owner.symbiosis_numstore and self.owner.symbiosis_numstore:value() or 0
-			local pulse = self.owner.symbiosis_pulse and self.owner.symbiosis_pulse:value() or false
-			local pos = CalcSymbiosisPosition(self)
-			self.symbiosis:Show()
-			self.symbiosis:SetPosition(pos:Get())
-			self.symbiosis:SetScale(self.brain:GetScale():Get())
-			self.symbiosis:SetPercent(percent, maxval)
-			self.symbiosis.num:SetString(GLOBAL.tostring(numstore))
-			if pulse then
-				self.symbiosis:PulseGreen()
-			end
-		end
-	end
+    self.owner.UpdateSymbiosisBadge = function()
+      local percent = self.owner.symbiosis_percent and (self.owner.symbiosis_percent:value() / 100) or 0
+      local maxval = self.owner.symbiosis_maxval and self.owner.symbiosis_maxval:value() or 0
+      local numstore = self.owner.symbiosis_numstore and self.owner.symbiosis_numstore:value() or 0
+      local pulse = self.owner.symbiosis_pulse and self.owner.symbiosis_pulse:value() or false
+      local pos = CalcSymbiosisPosition(self)
+      self.symbiosis:Show()
+      self.symbiosis:SetPosition(pos:Get())
+      self.symbiosis:SetScale(self.brain:GetScale():Get())
+      self.symbiosis:SetPercent(percent, maxval)
+      self.symbiosis.num:SetString(GLOBAL.tostring(numstore))
+      if pulse then
+        self.symbiosis:PulseGreen()
+      end
+    end
+  end
 end
 
 AddClassPostConstruct("widgets/statusdisplays", StatusPostConstruct)
 
 local function onsymbiosisdirty(inst)
-	if GLOBAL.ThePlayer and GLOBAL.ThePlayer.UpdateSymbiosisBadge then
-		GLOBAL.ThePlayer.UpdateSymbiosisBadge()
-	end
+  if GLOBAL.ThePlayer and GLOBAL.ThePlayer.UpdateSymbiosisBadge then
+    GLOBAL.ThePlayer.UpdateSymbiosisBadge()
+  end
 end
 
 local function PlayerPostConstruct(inst)
-	if inst.prefab ~= 'zeta' then
-		return
-	end
+  if inst.prefab ~= 'zeta' then
+    return
+  end
 
-	inst.symbiosis_percent = GLOBAL.net_byte(inst.GUID, "symbiosis.percent", "symbiosisdirty")
-	inst.symbiosis_maxval = GLOBAL.net_byte(inst.GUID, "symbiosis.maxval", "symbiosisdirty")
-	inst.symbiosis_numstore = GLOBAL.net_byte(inst.GUID, "symbiosis.numstore", "symbiosisdirty")
-	inst.symbiosis_pulse = GLOBAL.net_bool(inst.GUID, "symbiosis.pulse", "symbiosisdirty")
+  inst.symbiosis_percent = GLOBAL.net_byte(inst.GUID, "symbiosis.percent", "symbiosisdirty")
+  inst.symbiosis_maxval = GLOBAL.net_byte(inst.GUID, "symbiosis.maxval", "symbiosisdirty")
+  inst.symbiosis_numstore = GLOBAL.net_byte(inst.GUID, "symbiosis.numstore", "symbiosisdirty")
+  inst.symbiosis_pulse = GLOBAL.net_bool(inst.GUID, "symbiosis.pulse", "symbiosisdirty")
 
-	if GLOBAL.TheWorld.ismastersim then
-		inst:ListenForEvent("onregentick", OnRegenTick)
-		inst:ListenForEvent("onnumstorechange", OnNumStoreChange)
+  if GLOBAL.TheWorld.ismastersim then
+    inst:ListenForEvent("onregentick", OnRegenTick)
+    inst:ListenForEvent("onnumstorechange", OnNumStoreChange)
 
-		-- kick off badge
-		inst:DoTaskInTime(0, function() inst:PushEvent("onregentick", {currenttick = 0}) end)
-	end
+    -- kick off badge
+    inst:DoTaskInTime(0, function() inst:PushEvent("onregentick", {currenttick = 0}) end)
+  end
 
-	if not GLOBAL.TheNet:IsDedicated() then
-		inst:ListenForEvent("symbiosisdirty", onsymbiosisdirty)
-	end
+  if not GLOBAL.TheNet:IsDedicated() then
+    inst:ListenForEvent("symbiosisdirty", onsymbiosisdirty)
+  end
 end
 
 AddPlayerPostInit(PlayerPostConstruct)

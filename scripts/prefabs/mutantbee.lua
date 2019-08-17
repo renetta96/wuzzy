@@ -36,7 +36,7 @@ local killersounds =
 }
 
 local function FindTarget(inst, dist)
-	local nearbyplayer, range = FindClosestPlayerToInst(inst, dist, true)
+	local nearbyplayer, range = FindClosestPlayerToInst(inst, TUNING.MUTANT_BEE_WATCH_DIST, true)
 
 	return (nearbyplayer and FindEntity(inst, dist,
 		function(guy)
