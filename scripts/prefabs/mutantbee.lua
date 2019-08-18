@@ -280,7 +280,7 @@ end
 
 local function EnableBuzz(inst, enable)
   if enable then
-    if IsFollowing(inst) and inst.components.combat.target == nil then
+    if IsFollowing(inst) and not inst.components.combat.target then
       inst.buzzing = false
       inst.SoundEmitter:KillSound("buzz")
       return
@@ -320,11 +320,21 @@ local function OnDroppedTarget(inst, data)
   end
 end
 
+local function OnCheckBuzzing(inst)
+  if IsFollowing(inst) and not inst.components.combat.target then
+    EnableBuzz(inst, false)
+  end
+end
+
 local function OnStopFollowing(inst)
   EnableBuzz(inst, true)
   inst:RemoveEventCallback("newcombattarget", OnNewCombatTarget)
   inst:RemoveEventCallback("giveuptarget", OnDroppedTarget)
   inst:RemoveEventCallback("losttarget", OnDroppedTarget)
+  if inst._check_buzzing then
+    inst._check_buzzing:Cancel()
+    inst._check_buzzing = nil
+  end
 end
 
 local function OnKillOther(inst, data)
@@ -446,6 +456,7 @@ local function OnStartFollowing(inst, data)
   inst:ListenForEvent("newcombattarget", OnNewCombatTarget)
   inst:ListenForEvent("giveuptarget", OnDroppedTarget)
   inst:ListenForEvent("losttarget", OnDroppedTarget)
+  inst._check_buzzing = inst:DoPeriodicTask(3, OnCheckBuzzing)
 end
 
 local function commonfn(build, tags)
