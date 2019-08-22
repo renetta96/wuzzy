@@ -150,7 +150,7 @@ TUNING.MUTANT_BEE_RANGED_ATK_PERIOD = TUNING.MUTANT_BEE_RANGED_ATK_PERIOD - bee_
 
 -- The character select screen lines
 STRINGS.CHARACTER_TITLES.zeta = "The Buzzy"
-STRINGS.CHARACTER_NAMES.zeta = "Ozzy"
+STRINGS.CHARACTER_NAMES.zeta = "Wuzzy"
 STRINGS.CHARACTER_DESCRIPTIONS.zeta = "*Has his own hive\n*Produces honey by eating petals\n*Summons bees by chance on attack"
 STRINGS.CHARACTER_QUOTES.zeta = "\"Let's beefriend!\""
 
@@ -158,7 +158,7 @@ STRINGS.CHARACTER_QUOTES.zeta = "\"Let's beefriend!\""
 STRINGS.CHARACTERS.ZETA = require "speech_zeta"
 
 -- The character's name as appears in-game
-STRINGS.NAMES.ZETA = "Ozzy"
+STRINGS.NAMES.ZETA = "Wuzzy"
 
 AddMinimapAtlas("images/map_icons/zeta.xml")
 AddMinimapAtlas("images/map_icons/mutantbeecocoon.xml")

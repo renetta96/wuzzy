@@ -95,7 +95,7 @@ local function OnAttackOtherWithPoison(inst, data)
 end
 
 local function OnDeathExplosive(inst)
-	inst.components.combat:DoAreaAttack(inst, TUNING.MUTANT_BEE_EXPLOSIVE_RANGE, nil, nil, nil, { "INLIMBO", "mutant" })
+	inst.components.combat:DoAreaAttack(inst, TUNING.MUTANT_BEE_EXPLOSIVE_RANGE, nil, nil, nil, { "INLIMBO", "mutant", "player" })
 	SpawnPrefab("explode_small").Transform:SetPosition(inst.Transform:GetWorldPosition())
 	inst:Remove()
 end
