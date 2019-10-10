@@ -45,7 +45,8 @@ Assets = {
   Asset("SOUNDPACKAGE", "sound/zeta.fev"),
   Asset("SOUND", "sound/zeta.fsb"),
 
-  Asset("ANIM", "anim/symbiosis.zip"),
+  Asset("ANIM", "anim/status_symbiosis.zip"),
+  Asset("ANIM", "anim/status_meter_symbiosis.zip"),
 }
 
 RemapSoundEvent( "dontstarve/characters/zeta/hurt", "zeta/zeta/hurt" )
@@ -104,11 +105,11 @@ TUNING.MUTANT_BEE_RANGED_ATK_PERIOD = 2.5
 TUNING.MUTANT_BEEHIVE_DEFAULT_EMERGENCY_BEES = 2
 TUNING.MUTANT_BEEHIVE_EMERGENCY_BEES_PER_PLAYER = 100
 TUNING.MUTANT_BEEHIVE_EMERGENCY_RADIUS = 30
-TUNING.MUTANT_BEEHIVE_BEES = 3
-TUNING.MUTANT_BEEHIVE_DEFAULT_RELEASE_TIME = 50
+TUNING.MUTANT_BEEHIVE_BEES = 4
+TUNING.MUTANT_BEEHIVE_DEFAULT_RELEASE_TIME = 30
 TUNING.MUTANT_BEEHIVE_DEFAULT_REGEN_TIME = 30
 TUNING.MUTANT_BEEHIVE_DELTA_BEES = 1
-TUNING.MUTANT_BEEHIVE_DELTA_RELEASE_TIME = 5
+TUNING.MUTANT_BEEHIVE_DELTA_RELEASE_TIME = 10
 TUNING.MUTANT_BEEHIVE_DELTA_REGEN_TIME = 5
 TUNING.MUTANT_BEEHIVE_UPGRADES_PER_STAGE = 3
 TUNING.MUTANT_BEEHIVE_WATCH_DIST = 30
@@ -278,8 +279,9 @@ end
 
 local function StatusPostConstruct(self)
   if self.owner.prefab == 'zeta' then
-    self.symbiosis = self:AddChild(Badge("health", self.owner))
-    self.symbiosis.anim:GetAnimState():SetBuild("symbiosis")
+    self.symbiosis = self:AddChild(Badge(nil, self.owner, { 48 / 255, 169 / 255, 169 / 255, 1 }, "status_symbiosis"))
+    self.symbiosis.backing:GetAnimState():SetBuild("status_meter_symbiosis")
+
     self.symbiosis:Hide()
     self.symbiosis.num:Show()
     local OldOnLoseFocus = self.symbiosis.OnLoseFocus
