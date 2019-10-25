@@ -4,7 +4,9 @@ PrefabFiles = {
   "mutantbeehive",
   "zeta",
   "zeta_none",
-  "armor_honey"
+  "armor_honey",
+  "zetapollen",
+  "pollen_fx"
 }
 
 Assets = {
@@ -47,6 +49,7 @@ Assets = {
 
   Asset("ANIM", "anim/status_symbiosis.zip"),
   Asset("ANIM", "anim/status_meter_symbiosis.zip"),
+  Asset("ANIM", "anim/pollen_fx.zip"),
 }
 
 RemapSoundEvent( "dontstarve/characters/zeta/hurt", "zeta/zeta/hurt" )
@@ -64,6 +67,7 @@ local TUNING = GLOBAL.TUNING
 local Ingredient = GLOBAL.Ingredient
 local RECIPETABS = GLOBAL.RECIPETABS
 local TECH = GLOBAL.TECH
+local SpawnPrefab = GLOBAL.SpawnPrefab
 
 -- Stats
 TUNING.OZZY_MAX_HEALTH = 175
@@ -71,7 +75,7 @@ TUNING.OZZY_MAX_SANITY = 100
 TUNING.OZZY_MAX_HUNGER = 125
 TUNING.OZZY_DEFAULT_DAMAGE_MULTIPLIER = 0.75
 TUNING.OZZY_HUNGER_SCALE = 1.1
-TUNING.OZZY_NUM_PETALS_PER_HONEY = 5
+TUNING.OZZY_NUM_POLLENS_PER_HONEY = 5
 TUNING.OZZY_SHARE_TARGET_DIST = 30
 TUNING.OZZY_MAX_SHARE_TARGETS = 20
 TUNING.OZZY_DEFAUT_SPEED_MULTIPLIER = 1.0
@@ -80,6 +84,8 @@ TUNING.OZZY_WINTER_SPEED_MULTIPLIER = 0.85
 TUNING.OZZY_MAX_SUMMON_BEES = 3
 TUNING.OZZY_SUMMON_CHANCE = 0.3
 TUNING.OZZY_MAX_BEES_STORE = 7
+TUNING.OZZY_HONEYED_FOOD_BONUS = 0.35
+TUNING.OZZY_PICK_FLOWER_SANITY = -3 * TUNING.SANITY_TINY
 
 -- Mutant bee stats
 TUNING.MUTANT_BEE_HEALTH = 100
@@ -115,6 +121,8 @@ TUNING.MUTANT_BEEHIVE_UPGRADES_PER_STAGE = 3
 TUNING.MUTANT_BEEHIVE_WATCH_DIST = 30
 TUNING.MUTANT_BEEHIVE_RECOVER_PER_CHILD = 0.75
 TUNING.MUTANT_BEEHIVE_GROW_TIME = {TUNING.TOTAL_DAY_TIME * 10, TUNING.TOTAL_DAY_TIME * 10}
+TUNING.MUTANT_BEEHIVE_MAX_HONEYS_PER_CYCLE = 3
+TUNING.MUTANT_BEEHIVE_NUM_POLLENS_PER_HONEY = 3
 
 -- Armor honey
 TUNING.ARMORHONEY_MAX_ABSORPTION = 0.65
@@ -180,7 +188,7 @@ local function HandleHoneyPerishingInMetapisHive(prefab)
   if prefab.components.perishable and prefab.components.inventoryitem then
     local OldOnPutInInventory = prefab.components.inventoryitem.onputininventoryfn or function() return end
     prefab.components.inventoryitem:SetOnPutInInventoryFn(function(inst, owner)
-      if owner.prefab == "mutantbeehive" then
+      if owner and owner.prefab == "mutantbeehive" then
         inst.components.perishable:StopPerishing()
       end
 
@@ -206,6 +214,141 @@ local function HandleHoneyPerishingInMetapisHive(prefab)
 end
 
 AddPrefabPostInit("honey", HandleHoneyPerishingInMetapisHive)
+
+local function removefx(inst)
+  if inst._pollenfx then
+    inst._pollenfx:Remove()
+    inst._pollenfx = nil
+  end
+end
+
+local function spawnfx(inst)
+  removefx(inst)
+
+  local fx = SpawnPrefab("pollen_fx")
+  fx.entity:SetParent(inst.entity)
+  fx.entity:AddFollower():FollowSymbol(inst.GUID, 'flowers01', 0, 0, 0)
+  inst._pollenfx = fx
+end
+
+local function checkfx(inst)
+  if not inst.pollenpicked then
+    spawnfx(inst)
+  else
+    removefx(inst)
+  end
+end
+
+local function ontick(inst)
+  inst.pollenticks = inst.pollenticks - 1
+  if inst.pollenticks > 0 then
+    inst:DoTaskInTime(100, ontick)
+  else
+    inst.pollenpicked = false
+    checkfx(inst)
+  end
+end
+
+local function onpickedflowerfn(inst, picker)
+  if picker ~= nil and not inst.pollenpicked then
+    if picker.components.sanity ~= nil and not picker:HasTag("plantkin") then
+      picker.components.sanity:DoDelta(TUNING.SANITY_TINY)
+    end
+
+    inst.pollenpicked = true
+    inst.pollenticks = 5
+    inst:DoTaskInTime(100, ontick)
+    checkfx(inst)
+  end
+end
+
+local function onplayerjoined(inst, player)
+  if player:HasTag("beemaster") then
+    checkfx(inst)
+  else
+    removefx(inst)
+  end
+end
+
+local function FlowerPostInit(prefab)
+  if not GLOBAL.TheWorld.ismastersim then
+    return
+  end
+
+  if not GLOBAL.TheNet:IsDedicated() then
+    prefab:ListenForEvent("ms_playerjoined", function(src, player)
+      onplayerjoined(prefab, player)
+    end, GLOBAL.TheWorld)
+  end
+
+  prefab.pollenpicked = false
+  prefab.pollenticks = 0
+
+  prefab:DoTaskInTime(0, checkfx)
+
+  if prefab.components.pickable then
+    local oldonpickedfn = prefab.components.pickable.onpickedfn
+    prefab.components.pickable.onpickedfn = function(inst, picker)
+      if picker and picker.prefab == 'zeta' then
+        if not inst.pollenpicked then
+          onpickedflowerfn(inst, picker)
+        else
+          if oldonpickedfn ~= nil then
+            oldonpickedfn(inst, picker)
+          end
+          picker.components.sanity:DoDelta(TUNING.OZZY_PICK_FLOWER_SANITY)
+        end
+
+        return
+      end
+
+      if oldonpickedfn ~= nil then
+        oldonpickedfn(inst, picker)
+      end
+    end
+
+    local PickFn = prefab.components.pickable.Pick
+    prefab.components.pickable.Pick = function(comp, picker, ...)
+      if picker and picker.prefab == 'zeta' then
+        if not comp.inst.pollenpicked then
+          local product = comp.product
+          comp.product = 'zetapollen'
+          PickFn(comp, picker, ...)
+          comp.product = product
+        else
+          PickFn(comp, picker, ...)
+        end
+
+        return
+      end
+
+      PickFn(comp, picker, ...)
+    end
+
+    --Save/Load
+    local OldOnSave = prefab.OnSave
+    local OldOnLoad = prefab.OnLoad
+    prefab.OnSave = function(inst, data)
+      OldOnSave(inst, data)
+      data.pollenpicked = inst.pollenpicked
+      data.pollenticks = inst.pollenticks
+    end
+
+    prefab.OnLoad = function(inst, data)
+      OldOnLoad(inst, data)
+      inst.pollenpicked = data ~= nil and data.pollenpicked or false
+      inst.pollenticks = data ~= nil and data.pollenticks or 0
+      if inst.pollenticks > 0 then
+        inst:DoTaskInTime(100, ontick)
+      end
+
+      checkfx(inst)
+    end
+
+  end
+end
+
+AddPrefabPostInit("flower", FlowerPostInit)
 
 local containers = GLOBAL.require("containers")
 local oldwidgetsetup = containers.widgetsetup

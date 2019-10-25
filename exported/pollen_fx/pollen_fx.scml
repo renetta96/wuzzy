@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<spriter_data scml_version="1.0" generator="BrashMonkey Spriter" generator_version="b5">
+    <folder id="0" name="pollen">
+        <file id="1" name="pollen/pollen-0.png" width="40" height="40" pivot_x="0.547619" pivot_y="0.452381"/>
+    </folder>
+    <entity id="0" name="pollen_fx">
+        <animation id="0" name="idle" length="1000">
+            <mainline>
+                <key id="0">
+                    <object_ref id="0" name="pollen-0" folder="0" file="1" abs_x="0.682261" abs_y="-0.389864" abs_pivot_x="0.547619" abs_pivot_y="0.452381" abs_angle="360" abs_scale_x="0.3" abs_scale_y="0.3" abs_a="0.8" timeline="0" key="0" z_index="0"/>
+                </key>
+                <key id="1" time="300">
+                    <object_ref id="0" timeline="0" key="1" z_index="0"/>
+                </key>
+                <key id="2" time="500">
+                    <object_ref id="0" timeline="0" key="2" z_index="0"/>
+                </key>
+                <key id="3" time="800">
+                    <object_ref id="0" timeline="0" key="3" z_index="0"/>
+                </key>
+            </mainline>
+            <timeline id="0" name="pollen-0">
+                <key id="0" spin="0">
+                    <object folder="0" file="1" x="0.682261" y="-0.389864" scale_x="0.3" scale_y="0.3" a="0.8"/>
+                </key>
+                <key id="1" time="300" spin="0">
+                    <object folder="0" file="1" x="1.814191" y="-0.565515" a="0.8"/>
+                </key>
+                <key id="2" time="500" spin="0">
+                    <object folder="0" file="1" x="1.814191" y="-0.604411" a="0.9"/>
+                </key>
+                <key id="3" time="800" spin="0">
+                    <object folder="0" file="1" x="0.682261" y="-0.389864" scale_x="0.3" scale_y="0.3" a="0.8"/>
+                </key>
+            </timeline>
+        </animation>
+    </entity>
+</spriter_data>
