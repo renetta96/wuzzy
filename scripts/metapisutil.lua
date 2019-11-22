@@ -50,6 +50,11 @@ local function SpawnParasitesOnKill(killer, victim, prefab)
 		owner = killer.components.follower.leader
 	elseif killer.components.homeseeker and killer.components.homeseeker.home and killer.components.homeseeker.home._owner then
 		local player = killer.components.homeseeker.home._owner
+
+		if not player:IsValid() then
+			return
+		end
+
 		local x, y, z = killer.Transform:GetWorldPosition()
 		local distsq = player:GetDistanceSqToPoint(x, y, z)
 		local rangesq = TUNING.METAPIS_PARASITE_NEAR_OWNER_SPAWN_RANGE * TUNING.METAPIS_PARASITE_NEAR_OWNER_SPAWN_RANGE
