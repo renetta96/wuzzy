@@ -6,7 +6,8 @@ PrefabFiles = {
   "zeta_none",
   "armor_honey",
   "zetapollen",
-  "pollen_fx"
+  "pollen_fx",
+  "melissa"
 }
 
 Assets = {
@@ -143,6 +144,14 @@ TUNING.METAPIS_PARASITE_NEAR_OWNER_SPAWN_RANGE = 20
 TUNING.METAPIS_PARASITE_HEALTH_RATE = 0.5
 TUNING.METAPIS_PARASITE_DAMAGE_RATE = 0.5
 TUNING.METAPIS_PARASITE_LIFE_SPAN = 30
+
+-- Melissa
+TUNING.MELISSA_MIN_DAMAGE = 34
+TUNING.MELISSA_MAX_DAMAGE = 34 * 2.5
+TUNING.MELISSA_MAX_DAMAGE_HUNGER_THRESHOLD = 0.75
+TUNING.MELISSA_MIN_HUNGER_DRAIN = 1
+TUNING.MELISSA_PERCENT_HUNGER_DRAIN = 0.015
+TUNING.MELISSA_USES = 200
 
 -- Mod config
 local num_bees = GetModConfigData("NUM_BEES_IN_HIVE")
@@ -375,7 +384,7 @@ AddRecipe("mutantbeecocoon",
   "mutantbeecocoon.tex"
 )
 
-AddRecipe("armorhoney",
+local armorhoney_rec = AddRecipe("armorhoney",
   {
     Ingredient("log", 10),
     Ingredient("rope", 1),
@@ -388,8 +397,24 @@ AddRecipe("armorhoney",
   "images/inventoryimages/armor_honey.xml",
   "armor_honey.tex"
 )
+armorhoney_rec.sortkey = -1
 
-GLOBAL.ACTIONS.UPGRADE.priority = 1 -- To show over ACTIONS.STORE
+local melissa_rec = AddRecipe("melissa",
+  {
+    Ingredient("twigs", 2),
+    Ingredient("goldnugget", 1),
+    Ingredient("stinger", 5)
+  },
+  RECIPETABS.WAR,
+  TECH.NONE,
+  nil, nil, nil, nil,
+  "beemaster",
+  "images/inventoryimages/melissa.xml",
+  "melissa.tex"
+)
+melissa_rec.sortkey = -2
+
+GLOBAL.ACTIONS.UPGRADE.priority = GLOBAL.ACTIONS.STORE.priority + 1 -- To show over ACTIONS.STORE
 
 local Badge = require("widgets/badge")
 
