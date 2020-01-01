@@ -169,8 +169,8 @@ TUNING.MUTANT_BEE_RANGED_ATK_PERIOD = TUNING.MUTANT_BEE_RANGED_ATK_PERIOD - bee_
 -- The character select screen lines
 STRINGS.CHARACTER_TITLES.zeta = "The Buzzy"
 STRINGS.CHARACTER_NAMES.zeta = "Wuzzy"
-STRINGS.CHARACTER_DESCRIPTIONS.zeta = "*Has his own hive\n*Produces honey by eating petals\n*Summons bees by chance on attack"
-STRINGS.CHARACTER_QUOTES.zeta = "\"Let's beefriend!\""
+STRINGS.CHARACTER_DESCRIPTIONS.zeta = "*Leads his own species and hive\n*Has symbotic bees inside his body\n*Can pick pollen from flowers\n*Loves honeyed foods"
+STRINGS.CHARACTER_QUOTES.zeta = "\"Bees together strong.\""
 
 -- Custom speech strings
 STRINGS.CHARACTERS.ZETA = require "speech_zeta"
@@ -186,6 +186,10 @@ AddMinimapAtlas("images/map_icons/mutantbeehive.xml")
 AddModCharacter("zeta", "MALE")
 
 local function MakeHoneycombUpgrader(prefab)
+  if not GLOBAL.TheWorld.ismastersim then
+    return
+  end
+
   if not prefab.components.upgrader then
     prefab:AddComponent("upgrader")
   end
@@ -358,6 +362,39 @@ local function FlowerPostInit(prefab)
 end
 
 AddPrefabPostInit("flower", FlowerPostInit)
+
+local function BeeBoxPostInit(prefab)
+  if prefab.components.childspawner then
+    local oldReleaseAllChildren = prefab.components.childspawner.ReleaseAllChildren
+    prefab.components.childspawner.ReleaseAllChildren = function(comp, target, ...)
+      if target and target:HasTag("beemaster") then
+        return
+      end
+
+      oldReleaseAllChildren(comp, target, ...)
+    end
+  end
+end
+
+AddPrefabPostInit("beebox", BeeBoxPostInit)
+
+local function WaspHivePostInit(prefab)
+  if prefab.components.playerprox then
+    local oldOnNearFn = prefab.components.playerprox.onnear
+    local onnearfn = function(inst, target)
+      if target and target:HasTag("beemaster") then
+        return
+      end
+
+      if oldOnNearFn ~= nil then
+        oldOnNearFn(inst, target)
+      end
+    end
+    prefab.components.playerprox:SetOnPlayerNear(onnearfn)
+  end
+end
+
+AddPrefabPostInit("wasphive", WaspHivePostInit)
 
 local containers = GLOBAL.require("containers")
 local oldwidgetsetup = containers.widgetsetup
