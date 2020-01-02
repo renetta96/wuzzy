@@ -25,7 +25,7 @@ end
 local function OnAttack(inst)
   local owner = inst.components.inventoryitem:GetGrandOwner()
 
-  if owner and owner.components.hunger then
+  if owner and owner.components.hunger and owner.components.hunger:GetPercent() > TUNING.MELISSA_MIN_DAMAGE_HUNGER_THRESHOLD then
     local penalty = math.max(
       TUNING.MELISSA_MIN_HUNGER_DRAIN,
       TUNING.MELISSA_PERCENT_HUNGER_DRAIN * owner.components.hunger.max
@@ -41,11 +41,13 @@ local function UpdateDamage(inst)
 
         if percent >= TUNING.MELISSA_MAX_DAMAGE_HUNGER_THRESHOLD then
           inst.components.weapon:SetDamage(TUNING.MELISSA_MAX_DAMAGE)
+        elseif percent <= TUNING.MELISSA_MIN_DAMAGE_HUNGER_THRESHOLD then
+          inst.components.weapon:SetDamage(TUNING.MELISSA_MIN_DAMAGE)
         else
           local damage = Lerp(
             TUNING.MELISSA_MIN_DAMAGE,
             TUNING.MELISSA_MAX_DAMAGE,
-            percent / TUNING.MELISSA_MAX_DAMAGE_HUNGER_THRESHOLD
+            (percent - TUNING.MELISSA_MIN_DAMAGE_HUNGER_THRESHOLD) / (TUNING.MELISSA_MAX_DAMAGE_HUNGER_THRESHOLD - TUNING.MELISSA_MIN_DAMAGE_HUNGER_THRESHOLD)
           )
           inst.components.weapon:SetDamage(damage)
         end
