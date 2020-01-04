@@ -3,7 +3,10 @@ PrefabFiles = {
   "mutantbee",
   "mutantbeehive",
   "zeta",
-  "armor_honey"
+  "armor_honey",
+  "zetapollen",
+  "pollen_fx",
+  "melissa"
 }
 
 Assets = {
@@ -45,6 +48,7 @@ Assets = {
   Asset("SOUND", "sound/zeta.fsb"),
 
   Asset("ANIM", "anim/symbiosis.zip"),
+  Asset("ANIM", "anim/pollen_fx.zip"),
 }
 
 local function CheckDlcEnabled(dlc)
@@ -65,6 +69,7 @@ local TUNING = GLOBAL.TUNING
 local Ingredient = GLOBAL.Ingredient
 local RECIPETABS = GLOBAL.RECIPETABS
 local TECH = GLOBAL.TECH
+local SpawnPrefab = GLOBAL.SpawnPrefab
 
 -- Stats
 TUNING.OZZY_MAX_HEALTH = 175
@@ -72,7 +77,7 @@ TUNING.OZZY_MAX_SANITY = 100
 TUNING.OZZY_MAX_HUNGER = 125
 TUNING.OZZY_DEFAULT_DAMAGE_MULTIPLIER = 0.75
 TUNING.OZZY_HUNGER_SCALE = 1.1
-TUNING.OZZY_NUM_PETALS_PER_HONEY = 5
+TUNING.OZZY_NUM_POLLENS_PER_HONEY  = 5
 TUNING.OZZY_SHARE_TARGET_DIST = 30
 TUNING.OZZY_MAX_SHARE_TARGETS = 20
 TUNING.OZZY_DEFAUT_SPEED_MULTIPLIER = 0
@@ -81,6 +86,8 @@ TUNING.OZZY_WINTER_SPEED_MULTIPLIER = -0.15
 TUNING.OZZY_MAX_SUMMON_BEES = 3
 TUNING.OZZY_SUMMON_CHANCE = 0.3
 TUNING.OZZY_MAX_BEES_STORE = 7
+TUNING.OZZY_HONEYED_FOOD_BONUS = 0.35
+TUNING.OZZY_PICK_FLOWER_SANITY = -3 * TUNING.SANITY_TINY
 
 -- Mutant bee stats
 TUNING.MUTANT_BEE_HEALTH = 100
@@ -105,16 +112,18 @@ TUNING.MUTANT_BEE_RANGED_DAMAGE = 15
 TUNING.MUTANT_BEE_RANGED_ATK_PERIOD = 2.5
 
 -- Mutant beehive stats
-TUNING.MUTANT_BEEHIVE_BEES = 5
-TUNING.MUTANT_BEEHIVE_DEFAULT_RELEASE_TIME = 50
+TUNING.MUTANT_BEEHIVE_BEES = 4
+TUNING.MUTANT_BEEHIVE_DEFAULT_RELEASE_TIME = 30
 TUNING.MUTANT_BEEHIVE_DEFAULT_REGEN_TIME = 30
 TUNING.MUTANT_BEEHIVE_DELTA_BEES = 1
-TUNING.MUTANT_BEEHIVE_DELTA_RELEASE_TIME = 5
+TUNING.MUTANT_BEEHIVE_DELTA_RELEASE_TIME = 10
 TUNING.MUTANT_BEEHIVE_DELTA_REGEN_TIME = 5
 TUNING.MUTANT_BEEHIVE_UPGRADES_PER_STAGE = 3
 TUNING.MUTANT_BEEHIVE_WATCH_DIST = 30
 TUNING.MUTANT_BEEHIVE_RECOVER_PER_CHILD = 0.75
 TUNING.MUTANT_BEEHIVE_GROW_TIME = {TUNING.TOTAL_DAY_TIME * 8, TUNING.TOTAL_DAY_TIME * 8}
+TUNING.MUTANT_BEEHIVE_MAX_HONEYS_PER_CYCLE = 3
+TUNING.MUTANT_BEEHIVE_NUM_POLLENS_PER_HONEY = 3
 
 -- Armor honey
 TUNING.ARMORHONEY_MAX_ABSORPTION = 0.55
@@ -136,6 +145,15 @@ TUNING.METAPIS_PARASITE_HEALTH_RATE = 0.5
 TUNING.METAPIS_PARASITE_DAMAGE_RATE = 0.5
 TUNING.METAPIS_PARASITE_LIFE_SPAN = 30
 
+-- Melissa
+TUNING.MELISSA_MIN_DAMAGE = 34
+TUNING.MELISSA_MAX_DAMAGE = 34 * 2.25
+TUNING.MELISSA_MAX_DAMAGE_HUNGER_THRESHOLD = 0.75
+TUNING.MELISSA_MIN_DAMAGE_HUNGER_THRESHOLD = 0.15
+TUNING.MELISSA_MIN_HUNGER_DRAIN = 1
+TUNING.MELISSA_PERCENT_HUNGER_DRAIN = 0.01
+TUNING.MELISSA_USES = 200
+
 -- Mod config
 local num_bees = GetModConfigData("NUM_BEES_IN_HIVE")
 TUNING.MUTANT_BEEHIVE_BEES = TUNING.MUTANT_BEEHIVE_BEES + num_bees * 2
@@ -151,15 +169,15 @@ TUNING.MUTANT_BEE_RANGED_ATK_PERIOD = TUNING.MUTANT_BEE_RANGED_ATK_PERIOD - bee_
 
 -- The character select screen lines
 STRINGS.CHARACTER_TITLES.zeta = "The Buzzy"
-STRINGS.CHARACTER_NAMES.zeta = "Ozzy"
-STRINGS.CHARACTER_DESCRIPTIONS.zeta = "*Has his own hive\n*Produces honey by eating petals\n*Summons bees by chance on attack"
-STRINGS.CHARACTER_QUOTES.zeta = "\"Let's beefriend!\""
+STRINGS.CHARACTER_NAMES.zeta = "Wuzzy"
+STRINGS.CHARACTER_DESCRIPTIONS.zeta = "*Leads his own species and hive\n*Has symbotic bees inside his body\n*Can pick pollen from flowers\n*Loves honeyed foods"
+STRINGS.CHARACTER_QUOTES.zeta = "\"Bees together strong.\""
 
 -- Custom speech strings
 STRINGS.CHARACTERS.ZETA = require "speech_zeta"
 
 -- The character's name as appears in-game
-STRINGS.NAMES.ZETA = "Ozzy"
+STRINGS.NAMES.ZETA = "Wuzzy"
 
 AddMinimapAtlas("images/map_icons/zeta.xml")
 AddMinimapAtlas("images/map_icons/mutantbeecocoon.xml")
@@ -186,7 +204,7 @@ local function HandleHoneyPerishingInMetapisHive(prefab)
   if prefab.components.perishable and prefab.components.inventoryitem then
     local OldOnPutInInventory = prefab.components.inventoryitem.onputininventoryfn or function() return end
     prefab.components.inventoryitem:SetOnPutInInventoryFn(function(inst, owner)
-      if owner.prefab == "mutantbeehive" then
+      if owner and owner.prefab == "mutantbeehive" then
         inst.components.perishable:StopPerishing()
       end
 
@@ -223,9 +241,168 @@ end
 
 AddPrefabPostInit("honey", HandleHoneyPerishingInMetapisHive)
 
+local function removefx(inst)
+  print('REMOVE FX')
+  if inst._pollenfx then
+    inst._pollenfx:Remove()
+    inst._pollenfx = nil
+  end
+end
+
+local function spawnfx(inst)
+  removefx(inst)
+
+  local fx = SpawnPrefab("pollen_fx")
+  fx.entity:SetParent(inst.entity)
+  inst._pollenfx = fx
+end
+
+local function checkfx(inst)
+  if not inst.pollenpicked then
+    spawnfx(inst)
+  else
+    removefx(inst)
+  end
+end
+
+local function ontick(inst)
+  inst.pollenticks = inst.pollenticks - 1
+  if inst.pollenticks > 0 then
+    inst:DoTaskInTime(100, ontick)
+  else
+    inst.pollenpicked = false
+    checkfx(inst)
+  end
+end
+
+local function onpickedflowerfn(inst, picker)
+  if picker ~= nil and not inst.pollenpicked then
+    if picker.components.sanity ~= nil and not picker:HasTag("plantkin") then
+      picker.components.sanity:DoDelta(TUNING.SANITY_TINY)
+    end
+
+    inst.pollenpicked = true
+    inst.pollenticks = 5
+    inst:DoTaskInTime(100, ontick)
+    checkfx(inst)
+  end
+end
+
+local function onplayerjoined(inst)
+  if GLOBAL.GetPlayer():HasTag("beemaster") then
+    checkfx(inst)
+  else
+    removefx(inst)
+  end
+end
+
+local function FlowerPostInit(prefab)
+  prefab.pollenpicked = false
+  prefab.pollenticks = 0
+
+  prefab:DoTaskInTime(0, onplayerjoined)
+
+  if prefab.components.pickable then
+    local oldonpickedfn = prefab.components.pickable.onpickedfn
+    prefab.components.pickable.onpickedfn = function(inst, picker)
+      if picker and picker.prefab == 'zeta' then
+        if not inst.pollenpicked then
+          onpickedflowerfn(inst, picker)
+        else
+          if oldonpickedfn ~= nil then
+            oldonpickedfn(inst, picker)
+          end
+          picker.components.sanity:DoDelta(TUNING.OZZY_PICK_FLOWER_SANITY)
+        end
+
+        return
+      end
+
+      if oldonpickedfn ~= nil then
+        oldonpickedfn(inst, picker)
+      end
+    end
+
+    local PickFn = prefab.components.pickable.Pick
+    prefab.components.pickable.Pick = function(comp, picker, ...)
+      if picker and picker.prefab == 'zeta' then
+        if not comp.inst.pollenpicked then
+          local product = comp.product
+          comp.product = 'zetapollen'
+          PickFn(comp, picker, ...)
+          comp.product = product
+        else
+          PickFn(comp, picker, ...)
+        end
+
+        return
+      end
+
+      PickFn(comp, picker, ...)
+    end
+
+    --Save/Load
+    local OldOnSave = prefab.OnSave
+    local OldOnLoad = prefab.OnLoad
+    prefab.OnSave = function(inst, data)
+      OldOnSave(inst, data)
+      data.pollenpicked = inst.pollenpicked
+      data.pollenticks = inst.pollenticks
+    end
+
+    prefab.OnLoad = function(inst, data)
+      OldOnLoad(inst, data)
+      inst.pollenpicked = data ~= nil and data.pollenpicked or false
+      inst.pollenticks = data ~= nil and data.pollenticks or 0
+      if inst.pollenticks > 0 then
+        inst:DoTaskInTime(100, ontick)
+      end
+
+      checkfx(inst)
+    end
+
+  end
+end
+
+AddPrefabPostInit("flower", FlowerPostInit)
+AddPrefabPostInit("flower_rainforest", FlowerPostInit)
+
+local function BeeBoxPostInit(prefab)
+  if prefab.components.childspawner then
+    local oldReleaseAllChildren = prefab.components.childspawner.ReleaseAllChildren
+    prefab.components.childspawner.ReleaseAllChildren = function(comp, target, ...)
+      if target and target:HasTag("beemaster") then
+        return
+      end
+
+      oldReleaseAllChildren(comp, target, ...)
+    end
+  end
+end
+
+AddPrefabPostInit("beebox", BeeBoxPostInit)
+
+local function WaspHivePostInit(prefab)
+  if prefab.components.playerprox then
+    local oldOnNearFn = prefab.components.playerprox.onnear
+    local onnearfn = function(inst)
+      if GLOBAL.GetPlayer():HasTag("beemaster") then
+        return
+      end
+
+      if oldOnNearFn ~= nil then
+        oldOnNearFn(inst)
+      end
+    end
+    prefab.components.playerprox:SetOnPlayerNear(onnearfn)
+  end
+end
+
+AddPrefabPostInit("wasphive", WaspHivePostInit)
+
 local Recipe = GLOBAL.Recipe
 
-local myrecipe = Recipe("mutantbeecocoon",
+local cocoonrecipe = Recipe("mutantbeecocoon",
   {
     Ingredient("honeycomb", 1),
     Ingredient("cutgrass", 4),
@@ -234,9 +411,9 @@ local myrecipe = Recipe("mutantbeecocoon",
   RECIPETABS.SURVIVAL,
   TECH.NONE
 )
-myrecipe.atlas = "images/inventoryimages/mutantbeecocoon.xml"
+cocoonrecipe.atlas = "images/inventoryimages/mutantbeecocoon.xml"
 
-local myrecipe = Recipe("armorhoney",
+local armorhoneyrecipe = Recipe("armorhoney",
   {
     Ingredient("log", 10),
     Ingredient("rope", 1),
@@ -245,7 +422,18 @@ local myrecipe = Recipe("armorhoney",
   RECIPETABS.WAR,
   TECH.NONE
 )
-myrecipe.atlas = "images/inventoryimages/armorhoney.xml"
+armorhoneyrecipe.atlas = "images/inventoryimages/armorhoney.xml"
+
+local melissarecipe = Recipe("melissa",
+  {
+    Ingredient("twigs", 2),
+    Ingredient("goldnugget", 1),
+    Ingredient("stinger", 5)
+  },
+  RECIPETABS.WAR,
+  TECH.NONE
+)
+melissarecipe.atlas = "images/inventoryimages/melissa.xml"
 
 local Badge = require("widgets/badge")
 
@@ -272,13 +460,19 @@ local function CalcSymbiosisPosition(status)
   return pos
 end
 
+local function UpdateSymbiosisPosScale(self)
+  local pos = CalcSymbiosisPosition(self)
+  self.symbiosis:SetPosition(pos:Get())
+  self.symbiosis:SetScale(self.brain:GetScale():Get())
+end
+
 local function StatusPostConstruct(self)
   if self.owner.components.beesummoner then
-    local pos = CalcSymbiosisPosition(self)
     self.symbiosis = self:AddChild(Badge("health", self.owner))
     self.symbiosis.anim:GetAnimState():SetBuild("symbiosis")
-    self.symbiosis:SetPosition(pos:Get())
-    self.symbiosis:SetScale(self.brain:GetScale():Get())
+
+    UpdateSymbiosisPosScale(self)
+
     self.symbiosis:SetPercent(
       self.owner.components.beesummoner:GetRegenTickPercent(),
       self.owner.components.beesummoner.maxticks
@@ -286,10 +480,16 @@ local function StatusPostConstruct(self)
     self.symbiosis.num:SetString(GLOBAL.tostring(self.owner.components.beesummoner.numstore))
     self.symbiosis.num:Show()
     self.symbiosis.inst:ListenForEvent("onregentick",
-      function(inst, data) OnRegenTick(inst, data, self.symbiosis) end,
+      function(inst, data)
+        OnRegenTick(inst, data, self.symbiosis)
+        UpdateSymbiosisPosScale(self)
+      end,
       self.owner)
     self.symbiosis.inst:ListenForEvent("onnumstorechange",
-      function(inst, data) OnNumStoreChange(inst, data, self.symbiosis) end,
+      function(inst, data)
+        OnNumStoreChange(inst, data, self.symbiosis)
+        UpdateSymbiosisPosScale(self)
+      end,
       self.owner)
 
     local OldOnLoseFocus = self.symbiosis.OnLoseFocus

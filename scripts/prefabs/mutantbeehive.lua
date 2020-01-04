@@ -3,6 +3,7 @@ local prefabs =
 	"mutantbee",
 	"mutantkillerbee",
 	"honey",
+	"zetapollen",
 	"honeycomb",
 	"mutantbeecocoon",
 	"collapse_big",
@@ -436,18 +437,38 @@ local function GiveHoney(inst)
 	inst.components.container:GiveItem(honey)
 end
 
-local function AddHoneyProgress(inst)
-	inst.honey_progress = inst.honey_progress or 0
-	inst.honey_progress = inst.honey_progress + 1
+local function ConvertPollenToHoney(inst)
+  if not inst.components.container then
+    return
+  end
 
-	if inst.honey_progress >= 5 then
-		GiveHoney(inst)
-		inst.honey_progress = 0
-	end
+  local maxhoneys = TUNING.MUTANT_BEEHIVE_MAX_HONEYS_PER_CYCLE
+
+  for i=1,maxhoneys do
+    local numpollens = math.random(
+      TUNING.MUTANT_BEEHIVE_NUM_POLLENS_PER_HONEY,
+      TUNING.MUTANT_BEEHIVE_NUM_POLLENS_PER_HONEY + 1)
+    local has, numfound = inst.components.container:Has("zetapollen", numpollens)
+    if not has then
+      break
+    end
+
+    inst.components.container:ConsumeByName("zetapollen", numpollens)
+    GiveHoney(inst)
+  end
+end
+
+local function AddHoneyProgress(inst)
+	if not inst.components.container then
+    return
+  end
+
+  local pollen = SpawnPrefab("zetapollen")
+  inst.components.container:GiveItem(pollen)
 end
 
 local function itemtestfn(inst, item, slot)
-	return item and item.prefab and item.prefab == "honey"
+	return item and item.prefab and (item.prefab == "honey" or item.prefab == "zetapollen")
 end
 
 local function onchildgoinghome(inst, data)
@@ -466,6 +487,7 @@ local function OnInit(inst)
 	inst.components.growable:SetStage(inst.components.upgradeable.stage)
 
 	inst:DoPeriodicTask(3, SelfRepair)
+	inst:DoPeriodicTask(60, ConvertPollenToHoney)
 
 	OnPlayerJoined(inst)
 end

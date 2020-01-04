@@ -1,8 +1,8 @@
 -- This information tells other players more about the mod
-name = "Ozzy The Buzzy"
+name = "Wuzzy The Buzzy"
 description = "The bee master"
 author = "Zeta"
-version = "1.4.12" -- This is the version of the template. Change it to your own number.
+version = "1.4.13" -- This is the version of the template. Change it to your own number.
 
 -- This is the URL name of the mod's thread on the forum; the part after the ? and before the first & in the url
 forumthread = ""

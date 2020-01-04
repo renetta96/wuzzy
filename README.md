@@ -1,2 +1,2 @@
-# Ozzy the Buzzy
+# Wuzzy the Buzzy
 Literally a bee :)

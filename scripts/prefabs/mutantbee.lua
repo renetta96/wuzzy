@@ -498,10 +498,10 @@ local function commonfn(build, tags)
   ---------------------
 
   inst:AddComponent("lootdropper")
-  inst.components.lootdropper:AddRandomLoot("honey", 2)
-  inst.components.lootdropper:AddRandomLoot("stinger", 3)
+  inst.components.lootdropper:AddRandomLoot("honey", 1)
+  inst.components.lootdropper:AddRandomLoot("stinger", 4)
   inst.components.lootdropper.numrandomloot = 1
-  inst.components.lootdropper.chancerandomloot = 0.6
+  inst.components.lootdropper.chancerandomloot = 0.5
 
   ------------------
 

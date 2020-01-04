@@ -30,32 +30,33 @@ local start_inv = {
 	"honey"
 }
 
-local HONEYED_FOODS = {
-	honey = 0.2,
-	honeynuggets = 0.35,
-	honeyham = 0.35
-}
-
 local function OnKillOther(inst, data)
 	local victim = data.victim
 	metapisutil.SpawnParasitesOnKill(inst, victim)
 end
 
+local function OnNumStoreChange(inst)
+  local numstore = inst.components.beesummoner.numstore
+  local maxstore = inst.components.beesummoner.maxstore
+
+  inst.components.temperature.inherentinsulation = (TUNING.INSULATION_MED / maxstore) * numstore - TUNING.INSULATION_SMALL
+end
+
 local function OnEat(inst, data)
-	if data.food and (data.food.prefab == "petals" or data.food.prefab == "petals_evil") then
-		inst._eatenpetals = inst._eatenpetals + 1
-		if (inst._eatenpetals >= TUNING.OZZY_NUM_PETALS_PER_HONEY) then
-			local honey = SpawnPrefab("honey")
-			honey.Transform:SetPosition(inst.Transform:GetWorldPosition())
-			inst._eatenpetals = 0
-		end
+	if data.food and data.food.prefab == "zetapollen" then
+    inst._eatenpollens = inst._eatenpollens + 1
+    if (inst._eatenpollens >= TUNING.OZZY_NUM_POLLENS_PER_HONEY) then
+      local honey = SpawnPrefab("honey")
+      inst.components.inventory:GiveItem(honey)
+      inst._eatenpollens = 0
+    end
 
-		return
-	end
+    return
+  end
 
-	if data.food and HONEYED_FOODS[data.food.prefab] then
+	if data.food and data.food:HasTag("honeyed") then
 		local food = data.food
-		local bonus = HONEYED_FOODS[food.prefab]
+		local bonus = TUNING.OZZY_HONEYED_FOOD_BONUS
 
 		if inst.components.health then
 			local delta = food.components.edible:GetHealth(inst) * inst.components.eater.healthabsorption * bonus
@@ -198,11 +199,12 @@ local postinit = function(inst)
 	inst.components.beesummoner:SetMaxChildren(TUNING.OZZY_MAX_SUMMON_BEES)
 	inst.components.beesummoner:SetSummonChance(TUNING.OZZY_SUMMON_CHANCE)
 	inst.components.beesummoner:SetMaxStore(TUNING.OZZY_MAX_BEES_STORE)
+	inst:ListenForEvent("onnumstorechange", OnNumStoreChange)
 
 	SeasonalChanges(inst)
 	inst:ListenForEvent("seasonChange", function() SeasonalChanges(inst) end, GetWorld())
 
-	inst._eatenpetals = 0
+	inst._eatenpollens = 0
 	inst:ListenForEvent("oneat", OnEat)
 	inst:ListenForEvent("attacked", OnAttacked)
 
