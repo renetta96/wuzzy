@@ -97,14 +97,15 @@ TUNING.MUTANT_BEE_WATCH_DIST = 20
 TUNING.MUTANT_BEE_MAX_POISON_TICKS = 5
 TUNING.MUTANT_BEE_POISON_DAMAGE = 5
 TUNING.MUTANT_BEE_POISON_PERIOD = 0.75
-TUNING.MUTANT_BEE_EXPLOSIVE_DAMAGE_MULTIPLIER = 3.0
-TUNING.MUTANT_BEE_EXPLOSIVE_RANGE = 8
+TUNING.MUTANT_BEE_EXPLOSIVE_DAMAGE_MULTIPLIER = 1.0
+TUNING.MUTANT_BEE_EXPLOSIVE_RANGE = 3
 TUNING.MUTANT_BEE_FROSTBITE_SPEED_PENALTY = 0.5
 TUNING.MUTANT_BEE_FROSTBITE_ATK_PERIOD_PENALTY = 1.65
-TUNING.MUTANT_BEE_WEAPON_ATK_RANGE = 10
+TUNING.MUTANT_BEE_WEAPON_ATK_RANGE = 8
 TUNING.MUTANT_BEE_RANGED_TARGET_DIST = 10
 TUNING.MUTANT_BEE_RANGED_DAMAGE = 15
 TUNING.MUTANT_BEE_RANGED_ATK_PERIOD = 2.5
+TUNING.MUTANT_BEE_RANGED_HEATLH = 50
 TUNING.MUTANT_BEE_DEFENDER_HEALTH = 400
 TUNING.MUTANT_BEE_DEFENDER_DAMAGE = 5
 TUNING.MUTANT_BEE_DEFENDER_ATTACK_PERIOD = 2
@@ -485,6 +486,32 @@ local mutantdefenderhive_rec = AddRecipe("mutantdefenderhive",
   RECIPETABS.TOWN,
   TECH.SCIENCE_TWO,
   "mutantdefenderhive_placer",
+  nil, nil, nil,
+  "beemaster",
+  nil,nil,
+  slavehivetestfn
+)
+
+local mutantrangerhive_rec = AddRecipe("mutantrangerhive",
+  {
+    Ingredient("cutgrass", 1)
+  },
+  RECIPETABS.TOWN,
+  TECH.SCIENCE_TWO,
+  "mutantrangerhive_placer",
+  nil, nil, nil,
+  "beemaster",
+  nil,nil,
+  slavehivetestfn
+)
+
+local mutantassassinhive_rec = AddRecipe("mutantassassinhive",
+  {
+    Ingredient("cutgrass", 1)
+  },
+  RECIPETABS.TOWN,
+  TECH.SCIENCE_TWO,
+  "mutantassassinhive_placer",
   nil, nil, nil,
   "beemaster",
   nil,nil,

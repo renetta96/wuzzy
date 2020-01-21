@@ -25,36 +25,62 @@ local tagtoprefab = {
   assassin="mutantassassinbee"
 }
 
+local function CanSummon(inst, prefab)
+  if not inst._hive then
+    return false
+  end
+
+  return inst._hive:CanSpawn(prefab)
+end
+
 local function GetChildPrefab(inst)
-  local tagcount = {
-    defender=0,
-    soldier=0,
-    ranger=0,
-    assassin=0
+  local expect = {
+    mutantkillerbee = TUNING.OZZY_MAX_SUMMON_BEES,
+    mutantdefenderbee = 0,
+    mutantrangerbee = 0,
+    mutantassassinbee = 0
+  }
+
+  local cansummon = {"mutantkillerbee"}
+
+  for i, prefab in ipairs({"mutantdefenderbee", "mutantrangerbee", "mutantassassinbee"}) do
+    if CanSummon(inst, prefab) then
+      expect[prefab] = expect[prefab] + 1
+      expect["mutantkillerbee"] = expect["mutantkillerbee"] - 1
+      table.insert(cansummon, prefab)
+    end
+  end
+
+  local prefabcount = {
+    mutantdefenderbee = 0,
+    mutantkillerbee = 0,
+    mutantrangerbee = 0,
+    mutantassassinbee = 0
   }
 
   for i, child in pairs(inst.components.beesummoner.children) do
     if child ~= nil and child:IsValid() then
-      for tag, v in pairs(tagcount) do
-        if child:HasTag(tag) then
-          tagcount[tag] = tagcount[tag] + 1
-        end
+      prefabcount[child.prefab] = prefabcount[child.prefab] + 1
+    end
+  end
+
+  local prefabstopick = {}
+  for prefab, cnt in pairs(prefabcount) do
+    if cnt < expect[prefab] then
+      table.insert(prefabstopick, prefab)
+
+      -- Prioritize defender
+      if prefab == "mutantdefenderbee" then
+        return prefab
       end
     end
   end
 
-  local possibletags = {}
-  local mincount = tagcount["defender"]
-  for tag, v in pairs(tagcount) do
-    if v < mincount then
-      mincount = v
-      possibletags = {tag}
-    elseif v == mincount then
-      table.insert(possibletags, tag)
-    end
+  if #prefabstopick == 0 then
+    prefabstopick = cansummon
   end
 
-  return tagtoprefab[possibletags[math.random(#possibletags)]]
+  return prefabstopick[math.random(#prefabstopick)]
 end
 
 local function OnEat(inst, data)

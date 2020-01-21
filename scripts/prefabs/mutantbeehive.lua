@@ -806,6 +806,7 @@ local function fn()
   inst.OnRemoveEntity = OnRemoveEntity
   inst.OnSlave = OnSlave
   inst.InheritOwner = InheritOwner
+  inst.CanSpawn = CanSpawn
   inst._onplayerjoined = function(src, player) OnPlayerJoined(inst, player) end
   inst:ListenForEvent("ms_playerjoined", inst._onplayerjoined, TheWorld)
 
@@ -901,8 +902,7 @@ local function commonslavefn(bank, build, tags)
 
   -------------------
   inst:AddComponent("health")
-
-  -- inst:DoTaskInTime(0, OnInit)
+  inst.components.health:SetMaxHealth(400)
 
   ---------------------
   MakeLargeBurnable(inst)
@@ -916,11 +916,6 @@ local function commonslavefn(bank, build, tags)
   ---------------------
 
   inst:AddComponent("combat")
-  -- inst.components.combat:SetOnHit(OnHit)
-  -- inst:ListenForEvent("death", OnKilled)
-  -- inst:ListenForEvent("onburnt", OnBurnt)
-  -- inst:DoPeriodicTask(2, WatchEnemy)
-  -- inst.OnHit = OnHit
 
   ---------------------
 
@@ -950,6 +945,16 @@ local function defenderhive()
   return inst
 end
 
+local function rangerhive()
+  local inst = commonslavefn("beehive", "beehive", {"mutantrangerhive"})
+  return inst
+end
+
+local function assassinhive()
+  local inst = commonslavefn("beehive", "beehive", {"mutantassassinhive"})
+  return inst
+end
+
 STRINGS.MUTANTBEEHIVE = "Metapis Hive"
 STRINGS.NAMES.MUTANTBEEHIVE = "Metapis Hive"
 STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTBEEHIVE = "\"Apis\" is the Latin word for \"bee\"."
@@ -959,4 +964,8 @@ STRINGS.NAMES.MUTANTDEFENDERHIVE = "Metapis Defender Hive"
 
 return Prefab("mutantbeehive", fn, assets, prefabs),
   Prefab("mutantdefenderhive", defenderhive, assets, prefabs),
-  MakePlacer("mutantdefenderhive_placer", "beehive", "beehive", "cocoon_small")
+  MakePlacer("mutantdefenderhive_placer", "beehive", "beehive", "cocoon_small"),
+  Prefab("mutantrangerhive", rangerhive, assets, prefabs),
+  MakePlacer("mutantrangerhive_placer", "beehive", "beehive", "cocoon_small"),
+  Prefab("mutantassassinhive", assassinhive, assets, prefabs),
+  MakePlacer("mutantassassinhive_placer", "beehive", "beehive", "cocoon_small")
