@@ -281,7 +281,7 @@ local function OnHit(inst, attacker, damage)
   end
 
   if inst.components.childspawner ~= nil and not IsValidOwner(inst, attacker) then
-    inst.components.childspawner:ReleaseAllChildren(attacker, "mutantkillerbee")
+    inst.components.childspawner:ReleaseAllChildren(attacker)
   end
   if not inst.components.health:IsDead() then
     Shake(inst)
@@ -294,6 +294,122 @@ local function OnWork(inst, worker, workleft)
   else
     OnHit(inst, worker, 1)
   end
+end
+
+local function IsSlave(inst, slave)
+  return slave:IsValid() and slave._ownerid == inst._ownerid
+end
+
+local function OnSlave(inst)
+  local x, y, z = inst.Transform:GetWorldPosition()
+  local slaves = TheSim:FindEntities(x, y, z,
+    TUNING.MUTANT_BEEHIVE_MASTER_SLAVE_DIST,
+    { "_combat", "_health" },
+    { "INLIMBO", "player" },
+    { "mutantslavehive" }
+  )
+
+  local numslaves = 0
+
+  for i, slave in ipairs(slaves) do
+    if IsSlave(inst, slave) then
+      numslaves = numslaves + 1
+    end
+  end
+
+  local stage = inst.components.upgradeable.stage
+  local numchildren = TUNING.MUTANT_BEEHIVE_DEFAULT_EMERGENCY_BEES + (stage - 1) * TUNING.MUTANT_BEEHIVE_DELTA_BEES
+    + numslaves * TUNING.MUTANT_BEEHIVE_CHILDREN_PER_SLAVE
+  inst.components.childspawner:SetMaxEmergencyChildren(numchildren)
+end
+
+local tocheck = {
+  mutantdefenderbee = "mutantdefenderhive",
+  mutantrangerbee = "mutantrangerhive",
+  mutantassassinbee = "mutantassassinhive",
+  mutantkillerbee = true
+}
+
+local function CanSpawn(inst, prefab)
+  if prefab == "mutantkillerbee" then
+    return true
+  end
+
+  if not tocheck[prefab] then
+    return false
+  end
+
+  local hive = FindEntity(inst, TUNING.MUTANT_BEEHIVE_MASTER_SLAVE_DIST,
+    function(guy) return IsSlave(inst, guy) end,
+    { "_combat", "_health" },
+    { "INLIMBO", "player" },
+    { tocheck[prefab] }
+  )
+
+  if hive then
+    return true
+  end
+
+  return false
+end
+
+local function PickChildPrefab(inst)
+  local ratio = {
+    mutantkillerbee = 4,
+    mutantdefenderbee = 0,
+    mutantrangerbee = 0,
+    mutantassassinbee = 0
+  }
+
+  local canspawnprefabs = {"mutantkillerbee"}
+
+  for i, prefab in ipairs({"mutantdefenderbee", "mutantrangerbee", "mutantassassinbee"}) do
+    if CanSpawn(inst, prefab) then
+      ratio[prefab] = 1
+      ratio["mutantkillerbee"] = ratio["mutantkillerbee"] - 1
+      table.insert(canspawnprefabs, prefab)
+    end
+  end
+
+  local currentcount = {
+    mutantkillerbee = 0,
+    mutantdefenderbee = 0,
+    mutantrangerbee = 0,
+    mutantassassinbee = 0
+  }
+  local total = 0
+
+  for child, c in pairs(inst.components.childspawner.childrenoutside) do
+    if child:IsValid() and tocheck[child.prefab] then
+      currentcount[child.prefab] = currentcount[child.prefab] + 1
+      total = total + 1
+    end
+  end
+
+  for child, c in pairs(inst.components.childspawner.emergencychildrenoutside) do
+    if child:IsValid() and tocheck[child.prefab] then
+      currentcount[child.prefab] = currentcount[child.prefab] + 1
+      total = total + 1
+    end
+  end
+
+  local prefabstopick = {}
+  for prefab, cnt in pairs(currentcount) do
+    if cnt / total < ratio[prefab] / 4 then
+      table.insert(prefabstopick, prefab)
+    end
+  end
+
+  if #prefabstopick == 0 then
+    prefabstopick = canspawnprefabs
+  end
+
+  print("PREFABS TO PICK:")
+  for k,v in ipairs(prefabstopick) do
+    print(v)
+  end
+
+  return prefabstopick[math.random(#prefabstopick)]
 end
 
 -- /* Upgrade and Grow
@@ -320,6 +436,7 @@ local function MakeSetStageFn(stage)
     end
 
     inst.components.lootdropper:SetLoot(loots)
+    OnSlave(inst)
   end
 end
 
@@ -443,8 +560,6 @@ local function OnSave(inst, data)
   if inst._ownerid then
     data._ownerid = inst._ownerid
   end
-
-  -- data.honey_progress = inst.honey_progress or 0
 end
 
 local function OnPlayerJoined(inst, player)
@@ -468,10 +583,6 @@ local function OnLoad(inst, data)
   if data and data._ownerid then
     inst._ownerid = data._ownerid
   end
-
-  -- if data and data.honey_progress then
-  --   inst.honey_progress = data.honey_progress
-  -- end
 end
 
 local function GiveHoney(inst)
@@ -516,6 +627,7 @@ local function OnInit(inst)
 
   inst:DoPeriodicTask(3, SelfRepair)
   inst:DoPeriodicTask(60, ConvertPollenToHoney)
+  inst:DoPeriodicTask(2, OnSlave)
 end
 
 local function onopen(inst)
@@ -537,14 +649,6 @@ local function AddHoneyProgress(inst)
 
   local pollen = SpawnPrefab("zetapollen")
   inst.components.container:GiveItem(pollen)
-
-  -- inst.honey_progress = inst.honey_progress or 0
-  -- inst.honey_progress = inst.honey_progress + 1
-
-  -- if inst.honey_progress >= 5 then
-  --   GiveHoney(inst)
-  --   inst.honey_progress = 0
-  -- end
 end
 
 local function itemtestfn(inst, item, slot)
@@ -580,6 +684,7 @@ local function fn()
   inst:AddTag("structure")
   inst:AddTag("mutantbeehive")
   inst:AddTag("companion")
+  inst:AddTag("mutant")
 
   ---------------------------
   inst:AddComponent("talker")
@@ -611,6 +716,21 @@ local function fn()
   inst.components.childspawner:SetEmergencyRadius(TUNING.MUTANT_BEEHIVE_EMERGENCY_RADIUS)
   inst.components.childspawner:SetMaxChildren(TUNING.MUTANT_BEEHIVE_BEES)
   inst:ListenForEvent("childgoinghome", onchildgoinghome)
+
+  local oldSpawnChild = inst.components.childspawner.SpawnChild
+  local oldSpawnEmergencyChild = inst.components.childspawner.SpawnEmergencyChild
+  inst.components.childspawner.SpawnChild = function(comp, target, prefab, ...)
+    local newprefab = prefab
+    if target ~= nil then
+      newprefab = PickChildPrefab(inst)
+    end
+    return oldSpawnChild(comp, target, newprefab, ...)
+  end
+
+  inst.components.childspawner.SpawnEmergencyChild = function(comp, target, prefab, ...)
+    local newprefab = PickChildPrefab(inst)
+    return oldSpawnEmergencyChild(comp, target, newprefab, ...)
+  end
 
   inst:DoTaskInTime(0, OnInit)
 
@@ -684,6 +804,7 @@ local function fn()
   inst.OnSave = OnSave
   inst.OnLoad = OnLoad
   inst.OnRemoveEntity = OnRemoveEntity
+  inst.OnSlave = OnSlave
   inst.InheritOwner = InheritOwner
   inst._onplayerjoined = function(src, player) OnPlayerJoined(inst, player) end
   inst:ListenForEvent("ms_playerjoined", inst._onplayerjoined, TheWorld)
@@ -691,8 +812,151 @@ local function fn()
   return inst
 end
 
+local function OnSlaveHammered(inst, worker)
+  inst.SoundEmitter:PlaySound("dontstarve/bee/beehive_destroy")
+  inst.components.lootdropper:DropLoot(inst:GetPosition())
+
+  local fx = SpawnPrefab("collapse_small")
+  fx.Transform:SetPosition(inst.Transform:GetWorldPosition())
+  fx:SetMaterial("straw")
+
+  inst:Remove()
+end
+
+local function SetOwner(inst, owner)
+  if owner and owner:HasTag("player") and owner.prefab == 'zeta' then
+    inst._ownerid = owner.userid
+  end
+end
+
+local function SetMaster(inst, master)
+  if master then
+    inst.entity:SetParent(master.entity)
+    master:OnSlave()
+  end
+end
+
+local function onbuilt(inst, data)
+  local builder = data.builder
+  SetOwner(inst, builder)
+end
+
+local function CheckMaster(inst)
+  if not inst._ownerid then
+    OnSlaveHammered(inst)
+    return
+  end
+
+  local master = FindEntity(inst, TUNING.MUTANT_BEEHIVE_MASTER_SLAVE_DIST,
+    function(guy)
+      return guy:IsValid()
+        and guy.prefab == 'mutantbeehive'
+        and guy._ownerid == inst._ownerid
+    end,
+    { "_combat", "_health" },
+    { "INLIMBO", "player" },
+    { "mutantbeehive" }
+  )
+
+  if not master then
+    OnSlaveHammered(inst)
+    return
+  end
+
+  -- SetMaster(inst, master)
+end
+
+local function commonslavefn(bank, build, tags)
+  local inst = CreateEntity()
+
+  inst.entity:AddTransform()
+  inst.entity:AddAnimState()
+  inst.entity:AddSoundEmitter()
+  inst.entity:AddMiniMapEntity()
+  inst.entity:AddNetwork()
+
+  MakeObstaclePhysics(inst, 1)
+
+  inst.MiniMapEntity:SetIcon("beehive.png")
+
+  inst.AnimState:SetBank(bank)
+  inst.AnimState:SetBuild(build)
+  inst.AnimState:PlayAnimation("cocoon_small", true)
+
+  inst:AddTag("structure")
+  inst:AddTag("companion")
+  inst:AddTag("mutantslavehive")
+  inst:AddTag("mutant")
+  for i, v in ipairs(tags) do
+    inst:AddTag(v)
+  end
+
+  MakeSnowCoveredPristine(inst)
+
+  inst.entity:SetPristine()
+
+  if not TheWorld.ismastersim then
+    return inst
+  end
+
+  -------------------
+  inst:AddComponent("health")
+
+  -- inst:DoTaskInTime(0, OnInit)
+
+  ---------------------
+  MakeLargeBurnable(inst)
+  ---------------------
+
+  ---------------------
+  MakeMediumFreezableCharacter(inst)
+  inst:ListenForEvent("freeze", OnFreeze)
+  inst:ListenForEvent("onthaw", OnThaw)
+  inst:ListenForEvent("unfreeze", OnUnFreeze)
+  ---------------------
+
+  inst:AddComponent("combat")
+  -- inst.components.combat:SetOnHit(OnHit)
+  -- inst:ListenForEvent("death", OnKilled)
+  -- inst:ListenForEvent("onburnt", OnBurnt)
+  -- inst:DoPeriodicTask(2, WatchEnemy)
+  -- inst.OnHit = OnHit
+
+  ---------------------
+
+  inst:AddComponent("workable")
+  inst.components.workable:SetWorkAction(ACTIONS.HAMMER)
+  inst.components.workable:SetWorkLeft(5)
+  inst.components.workable:SetOnFinishCallback(OnSlaveHammered)
+
+  ---------------------
+  inst:AddComponent("lootdropper")
+
+  ---------------------
+  MakeLargePropagator(inst)
+  MakeSnowCovered(inst)
+
+  inst:AddComponent("inspectable")
+  inst.OnSave = OnSave
+  inst.OnLoad = OnLoad
+  inst:ListenForEvent("onbuilt", onbuilt)
+  inst:DoPeriodicTask(5, CheckMaster)
+
+  return inst
+end
+
+local function defenderhive()
+  local inst = commonslavefn("beehive", "beehive", {"mutantdefenderhive"})
+  return inst
+end
+
 STRINGS.MUTANTBEEHIVE = "Metapis Hive"
 STRINGS.NAMES.MUTANTBEEHIVE = "Metapis Hive"
 STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTBEEHIVE = "\"Apis\" is the Latin word for \"bee\"."
 
-return Prefab("mutantbeehive", fn, assets, prefabs)
+STRINGS.MUTANTDEFENDERHIVE = "Metapis Defender Hive"
+STRINGS.NAMES.MUTANTDEFENDERHIVE = "Metapis Defender Hive"
+
+return Prefab("mutantbeehive", fn, assets, prefabs),
+  Prefab("mutantdefenderhive", defenderhive, assets, prefabs),
+  MakePlacer("mutantdefenderhive_placer", "beehive", "beehive", "cocoon_small")

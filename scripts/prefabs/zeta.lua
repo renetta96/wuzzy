@@ -18,6 +18,45 @@ local start_inv = {
   "honey"
 }
 
+local tagtoprefab = {
+  defender="mutantdefenderbee",
+  soldier="mutantkillerbee",
+  ranger="mutantrangerbee",
+  assassin="mutantassassinbee"
+}
+
+local function GetChildPrefab(inst)
+  local tagcount = {
+    defender=0,
+    soldier=0,
+    ranger=0,
+    assassin=0
+  }
+
+  for i, child in pairs(inst.components.beesummoner.children) do
+    if child ~= nil and child:IsValid() then
+      for tag, v in pairs(tagcount) do
+        if child:HasTag(tag) then
+          tagcount[tag] = tagcount[tag] + 1
+        end
+      end
+    end
+  end
+
+  local possibletags = {}
+  local mincount = tagcount["defender"]
+  for tag, v in pairs(tagcount) do
+    if v < mincount then
+      mincount = v
+      possibletags = {tag}
+    elseif v == mincount then
+      table.insert(possibletags, tag)
+    end
+  end
+
+  return tagtoprefab[possibletags[math.random(#possibletags)]]
+end
+
 local function OnEat(inst, data)
   if data.food and data.food.prefab == "zetapollen" then
     inst._eatenpollens = inst._eatenpollens + 1
@@ -155,6 +194,7 @@ local master_postinit = function(inst)
   inst.components.beesummoner:SetMaxChildren(TUNING.OZZY_MAX_SUMMON_BEES)
   inst.components.beesummoner:SetSummonChance(TUNING.OZZY_SUMMON_CHANCE)
   inst.components.beesummoner:SetMaxStore(TUNING.OZZY_MAX_BEES_STORE)
+  inst.components.beesummoner.childprefabfn = GetChildPrefab
   inst:ListenForEvent("onnumstorechange", OnNumStoreChange)
 
   SeasonalChanges(inst, TheWorld.state.season)
@@ -163,7 +203,7 @@ local master_postinit = function(inst)
   inst._eatenpollens = 0
   inst:ListenForEvent("oneat", OnEat)
   inst:ListenForEvent("attacked", OnAttacked)
-  inst:ListenForEvent("killed", OnKillOther)
+  -- inst:ListenForEvent("killed", OnKillOther)
 
   inst.OnLoad = onload
   inst.OnNewSpawn = onload

@@ -45,15 +45,20 @@ function BeeBrain:OnStart()
 
       WhileNode(
         function()
-            return self.inst.components.combat.target == nil or not self.inst.components.combat:InCooldown()
+          return self.inst.components.combat:HasTarget()
         end,
-        "AttackMomentarily",
-        ChaseAndAttack(self.inst, SpringCombatMod(MAX_CHASE_TIME), SpringCombatMod(MAX_CHASE_DIST))
+        "Retreat",
+        DoAction(
+          self.inst,
+          function() return beecommon.GoHomeAction(self.inst) end,
+          "go home",
+          true
+        )
       ),
 
       WhileNode(
         function()
-            return self.inst.components.combat.target and self.inst.components.combat:InCooldown()
+          return self.inst.components.combat:HasTarget()
         end,
         "Dodge",
         RunAway(
@@ -63,7 +68,6 @@ function BeeBrain:OnStart()
         )
       ),
 
-      -- ChaseAndAttack(self.inst, beecommon.MAX_CHASE_TIME),
       WhileNode(
         function() return IsHomeOnFire(self.inst) end,
         "HomeOnFire",

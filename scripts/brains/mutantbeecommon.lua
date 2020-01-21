@@ -36,11 +36,6 @@ local function OnAttacked(inst, data)
 	end, targetshares)
 end
 
-local function OnWorked(inst, data)
-	--print("OnWorked")
-	OnAttacked(inst, {attacker=data.worker})
-end
-
 local function GoHomeAction(inst)
 	local homeseeker = inst.components.homeseeker
 	if homeseeker
@@ -55,7 +50,6 @@ end
 return {
 	GoHomeAction = GoHomeAction,
 	OnAttacked = OnAttacked,
-	OnWorked = OnWorked,
 	RUN_AWAY_DIST = RUN_AWAY_DIST,
 	SEE_FLOWER_DIST = SEE_FLOWER_DIST,
 	SEE_TARGET_DIST = SEE_TARGET_DIST,
