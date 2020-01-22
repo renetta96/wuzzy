@@ -100,7 +100,7 @@ end
 local function OnAttackExplosive(inst, data)
 	inst._attackcount = inst._attackcount + 1
 
-	if inst._attackcount >= 5 then
+	if inst._attackcount >= 7 then
 		inst._attackcount = 0
 		local target = data.target
 
@@ -553,7 +553,7 @@ local function OnDefenderStartCombat(inst)
 		inst._taunttask:Cancel()
 	end
 
-	inst._taunttask = inst:DoPeriodicTask(0.25, Taunt)
+	inst._taunttask = inst:DoPeriodicTask(1, Taunt)
 end
 
 local function OnDefenderStopCombat(inst)

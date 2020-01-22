@@ -11,7 +11,8 @@ local prefabs =
 
 local assets =
 {
-  Asset("ANIM", "anim/mutantbeehive.zip"), -- New anim
+  Asset("ANIM", "anim/mutantbeehive.zip"),
+  Asset("ANIM", "anim/mutantdefenderhive.zip"),
   Asset("SOUND", "sound/bee.fsb"),
   Asset("ANIM", "anim/ui_chest_3x2.zip"),
 }
@@ -59,9 +60,9 @@ local SPEECH =
   },
   HAMMER = {
     "WELL IF THAT'S YOUR CHOICE THEN...",
-    "BUT... WHY ?",
+    "BUT... WHY?",
     "IF DOING THIS MAY HELP, THEN JUST DO IT!",
-    "AIN'T WE GOOD ENOUGH, MASTER ?"
+    "AIN'T WE GOOD ENOUGH, MASTER?"
   },
   HIT = {
     "THE HIVE IS UNDER ATTACK!!!",
@@ -830,13 +831,6 @@ local function SetOwner(inst, owner)
   end
 end
 
-local function SetMaster(inst, master)
-  if master then
-    inst.entity:SetParent(master.entity)
-    master:OnSlave()
-  end
-end
-
 local function onbuilt(inst, data)
   local builder = data.builder
   SetOwner(inst, builder)
@@ -863,8 +857,16 @@ local function CheckMaster(inst)
     OnSlaveHammered(inst)
     return
   end
+end
 
-  -- SetMaster(inst, master)
+local function OnSlaveKilled(inst)
+  inst.AnimState:PlayAnimation("dead", true)
+  RemovePhysicsColliders(inst)
+
+  inst.SoundEmitter:KillSound("loop")
+
+  inst.SoundEmitter:PlaySound("dontstarve/bee/beehive_destroy")
+  inst.components.lootdropper:DropLoot(inst:GetPosition())
 end
 
 local function commonslavefn(bank, build, tags)
@@ -882,7 +884,7 @@ local function commonslavefn(bank, build, tags)
 
   inst.AnimState:SetBank(bank)
   inst.AnimState:SetBuild(build)
-  inst.AnimState:PlayAnimation("cocoon_small", true)
+  inst.AnimState:PlayAnimation("idle", true)
 
   inst:AddTag("structure")
   inst:AddTag("companion")
@@ -909,11 +911,6 @@ local function commonslavefn(bank, build, tags)
   ---------------------
 
   ---------------------
-  MakeMediumFreezableCharacter(inst)
-  inst:ListenForEvent("freeze", OnFreeze)
-  inst:ListenForEvent("onthaw", OnThaw)
-  inst:ListenForEvent("unfreeze", OnUnFreeze)
-  ---------------------
 
   inst:AddComponent("combat")
 
@@ -934,6 +931,7 @@ local function commonslavefn(bank, build, tags)
   inst:AddComponent("inspectable")
   inst.OnSave = OnSave
   inst.OnLoad = OnLoad
+  inst:ListenForEvent("death", OnSlaveKilled)
   inst:ListenForEvent("onbuilt", onbuilt)
   inst:DoPeriodicTask(5, CheckMaster)
 
@@ -941,7 +939,7 @@ local function commonslavefn(bank, build, tags)
 end
 
 local function defenderhive()
-  local inst = commonslavefn("beehive", "beehive", {"mutantdefenderhive"})
+  local inst = commonslavefn("mutantdefenderhive", "mutantdefenderhive", {"mutantdefenderhive"})
   return inst
 end
 
@@ -955,12 +953,12 @@ local function assassinhive()
   return inst
 end
 
-STRINGS.MUTANTBEEHIVE = "Metapis Hive"
-STRINGS.NAMES.MUTANTBEEHIVE = "Metapis Hive"
+STRINGS.MUTANTBEEHIVE = "Metapis Mother Hive"
+STRINGS.NAMES.MUTANTBEEHIVE = "Metapis Mother Hive"
 STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTBEEHIVE = "\"Apis\" is the Latin word for \"bee\"."
 
-STRINGS.MUTANTDEFENDERHIVE = "Metapis Defender Hive"
-STRINGS.NAMES.MUTANTDEFENDERHIVE = "Metapis Defender Hive"
+STRINGS.MUTANTDEFENDERHIVE = "Metapis Defender Den"
+STRINGS.NAMES.MUTANTDEFENDERHIVE = "Metapis Defender Den"
 
 return Prefab("mutantbeehive", fn, assets, prefabs),
   Prefab("mutantdefenderhive", defenderhive, assets, prefabs),
