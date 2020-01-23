@@ -2,9 +2,9 @@
 <spriter_data scml_version="1.0" generator="BrashMonkey Spriter" generator_version="b5">
     <folder id="0" name="beehive_01">
         <file id="0" name="beehive_01/beehive_01-0.png" width="1000" height="780" pivot_x="0.502706" pivot_y="0.073928"/>
-        <file id="1" name="beehive_01/beehive_01-1.png" width="516" height="500" pivot_x="0.500823" pivot_y="0.180643"/>
+        <file id="1" name="beehive_01/beehive_01-1.png" width="700" height="500" pivot_x="0.500823" pivot_y="0.180643"/>
     </folder>
-    <entity id="0" name="mutantdefenderhive">
+    <entity id="0" name="mutantassassinhive">
         <animation id="0" name="dead" length="300">
             <mainline>
                 <key id="0">

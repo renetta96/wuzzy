@@ -13,6 +13,7 @@ local assets =
 {
   Asset("ANIM", "anim/mutantbeehive.zip"),
   Asset("ANIM", "anim/mutantdefenderhive.zip"),
+  Asset("ANIM", "anim/mutantassassinhive.zip"),
   Asset("SOUND", "sound/bee.fsb"),
   Asset("ANIM", "anim/ui_chest_3x2.zip"),
 }
@@ -321,7 +322,7 @@ local function OnSlave(inst)
   local stage = inst.components.upgradeable.stage
   local numchildren = TUNING.MUTANT_BEEHIVE_DEFAULT_EMERGENCY_BEES + (stage - 1) * TUNING.MUTANT_BEEHIVE_DELTA_BEES
     + numslaves * TUNING.MUTANT_BEEHIVE_CHILDREN_PER_SLAVE
-  inst.components.childspawner:SetMaxEmergencyChildren(numchildren)
+  inst.components.childspawner.maxemergencychildren = numchildren
 end
 
 local tocheck = {
@@ -949,7 +950,7 @@ local function rangerhive()
 end
 
 local function assassinhive()
-  local inst = commonslavefn("beehive", "beehive", {"mutantassassinhive"})
+  local inst = commonslavefn("mutantassassinhive", "mutantassassinhive", {"mutantassassinhive"})
   return inst
 end
 
@@ -957,13 +958,22 @@ STRINGS.MUTANTBEEHIVE = "Metapis Mother Hive"
 STRINGS.NAMES.MUTANTBEEHIVE = "Metapis Mother Hive"
 STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTBEEHIVE = "\"Apis\" is the Latin word for \"bee\"."
 
-STRINGS.MUTANTDEFENDERHIVE = "Metapis Defender Den"
-STRINGS.NAMES.MUTANTDEFENDERHIVE = "Metapis Defender Den"
+STRINGS.MUTANTDEFENDERHIVE = "Metapis Guardian Hive"
+STRINGS.NAMES.MUTANTDEFENDERHIVE = "Metapis Guardian Hive"
+STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTDEFENDERHIVE = "Metapis Guardian Hive"
+
+STRINGS.MUTANTRANGERHIVE = "Metapis Ranger Hive"
+STRINGS.NAMES.MUTANTRANGERHIVE = "Metapis Ranger Hive"
+STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTRANGERHIVE = "Metapis Ranger Hive"
+
+STRINGS.MUTANTASSASSINHIVE = "Metapis Assasin Hive"
+STRINGS.NAMES.MUTANTASSASSINHIVE = "Metapis Assasin Hive"
+STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTASSASSINHIVE = "Metapis Assasin Hive"
 
 return Prefab("mutantbeehive", fn, assets, prefabs),
   Prefab("mutantdefenderhive", defenderhive, assets, prefabs),
-  MakePlacer("mutantdefenderhive_placer", "beehive", "beehive", "cocoon_small"),
+  MakePlacer("mutantdefenderhive_placer", "mutantdefenderhive", "mutantdefenderhive", "idle"),
   Prefab("mutantrangerhive", rangerhive, assets, prefabs),
   MakePlacer("mutantrangerhive_placer", "beehive", "beehive", "cocoon_small"),
   Prefab("mutantassassinhive", assassinhive, assets, prefabs),
-  MakePlacer("mutantassassinhive_placer", "beehive", "beehive", "cocoon_small")
+  MakePlacer("mutantassassinhive_placer", "mutantassassinhive", "mutantassassinhive", "idle")

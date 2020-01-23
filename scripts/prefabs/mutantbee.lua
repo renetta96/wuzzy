@@ -703,7 +703,7 @@ local function defenderbee()
 
   MakeSmallBurnableCharacter(inst, "mane")
   MakeSmallFreezableCharacter(inst, "mane")
-  inst.components.freezable:SetResistance(2)
+  inst.components.freezable:SetResistance(4)
   inst.components.freezable.diminishingreturns = true
 
   inst:SetStateGraph("SGdefenderbee")
@@ -745,8 +745,8 @@ STRINGS.MUTANTASSASSINBEE = "Metapis Assassin"
 STRINGS.NAMES.MUTANTASSASSINBEE = "Metapis Assassin"
 STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTASSASSINBEE = "Is it really OK to come near them?"
 
-STRINGS.MUTANTDEFENDERBEE = "Metapis Defender"
-STRINGS.NAMES.MUTANTDEFENDERBEE = "Metapis Defender"
+STRINGS.MUTANTDEFENDERBEE = "Metapis Guardian"
+STRINGS.NAMES.MUTANTDEFENDERBEE = "Metapis Guardian"
 STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTDEFENDERBEE = "Is it really OK to come near them?"
 
 return Prefab("mutantbee", workerbee, assets, prefabs),
