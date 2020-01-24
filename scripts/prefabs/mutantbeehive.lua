@@ -14,6 +14,7 @@ local assets =
   Asset("ANIM", "anim/mutantbeehive.zip"),
   Asset("ANIM", "anim/mutantdefenderhive.zip"),
   Asset("ANIM", "anim/mutantassassinhive.zip"),
+  Asset("ANIM", "anim/mutantrangerhive.zip"),
   Asset("SOUND", "sound/bee.fsb"),
   Asset("ANIM", "anim/ui_chest_3x2.zip"),
 }
@@ -870,6 +871,12 @@ local function OnSlaveKilled(inst)
   inst.components.lootdropper:DropLoot(inst:GetPosition())
 end
 
+local function OnSlaveHit(inst)
+  inst.SoundEmitter:PlaySound("dontstarve/bee/beehive_hit")
+  inst.AnimState:PlayAnimation("hit")
+  inst.AnimState:PushAnimation("idle", true)
+end
+
 local function commonslavefn(bank, build, tags)
   local inst = CreateEntity()
 
@@ -914,6 +921,7 @@ local function commonslavefn(bank, build, tags)
   ---------------------
 
   inst:AddComponent("combat")
+  inst.components.combat:SetOnHit(OnSlaveHit)
 
   ---------------------
 
@@ -945,7 +953,7 @@ local function defenderhive()
 end
 
 local function rangerhive()
-  local inst = commonslavefn("beehive", "beehive", {"mutantrangerhive"})
+  local inst = commonslavefn("mutantrangerhive", "mutantrangerhive", {"mutantrangerhive"})
   return inst
 end
 
@@ -974,6 +982,6 @@ return Prefab("mutantbeehive", fn, assets, prefabs),
   Prefab("mutantdefenderhive", defenderhive, assets, prefabs),
   MakePlacer("mutantdefenderhive_placer", "mutantdefenderhive", "mutantdefenderhive", "idle"),
   Prefab("mutantrangerhive", rangerhive, assets, prefabs),
-  MakePlacer("mutantrangerhive_placer", "beehive", "beehive", "cocoon_small"),
+  MakePlacer("mutantrangerhive_placer", "mutantrangerhive", "mutantrangerhive", "idle"),
   Prefab("mutantassassinhive", assassinhive, assets, prefabs),
   MakePlacer("mutantassassinhive_placer", "mutantassassinhive", "mutantassassinhive", "idle")
