@@ -75,7 +75,7 @@ function RangedKillerBeeBrain:OnStart()
             IfNode(function() return ShouldGoHome(self.inst) end, "TryGoHome",
                 DoAction(self.inst, function() return beecommon.GoHomeAction(self.inst) end, "go home", true )),
             Wander(self.inst, function() return self.inst.components.knownlocations:GetLocation("home") end, beecommon.MAX_WANDER_DIST)
-        }, .5)
+        }, 0.25)
 
 
     self.bt = BT(self.inst, root)

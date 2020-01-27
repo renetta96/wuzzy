@@ -23,6 +23,14 @@ local function IsHomeOnFire(inst)
     and inst.components.homeseeker.home.components.burnable:IsBurning()
 end
 
+local function ShouldRetreat(inst)
+  return inst.components.combat:HasTarget()
+    or (
+      inst.components.homeseeker and inst.components.homeseeker.home
+      and inst.components.homeseeker.home.incombat
+    )
+end
+
 function BeeBrain:OnStart()
   local root =
     PriorityNode(
@@ -45,7 +53,7 @@ function BeeBrain:OnStart()
 
       WhileNode(
         function()
-          return self.inst.components.combat:HasTarget()
+          return ShouldRetreat(self.inst)
         end,
         "Retreat",
         DoAction(

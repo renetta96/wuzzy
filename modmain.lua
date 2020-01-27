@@ -51,6 +51,13 @@ Assets = {
   Asset("ANIM", "anim/status_symbiosis.zip"),
   Asset("ANIM", "anim/status_meter_symbiosis.zip"),
   Asset("ANIM", "anim/pollen_fx.zip"),
+
+  Asset( "IMAGE", "images/inventoryimages/mutantdefenderhive.tex" ),
+  Asset( "ATLAS", "images/inventoryimages/mutantdefenderhive.xml" ),
+  Asset( "IMAGE", "images/inventoryimages/mutantrangerhive.tex" ),
+  Asset( "ATLAS", "images/inventoryimages/mutantrangerhive.xml" ),
+  Asset( "IMAGE", "images/inventoryimages/mutantassassinhive.tex" ),
+  Asset( "ATLAS", "images/inventoryimages/mutantassassinhive.xml" ),
 }
 
 RemapSoundEvent( "dontstarve/characters/zeta/hurt", "zeta/zeta/hurt" )
@@ -481,40 +488,49 @@ end
 
 local mutantdefenderhive_rec = AddRecipe("mutantdefenderhive",
   {
-    Ingredient("cutgrass", 1)
+    Ingredient("horn", 2),
+    Ingredient("honeycomb", 1),
+    Ingredient("moonrocknugget", 10)
   },
   RECIPETABS.TOWN,
   TECH.SCIENCE_TWO,
   "mutantdefenderhive_placer",
   nil, nil, nil,
   "beemaster",
-  nil,nil,
+  "images/inventoryimages/mutantdefenderhive.xml",
+  "mutantdefenderhive.tex",
   slavehivetestfn
 )
 
 local mutantrangerhive_rec = AddRecipe("mutantrangerhive",
   {
-    Ingredient("cutgrass", 1)
+    Ingredient("lightninggoathorn", 2),
+    Ingredient("honeycomb", 1),
+    Ingredient("driftwood_log", 10)
   },
   RECIPETABS.TOWN,
   TECH.SCIENCE_TWO,
   "mutantrangerhive_placer",
   nil, nil, nil,
   "beemaster",
-  nil,nil,
+  "images/inventoryimages/mutantrangerhive.xml",
+  "mutantrangerhive.tex",
   slavehivetestfn
 )
 
 local mutantassassinhive_rec = AddRecipe("mutantassassinhive",
   {
-    Ingredient("cutgrass", 1)
+    Ingredient("houndstooth", 15),
+    Ingredient("honeycomb", 1),
+    Ingredient("nightmarefuel", 40)
   },
   RECIPETABS.TOWN,
   TECH.SCIENCE_TWO,
   "mutantassassinhive_placer",
   nil, nil, nil,
   "beemaster",
-  nil,nil,
+  "images/inventoryimages/mutantassassinhive.xml",
+  "mutantassassinhive.tex",
   slavehivetestfn
 )
 

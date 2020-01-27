@@ -14,6 +14,8 @@ local MAX_CHASE_TIME = 10
 
 local RUN_AWAY_DIST = 3
 local STOP_RUN_AWAY_DIST = 6
+local AVOID_EPIC_DIST = TUNING.DEERCLOPS_AOE_RANGE + 5
+local STOP_AVOID_EPIC_DIST = TUNING.DEERCLOPS_AOE_RANGE + 5
 
 local MIN_FOLLOW_DIST = 2
 local MAX_FOLLOW_DIST = 8
@@ -55,6 +57,30 @@ local function GetClosestDefender(inst)
 	return GetClosestInstWithTag({"mutant", "defender"}, inst, TUNING.MUTANT_BEE_DEFENDER_TAUNT_DIST * 4)
 end
 
+local function FindEpicEnemy(inst)
+	return GetClosestInstWithTag({"epic"}, inst, AVOID_EPIC_DIST)
+end
+
+local estimated_epic_atk_time = 1
+
+local function IsEpicAttackComing(inst)
+	local epic = FindEpicEnemy(inst)
+	if epic and epic.components.combat
+		and epic.components.combat.areahitdamagepercent ~= nil
+		and epic.components.combat.areahitdamagepercent > 0 then
+			if epic.components.combat.laststartattacktime ~= nil
+				and epic.components.combat.laststartattacktime + estimated_epic_atk_time >= GetTime() then
+					return true
+			end
+
+			if epic.components.combat:GetCooldown() <= 1 then
+				return true
+			end
+	end
+
+	return false
+end
+
 local AssassinBeeBrain = Class(Brain, function(self, inst)
 	Brain._ctor(self, inst)
 end)
@@ -73,8 +99,29 @@ function AssassinBeeBrain:OnStart()
 				Follow(self.inst, function() return GetClosestDefender(self.inst) end,
 					MIN_LOOK_HELP_DIST, TARGET_LOOK_HELP_DIST, MAX_LOOK_HELP_DIST)
 			),
+			WhileNode(
+				function()
+					return IsEpicAttackComing(self.inst)
+				end,
+				"AvoidEpicAttack",
+				RunAway(
+					self.inst,
+					function() return FindEpicEnemy(self.inst) end,
+					AVOID_EPIC_DIST, STOP_AVOID_EPIC_DIST
+				)
+			),
+			WhileNode(
+				function()
+					return self.inst.components.combat.target and self.inst.components.combat:InCooldown()
+				end,
+				"Dodge",
+				RunAway(
+					self.inst,
+					function() return self.inst.components.combat.target end,
+					RUN_AWAY_DIST, STOP_RUN_AWAY_DIST
+				)
+			),
 			WhileNode( function() return self.inst.components.combat.target == nil or not self.inst.components.combat:InCooldown() end, "AttackMomentarily", ChaseAndAttack(self.inst, MAX_CHASE_TIME, MAX_CHASE_DIST) ),
-			WhileNode( function() return self.inst.components.combat.target and self.inst.components.combat:InCooldown() end, "Dodge", RunAway(self.inst, function() return self.inst.components.combat.target end, RUN_AWAY_DIST, STOP_RUN_AWAY_DIST) ),
 
 			Follow(self.inst, function() return GetLeader(self.inst) end, MIN_FOLLOW_DIST, TARGET_FOLLOW_DIST, MAX_FOLLOW_DIST),
 			IfNode(function() return GetLeader(self.inst) ~= nil end, "HasLeader",

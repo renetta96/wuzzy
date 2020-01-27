@@ -303,27 +303,34 @@ local function IsSlave(inst, slave)
   return slave:IsValid() and slave._ownerid == inst._ownerid
 end
 
-local function OnSlave(inst)
+local function GetSlaves(inst)
   local x, y, z = inst.Transform:GetWorldPosition()
-  local slaves = TheSim:FindEntities(x, y, z,
+  local entities = TheSim:FindEntities(x, y, z,
     TUNING.MUTANT_BEEHIVE_MASTER_SLAVE_DIST,
     { "_combat", "_health" },
     { "INLIMBO", "player" },
     { "mutantslavehive" }
   )
 
-  local numslaves = 0
+  local slaves = {}
 
-  for i, slave in ipairs(slaves) do
-    if IsSlave(inst, slave) then
-      numslaves = numslaves + 1
+  for i, e in ipairs(entities) do
+    if IsSlave(inst, e) then
+      table.insert(slaves, e)
     end
   end
 
-  local stage = inst.components.upgradeable.stage
-  local numchildren = TUNING.MUTANT_BEEHIVE_DEFAULT_EMERGENCY_BEES + (stage - 1) * TUNING.MUTANT_BEEHIVE_DELTA_BEES
-    + numslaves * TUNING.MUTANT_BEEHIVE_CHILDREN_PER_SLAVE
-  inst.components.childspawner.maxemergencychildren = numchildren
+  return slaves
+end
+
+local function OnSlave(inst)
+  if inst.components.childspawner then
+    local slaves = GetSlaves(inst)
+    inst.components.childspawner.maxemergencychildren =
+      TUNING.MUTANT_BEEHIVE_DEFAULT_EMERGENCY_BEES
+      + (inst.components.upgradeable.stage - 1) * TUNING.MUTANT_BEEHIVE_DELTA_BEES
+      + #slaves * TUNING.MUTANT_BEEHIVE_CHILDREN_PER_SLAVE
+  end
 end
 
 local tocheck = {
@@ -382,34 +389,27 @@ local function PickChildPrefab(inst)
   }
   local total = 0
 
-  for child, c in pairs(inst.components.childspawner.childrenoutside) do
-    if child:IsValid() and tocheck[child.prefab] then
-      currentcount[child.prefab] = currentcount[child.prefab] + 1
-      total = total + 1
-    end
-  end
-
-  for child, c in pairs(inst.components.childspawner.emergencychildrenoutside) do
-    if child:IsValid() and tocheck[child.prefab] then
-      currentcount[child.prefab] = currentcount[child.prefab] + 1
-      total = total + 1
+  if inst.components.childspawner then
+    for child, c in pairs(inst.components.childspawner.emergencychildrenoutside) do
+      if child:IsValid() and tocheck[child.prefab] then
+        currentcount[child.prefab] = currentcount[child.prefab] + 1
+        total = total + 1
+      end
     end
   end
 
   local prefabstopick = {}
-  for prefab, cnt in pairs(currentcount) do
-    if cnt / total < ratio[prefab] / 4 then
-      table.insert(prefabstopick, prefab)
+
+  if total > 0 then
+    for prefab, cnt in pairs(currentcount) do
+      if cnt / total < ratio[prefab] / 4 then
+        table.insert(prefabstopick, prefab)
+      end
     end
   end
 
   if #prefabstopick == 0 then
     prefabstopick = canspawnprefabs
-  end
-
-  print("PREFABS TO PICK:")
-  for k,v in ipairs(prefabstopick) do
-    print(v)
   end
 
   return prefabstopick[math.random(#prefabstopick)]
@@ -492,7 +492,10 @@ local function WatchEnemy(inst)
 
   if enemy then
     inst:Say(SPEECH.ATTACK)
+    inst.incombat = true
     OnHit(inst, enemy)
+  else
+    inst.incombat = false
   end
 end
 
@@ -502,6 +505,13 @@ local function SelfRepair(inst)
       local numfixers = inst.components.childspawner.childreninside + inst.components.childspawner.emergencychildreninside
       local recover = TUNING.MUTANT_BEEHIVE_RECOVER_PER_CHILD * numfixers
       inst.components.health:DoDelta(recover, true, "self_repair")
+
+      local slaves = GetSlaves(inst)
+      for i, slave in ipairs(slaves) do
+        if slave.components.health and not slave.components.health:IsDead() then
+          slave.components.health:DoDelta(recover, true, "self_repair")
+        end
+      end
     end
   end
 end
@@ -684,7 +694,6 @@ local function fn()
   inst.AnimState:SetBuild("mutantbeehive")
   inst.AnimState:PlayAnimation("cocoon_small", true)
 
-  inst:AddTag("structure")
   inst:AddTag("mutantbeehive")
   inst:AddTag("companion")
   inst:AddTag("mutant")
@@ -753,7 +762,7 @@ local function fn()
   inst.components.combat:SetOnHit(OnHit)
   inst:ListenForEvent("death", OnKilled)
   inst:ListenForEvent("onburnt", OnBurnt)
-  inst:DoPeriodicTask(2, WatchEnemy)
+  inst:DoPeriodicTask(1, WatchEnemy)
   inst.OnHit = OnHit
 
   ---------------------
@@ -802,6 +811,7 @@ local function fn()
   ---------------------
 
   inst:AddComponent("inspectable")
+  inst.incombat = false
   inst.OnEntitySleep = OnEntitySleep
   inst.OnEntityWake = OnEntityWake
   inst.OnSave = OnSave
@@ -872,9 +882,11 @@ local function OnSlaveKilled(inst)
 end
 
 local function OnSlaveHit(inst)
-  inst.SoundEmitter:PlaySound("dontstarve/bee/beehive_hit")
-  inst.AnimState:PlayAnimation("hit")
-  inst.AnimState:PushAnimation("idle", true)
+  if not inst.components.health:IsDead() then
+    inst.SoundEmitter:PlaySound("dontstarve/bee/beehive_hit")
+    inst.AnimState:PlayAnimation("hit")
+    inst.AnimState:PushAnimation("idle", true)
+  end
 end
 
 local function commonslavefn(bank, build, tags)
@@ -894,7 +906,6 @@ local function commonslavefn(bank, build, tags)
   inst.AnimState:SetBuild(build)
   inst.AnimState:PlayAnimation("idle", true)
 
-  inst:AddTag("structure")
   inst:AddTag("companion")
   inst:AddTag("mutantslavehive")
   inst:AddTag("mutant")
@@ -968,15 +979,18 @@ STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTBEEHIVE = "\"Apis\" is the Latin word 
 
 STRINGS.MUTANTDEFENDERHIVE = "Metapis Guardian Hive"
 STRINGS.NAMES.MUTANTDEFENDERHIVE = "Metapis Guardian Hive"
-STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTDEFENDERHIVE = "Metapis Guardian Hive"
+STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTDEFENDERHIVE = "Why does it have tusks?"
+STRINGS.RECIPE_DESC.MUTANTDEFENDERHIVE = "Adds Metapis Guardian to Mother Hive."
 
 STRINGS.MUTANTRANGERHIVE = "Metapis Ranger Hive"
 STRINGS.NAMES.MUTANTRANGERHIVE = "Metapis Ranger Hive"
-STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTRANGERHIVE = "Metapis Ranger Hive"
+STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTRANGERHIVE = "Looks like an ancient symbol."
+STRINGS.RECIPE_DESC.MUTANTRANGERHIVE = "Adds Metapis Ranger to Mother Hive."
 
 STRINGS.MUTANTASSASSINHIVE = "Metapis Assasin Hive"
 STRINGS.NAMES.MUTANTASSASSINHIVE = "Metapis Assasin Hive"
-STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTASSASSINHIVE = "Metapis Assasin Hive"
+STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTASSASSINHIVE = "Spiky."
+STRINGS.RECIPE_DESC.MUTANTASSASSINHIVE = "Adds Metapis Assasin to Mother Hive."
 
 return Prefab("mutantbeehive", fn, assets, prefabs),
   Prefab("mutantdefenderhive", defenderhive, assets, prefabs),

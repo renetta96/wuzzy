@@ -329,8 +329,6 @@ local function workerbee()
 	inst:SetBrain(workerbrain)
 	inst.sounds = workersounds
 
-	-- inst:ListenForEvent("killed", OnKillOther)
-
 	MakeHauntableChangePrefab(inst, "mutantkillerbee")
 
 	return inst
@@ -364,7 +362,6 @@ local function killerbee()
 	inst._attackcount = 0
 
 	inst:ListenForEvent("onattackother", OnAttackExplosive)
-	-- inst:ListenForEvent("killed", OnKillOther)
 
 	MakeHauntablePanic(inst)
 	inst:ListenForEvent("spawnedfromhaunt", OnSpawnedFromHaunt)
@@ -464,6 +461,10 @@ local function OnStealthAttack(inst, data)
 	local target = data.target
 
 	if not target.components.combat or not target.components.combat:TargetIs(inst) then
+		local damagemult = TUNING.MUTANT_BEE_ASSASSIN_BACKSTAB_DAMAGE_MULT
+		if target.components.health then
+			damagemult = damagemult + (1 - target.components.health:GetPercent())
+		end
 		inst.components.combat:DoAttack(target, nil, nil, "stealthattack", TUNING.MUTANT_BEE_ASSASSIN_BACKSTAB_DAMAGE_MULT)
 	end
 end
@@ -487,13 +488,13 @@ local function assassinbee()
 		return inst
 	end
 
-	inst.components.locomotor.groundspeedmultiplier = 1.3
+	inst.components.locomotor.groundspeedmultiplier = 1.5
 	inst:ListenForEvent("onattackother", OnAttackOtherWithPoison)
 
 	inst.components.health:SetMaxHealth(TUNING.MUTANT_BEE_ASSSASIN_HEALTH)
 	inst.components.combat:SetDefaultDamage(TUNING.MUTANT_BEE_ASSSASIN_DAMAGE)
 	inst.components.combat:SetAttackPeriod(TUNING.MUTANT_BEE_ASSASSIN_ATTACK_PERIOD)
-	inst.components.combat:SetRetargetFunction(1, KillerRetarget)
+	inst.components.combat:SetRetargetFunction(0.25, KillerRetarget)
 	inst:SetBrain(assassinbeebrain)
 	inst.sounds = killersounds
 
@@ -564,7 +565,7 @@ local function OnDefenderStopCombat(inst)
 end
 
 local function CauseFrostBite(inst)
-	inst._frostbite_expire = GetTime() + 4.75
+	inst._frostbite_expire = GetTime() + 9.75
 	inst.AnimState:SetAddColour(82 / 255, 115 / 255, 124 / 255, 0)
 
 	if inst.components.combat and not inst._currentattackperiod then
@@ -574,7 +575,7 @@ local function CauseFrostBite(inst)
 
 	if inst.components.locomotor.enablegroundspeedmultiplier then
 		inst.components.locomotor:SetExternalSpeedMultiplier(inst, "frostbite", TUNING.MUTANT_BEE_FROSTBITE_SPEED_PENALTY)
-		inst:DoTaskInTime(5.0,
+		inst:DoTaskInTime(10,
 			function (inst)
 				if GetTime() >= inst._frostbite_expire then
 					inst.AnimState:SetAddColour(0, 0, 0, 0)
@@ -593,7 +594,7 @@ local function CauseFrostBite(inst)
 		inst._currentspeed = inst.components.locomotor.groundspeedmultiplier
 	end
 	inst.components.locomotor.groundspeedmultiplier = TUNING.MUTANT_BEE_FROSTBITE_SPEED_PENALTY
-	inst:DoTaskInTime(5.0,
+	inst:DoTaskInTime(10,
 		function (inst)
 			if GetTime() >= inst._frostbite_expire then
 				inst.AnimState:SetAddColour(0, 0, 0, 0)
@@ -641,7 +642,6 @@ local function defenderbee()
 
   inst.DynamicShadow:SetSize(1.2, .75)
 
-  -- MakeFlyingCharacterPhysics(inst, 1.5, .75)
   MakeFlyingCharacterPhysics(inst, 1.5, 0.1)
 
   inst.AnimState:SetBank("mutantdefenderbee")
@@ -731,23 +731,23 @@ STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTBEE = "Meta...apis? Metabee? Like meta
 
 STRINGS.MUTANTKILLERBEE = "Metapis Soldier"
 STRINGS.NAMES.MUTANTKILLERBEE = "Metapis Soldier"
-STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTKILLERBEE = "Is it really OK to come near them?"
+STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTKILLERBEE = "Little grunt."
 
 STRINGS.MUTANTPARASITEBEE = "Metapis Parasite"
 STRINGS.NAMES.MUTANTPARASITEBEE = "Metapis Parasite"
-STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTPARASITEBEE = "It spawned from the dead body of an enemy."
+STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTPARASITEBEE = "It's spawned from the dead body of an enemy."
 
 STRINGS.MUTANTRANGERBEE = "Metapis Ranger"
 STRINGS.NAMES.MUTANTRANGERBEE = "Metapis Ranger"
-STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTRANGERBEE = "Is it really OK to come near them?"
+STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTRANGERBEE = "It always tries to keep distance."
 
 STRINGS.MUTANTASSASSINBEE = "Metapis Assassin"
 STRINGS.NAMES.MUTANTASSASSINBEE = "Metapis Assassin"
-STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTASSASSINBEE = "Is it really OK to come near them?"
+STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTASSASSINBEE = "Seems deadly."
 
 STRINGS.MUTANTDEFENDERBEE = "Metapis Guardian"
 STRINGS.NAMES.MUTANTDEFENDERBEE = "Metapis Guardian"
-STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTDEFENDERBEE = "Is it really OK to come near them?"
+STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTDEFENDERBEE = "Buff and fluffy."
 
 return Prefab("mutantbee", workerbee, assets, prefabs),
 	Prefab("mutantkillerbee", killerbee, assets, prefabs),
