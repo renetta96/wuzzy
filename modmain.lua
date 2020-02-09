@@ -29,6 +29,12 @@ Assets = {
   Asset( "ATLAS", "images/map_icons/mutantbeecocoon.xml" ),
   Asset( "IMAGE", "images/map_icons/mutantbeehive.tex" ),
   Asset( "ATLAS", "images/map_icons/mutantbeehive.xml" ),
+  Asset( "IMAGE", "images/map_icons/mutantdefenderhive.tex" ),
+  Asset( "ATLAS", "images/map_icons/mutantdefenderhive.xml" ),
+  Asset( "IMAGE", "images/map_icons/mutantrangerhive.tex" ),
+  Asset( "ATLAS", "images/map_icons/mutantrangerhive.xml" ),
+  Asset( "IMAGE", "images/map_icons/mutantassassinhive.tex" ),
+  Asset( "ATLAS", "images/map_icons/mutantassassinhive.xml" ),
 
   Asset( "IMAGE", "images/avatars/avatar_zeta.tex" ),
   Asset( "ATLAS", "images/avatars/avatar_zeta.xml" ),
@@ -174,18 +180,6 @@ TUNING.MELISSA_MIN_HUNGER_DRAIN = 1
 TUNING.MELISSA_PERCENT_HUNGER_DRAIN = 0.01
 TUNING.MELISSA_USES = 200
 
--- Mod config
-local num_bees = GetModConfigData("NUM_BEES_IN_HIVE")
-TUNING.MUTANT_BEEHIVE_DEFAULT_EMERGENCY_BEES = TUNING.MUTANT_BEEHIVE_DEFAULT_EMERGENCY_BEES + num_bees * 2
-TUNING.MUTANT_BEEHIVE_DEFAULT_REGEN_TIME = TUNING.MUTANT_BEEHIVE_DEFAULT_REGEN_TIME - num_bees * 10
-
-local bee_damage = GetModConfigData("BEE_DAMAGE")
-TUNING.MUTANT_BEE_DAMAGE = TUNING.MUTANT_BEE_DAMAGE + bee_damage * 5
-TUNING.MUTANT_BEE_ATTACK_PERIOD = TUNING.MUTANT_BEE_ATTACK_PERIOD - bee_damage * 0.5
-TUNING.MUTANT_BEE_POISON_DAMAGE = TUNING.MUTANT_BEE_POISON_DAMAGE - bee_damage * 2
-TUNING.MUTANT_BEE_RANGED_DAMAGE = TUNING.MUTANT_BEE_RANGED_DAMAGE + bee_damage * 5
-TUNING.MUTANT_BEE_RANGED_ATK_PERIOD = TUNING.MUTANT_BEE_RANGED_ATK_PERIOD - bee_damage * 1
-
 
 -- The character select screen lines
 STRINGS.CHARACTER_TITLES.zeta = "The Buzzy"
@@ -202,6 +196,9 @@ STRINGS.NAMES.ZETA = "Wuzzy"
 AddMinimapAtlas("images/map_icons/zeta.xml")
 AddMinimapAtlas("images/map_icons/mutantbeecocoon.xml")
 AddMinimapAtlas("images/map_icons/mutantbeehive.xml")
+AddMinimapAtlas("images/map_icons/mutantdefenderhive.xml")
+AddMinimapAtlas("images/map_icons/mutantrangerhive.xml")
+AddMinimapAtlas("images/map_icons/mutantassassinhive.xml")
 
 -- Add mod character to mod character list. Also specify a gender. Possible genders are MALE, FEMALE, ROBOT, NEUTRAL, and PLURAL.
 AddModCharacter("zeta", "MALE")

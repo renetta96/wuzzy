@@ -21,15 +21,15 @@ local assets =
 
 local UPGRADE_STAGES = {
   [1] = {
-    SIZE_SCALE = 1.0,
+    SIZE_SCALE = 1.15,
     HEALTH = 700
   },
   [2] = {
-    SIZE_SCALE = 1.15,
+    SIZE_SCALE = 1.3,
     HEALTH = 1100
   },
   [3] = {
-    SIZE_SCALE = 1.3,
+    SIZE_SCALE = 1.45,
     HEALTH = 1500
   }
 }
@@ -854,21 +854,21 @@ local function CheckMaster(inst)
     return
   end
 
-  local master = FindEntity(inst, TUNING.MUTANT_BEEHIVE_MASTER_SLAVE_DIST,
-    function(guy)
-      return guy:IsValid()
-        and guy.prefab == 'mutantbeehive'
-        and guy._ownerid == inst._ownerid
-    end,
-    { "_combat", "_health" },
-    { "INLIMBO", "player" },
-    { "mutantbeehive" }
-  )
+  -- local master = FindEntity(inst, TUNING.MUTANT_BEEHIVE_MASTER_SLAVE_DIST,
+  --   function(guy)
+  --     return guy:IsValid()
+  --       and guy.prefab == 'mutantbeehive'
+  --       and guy._ownerid == inst._ownerid
+  --   end,
+  --   { "_combat", "_health" },
+  --   { "INLIMBO", "player" },
+  --   { "mutantbeehive" }
+  -- )
 
-  if not master then
-    OnSlaveHammered(inst)
-    return
-  end
+  -- if not master then
+  --   OnSlaveHammered(inst)
+  --   return
+  -- end
 end
 
 local function OnSlaveKilled(inst)
@@ -889,7 +889,7 @@ local function OnSlaveHit(inst)
   end
 end
 
-local function commonslavefn(bank, build, tags)
+local function commonslavefn(bank, build, tags, mapicon)
   local inst = CreateEntity()
 
   inst.entity:AddTransform()
@@ -900,7 +900,7 @@ local function commonslavefn(bank, build, tags)
 
   MakeObstaclePhysics(inst, 1)
 
-  inst.MiniMapEntity:SetIcon("beehive.png")
+  inst.MiniMapEntity:SetIcon(mapicon)
 
   inst.AnimState:SetBank(bank)
   inst.AnimState:SetBuild(build)
@@ -959,17 +959,17 @@ local function commonslavefn(bank, build, tags)
 end
 
 local function defenderhive()
-  local inst = commonslavefn("mutantdefenderhive", "mutantdefenderhive", {"mutantdefenderhive"})
+  local inst = commonslavefn("mutantdefenderhive", "mutantdefenderhive", {"mutantdefenderhive"}, "mutantdefenderhive.tex")
   return inst
 end
 
 local function rangerhive()
-  local inst = commonslavefn("mutantrangerhive", "mutantrangerhive", {"mutantrangerhive"})
+  local inst = commonslavefn("mutantrangerhive", "mutantrangerhive", {"mutantrangerhive"}, "mutantrangerhive.tex")
   return inst
 end
 
 local function assassinhive()
-  local inst = commonslavefn("mutantassassinhive", "mutantassassinhive", {"mutantassassinhive"})
+  local inst = commonslavefn("mutantassassinhive", "mutantassassinhive", {"mutantassassinhive"}, "mutantassassinhive.tex")
   return inst
 end
 
