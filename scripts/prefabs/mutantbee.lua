@@ -105,7 +105,20 @@ local function OnAttackExplosive(inst, data)
 		local target = data.target
 
 		if target then
-			inst.components.combat:DoAreaAttack(target, TUNING.MUTANT_BEE_EXPLOSIVE_RANGE, nil, nil, nil, { "INLIMBO", "mutant", "player" })
+			inst.components.combat:DoAreaAttack(
+				target,
+				TUNING.MUTANT_BEE_EXPLOSIVE_RANGE, nil,
+				function(guy)
+					return guy:HasTag("monster") or
+						(
+							guy.components.combat and guy.components.combat:HasTarget()
+							and (
+								guy.components.combat.target:HasTag("player")
+								or guy.components.combat.target:HasTag("mutant")
+							)
+						)
+				end,
+				nil, { "INLIMBO", "mutant", "player" })
 			SpawnPrefab("explode_small").Transform:SetPosition(target.Transform:GetWorldPosition())
 		end
 	end
