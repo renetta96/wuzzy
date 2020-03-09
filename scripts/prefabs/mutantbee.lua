@@ -161,7 +161,7 @@ local function EnableBuzz(inst, enable)
         inst.SoundEmitter:PlaySound(inst.sounds.buzz, "buzz")
       end
     end
-  elseif inst.buzzing then
+  else
     inst.buzzing = false
     inst.SoundEmitter:KillSound("buzz")
   end
