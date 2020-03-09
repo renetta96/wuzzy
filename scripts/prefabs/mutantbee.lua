@@ -372,7 +372,7 @@ local rangedkillerbrain = require("brains/rangedkillerbeebrain")
 local function rangerbee()
   local inst = commonfn("mutantrangerbee", "mutantrangerbee", { "killer", "ranger", "scarytoprey" })
 
-  inst.components.health:SetMaxHealth(TUNING.MUTANT_BEE_HEALTH)
+  inst.components.health:SetMaxHealth(TUNING.MUTANT_BEE_RANGED_HEATLH)
   inst.components.combat:SetRange(TUNING.MUTANT_BEE_WEAPON_ATK_RANGE)
   inst.components.combat:SetAttackPeriod(TUNING.MUTANT_BEE_RANGED_ATK_PERIOD)
   inst.components.combat:SetDefaultDamage(TUNING.MUTANT_BEE_RANGED_DAMAGE)
