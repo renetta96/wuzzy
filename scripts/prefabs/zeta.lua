@@ -9,7 +9,9 @@ local assets = {
 
 local prefabs = {
 	"mutantbeecocoon",
-	"honey"
+	"honey",
+	"armorhoney",
+	"melissa"
 }
 
 local opentop_hats = {
@@ -30,9 +32,69 @@ local start_inv = {
 	"honey"
 }
 
-local function OnKillOther(inst, data)
-	local victim = data.victim
-	metapisutil.SpawnParasitesOnKill(inst, victim)
+local tagtoprefab = {
+  defender="mutantdefenderbee",
+  soldier="mutantkillerbee",
+  ranger="mutantrangerbee",
+  assassin="mutantassassinbee"
+}
+
+local function CanSummon(inst, prefab)
+  if not inst._hive then
+    return false
+  end
+
+  return inst._hive:CanSpawn(prefab)
+end
+
+local function GetChildPrefab(inst)
+  local expect = {
+    mutantkillerbee = TUNING.OZZY_MAX_SUMMON_BEES,
+    mutantdefenderbee = 0,
+    mutantrangerbee = 0,
+    mutantassassinbee = 0
+  }
+
+  local cansummon = {"mutantkillerbee"}
+
+  for i, prefab in ipairs({"mutantdefenderbee", "mutantrangerbee", "mutantassassinbee"}) do
+    if CanSummon(inst, prefab) then
+      expect[prefab] = expect[prefab] + 1
+      expect["mutantkillerbee"] = expect["mutantkillerbee"] - 1
+      table.insert(cansummon, prefab)
+    end
+  end
+
+  local prefabcount = {
+    mutantdefenderbee = 0,
+    mutantkillerbee = 0,
+    mutantrangerbee = 0,
+    mutantassassinbee = 0
+  }
+
+  for i, child in pairs(inst.components.beesummoner.children) do
+    if child ~= nil and child:IsValid() then
+      prefabcount[child.prefab] = prefabcount[child.prefab] + 1
+    end
+  end
+
+  local prefabstopick = {}
+  for prefab, cnt in pairs(prefabcount) do
+    if cnt < expect[prefab] then
+      table.insert(prefabstopick, prefab)
+
+      -- Prioritize defender
+      if prefab == "mutantdefenderbee" then
+        return prefab
+      end
+    end
+  end
+
+  if #prefabstopick == 0 then
+    prefabstopick = cansummon
+  end
+
+  return prefabstopick[math.random(#prefabstopick)]
 end
 
 local function OnNumStoreChange(inst)
@@ -176,6 +238,72 @@ local function InitFn(inst)
 	OnUnequip(inst)
 end
 
+local function GetDefenderHiveIngredients()
+	if SaveGameIndex:IsModePorkland() then
+		return {
+			Ingredient("horn", 2),
+	    Ingredient("honeycomb", 1),
+	    Ingredient("alloy", 3)
+		}
+	elseif SaveGameIndex:IsModeShipwrecked() then
+		return {
+			Ingredient("ox_horn", 2),
+	    Ingredient("honeycomb", 1),
+	    Ingredient("limestone", 5)
+		}
+	else
+		return {
+			Ingredient("horn", 2),
+	    Ingredient("honeycomb", 1),
+	    Ingredient("cutstone", 10)
+		}
+	end
+end
+
+local function GetRangerHiveIngredients()
+	if SaveGameIndex:IsModePorkland() then
+		return {
+	    Ingredient("bill_quill", 2),
+	    Ingredient("honeycomb", 1),
+	    Ingredient("chitin", 30)
+	  }
+	elseif SaveGameIndex:IsModeShipwrecked() then
+		return {
+			Ingredient("feather_robin_winter", 2),
+	    Ingredient("honeycomb", 1),
+	    Ingredient("sand", 30)
+		}
+	else
+		return {
+			Ingredient("feather_robin", 4),
+	    Ingredient("honeycomb", 1),
+	    Ingredient("cutstone", 10)
+		}
+	end
+end
+
+local function GetAssassinHiveIngredients()
+	if SaveGameIndex:IsModePorkland() then
+		return {
+	    Ingredient("venomgland", 3),
+	    Ingredient("honeycomb", 1),
+	    Ingredient("weevole_carapace", 30)
+	  }
+	elseif SaveGameIndex:IsModeShipwrecked() then
+		return {
+			Ingredient("mosquitosack_yellow", 2),
+	    Ingredient("honeycomb", 1),
+	    Ingredient("palmleaf", 40)
+		}
+	else
+		return {
+			Ingredient("mosquitosack", 4),
+	    Ingredient("honeycomb", 1),
+	    Ingredient("cutstone", 10)
+		}
+	end
+end
+
 local postinit = function(inst)
 	-- Minimap icon
 	inst.MiniMapEntity:SetIcon( "zeta.tex" )
@@ -199,6 +327,7 @@ local postinit = function(inst)
 	inst.components.beesummoner:SetMaxChildren(TUNING.OZZY_MAX_SUMMON_BEES)
 	inst.components.beesummoner:SetSummonChance(TUNING.OZZY_SUMMON_CHANCE)
 	inst.components.beesummoner:SetMaxStore(TUNING.OZZY_MAX_BEES_STORE)
+	inst.components.beesummoner.childprefabfn = GetChildPrefab
 	inst:ListenForEvent("onnumstorechange", OnNumStoreChange)
 
 	SeasonalChanges(inst)
@@ -210,9 +339,72 @@ local postinit = function(inst)
 
 	inst:ListenForEvent("equip", OnEquip)
 	inst:ListenForEvent("unequip", OnUnequip)
-	inst:ListenForEvent("killed", OnKillOther)
 
 	InitFn(inst)
+
+	-- Recipes
+	local cocoonrecipe = Recipe("mutantbeecocoon",
+	  {
+	    Ingredient("honeycomb", 1),
+	    Ingredient("cutgrass", 4),
+	    Ingredient("honey", 1)
+	  },
+	  RECIPETABS.SURVIVAL,
+	  TECH.NONE
+	)
+	cocoonrecipe.atlas = "images/inventoryimages/mutantbeecocoon.xml"
+
+	local armorhoneyrecipe = Recipe("armorhoney",
+	  {
+	    Ingredient("log", 10),
+	    Ingredient("rope", 1),
+	    Ingredient("honey", 3)
+	  },
+	  RECIPETABS.WAR,
+	  TECH.NONE
+	)
+	armorhoneyrecipe.atlas = "images/inventoryimages/armorhoney.xml"
+
+	local melissarecipe = Recipe("melissa",
+	  {
+	    Ingredient("twigs", 2),
+	    Ingredient("goldnugget", 1),
+	    Ingredient("stinger", 5)
+	  },
+	  RECIPETABS.WAR,
+	  TECH.NONE
+	)
+	melissarecipe.atlas = "images/inventoryimages/melissa.xml"
+
+	melissarecipe.sortkey = 1
+	armorhoneyrecipe.sortkey = 2
+
+	local mutantdefenderhive_rec = Recipe("mutantdefenderhive",
+	  GetDefenderHiveIngredients(),
+	  RECIPETABS.TOWN,
+	  TECH.SCIENCE_TWO,
+	  nil,
+	  "mutantdefenderhive_placer"
+  )
+  mutantdefenderhive_rec.atlas = "images/inventoryimages/mutantdefenderhive.xml"
+
+	local mutantrangerhive_rec = Recipe("mutantrangerhive",
+		GetRangerHiveIngredients(),
+	  RECIPETABS.TOWN,
+	  TECH.SCIENCE_TWO,
+	  nil,
+	  "mutantrangerhive_placer"
+	)
+	mutantrangerhive_rec.atlas = "images/inventoryimages/mutantrangerhive.xml"
+
+	local mutantassassinhive_rec = Recipe("mutantassassinhive",
+		GetAssassinHiveIngredients(),
+	  RECIPETABS.TOWN,
+	  TECH.SCIENCE_TWO,
+	  nil,
+	  "mutantassassinhive_placer"
+	)
+	mutantassassinhive_rec.atlas = "images/inventoryimages/mutantassassinhive.xml"
 end
 
 return MakePlayerCharacter("zeta", prefabs, assets, postinit, start_inv)

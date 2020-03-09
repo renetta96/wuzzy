@@ -8,6 +8,18 @@ local function CheckDlcEnabled(dlc)
 	return IsDLCEnabled(_G[dlc])
 end
 
+local function GetCombatCooldown(inst)
+	local combat = inst.components.combat
+	return combat.laststartattacktime ~= nil
+		and math.max(
+			0,
+			combat.min_attack_period
+			+ (combat:GetPeriodModifier() * combat.min_attack_period)
+			- GetTime() + combat.laststartattacktime)
+		or 0
+end
+
 return {
-	CheckDlcEnabled = CheckDlcEnabled
+	CheckDlcEnabled = CheckDlcEnabled,
+	GetCombatCooldown = GetCombatCooldown
 }

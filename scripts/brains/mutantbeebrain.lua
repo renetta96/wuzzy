@@ -23,6 +23,14 @@ local function IsHomeOnFire(inst)
     and inst.components.homeseeker.home.components.burnable:IsBurning()
 end
 
+local function ShouldRetreat(inst)
+  return inst.components.combat.target ~= nil
+    or (
+      inst.components.homeseeker and inst.components.homeseeker.home
+      and inst.components.homeseeker.home.incombat
+    )
+end
+
 function BeeBrain:OnStart()
   local clock = GetClock()
 
@@ -39,15 +47,20 @@ function BeeBrain:OnStart()
 
       WhileNode(
         function()
-            return self.inst.components.combat.target == nil or not self.inst.components.combat:InCooldown()
+          return ShouldRetreat(self.inst)
         end,
-        "AttackMomentarily",
-        ChaseAndAttack(self.inst, MAX_CHASE_TIME, MAX_CHASE_DIST)
+        "Retreat",
+        DoAction(
+          self.inst,
+          function() return beecommon.GoHomeAction(self.inst) end,
+          "go home",
+          true
+        )
       ),
 
       WhileNode(
         function()
-            return self.inst.components.combat.target and self.inst.components.combat:InCooldown()
+          return self.inst.components.combat.target ~= nil
         end,
         "Dodge",
         RunAway(

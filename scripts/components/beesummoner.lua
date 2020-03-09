@@ -45,6 +45,7 @@ local BeeSummoner = Class(function(self, inst)
 	self.numchildren = 0
 	self.maxchildren = 0
 	self.childname = "mutantkillerbee"
+	self.childprefabfn = nil
 	self.summonchance = 0.3
 	self.radius = 0.5
 	self.maxstore = 6
@@ -221,6 +222,14 @@ function BeeSummoner:StartRegen(tick)
 	end
 end
 
+function BeeSummoner:GetChildPrefab()
+	if self.childprefabfn then
+		return self.childprefabfn(self.inst)
+	end
+
+	return self.childname
+end
+
 function BeeSummoner:CanSummonChild()
 	return self.numchildren < self.maxchildren
 		and math.random() < self.summonchance
@@ -228,39 +237,43 @@ function BeeSummoner:CanSummonChild()
 end
 
 function BeeSummoner:DoSummonChild(target)
-	if not self.childname then
+	if not self:CanSummonChild() then
+		return
+	end
+
+	local childprefab = self:GetChildPrefab()
+
+	if not childprefab then
 		print("No child prefab defined")
 		return
 	end
 
-	if self:CanSummonChild() then
-		local pos = Vector3(self.inst.Transform:GetWorldPosition())
-		local start_angle = math.random() * PI * 2
-	    local rad = self.radius or 0.5
-	    if self.inst.Physics then
-	        rad = rad + self.inst.Physics:GetRadius()
-	    end
-	    local offset = FindWalkableOffset(pos, start_angle, rad, 8, false)
-	    if offset == nil then
-	        return
-	    end
+	local pos = Vector3(self.inst.Transform:GetWorldPosition())
+	local start_angle = math.random() * PI * 2
+  local rad = self.radius or 0.5
+  if self.inst.Physics then
+      rad = rad + self.inst.Physics:GetRadius()
+  end
+  local offset = FindWalkableOffset(pos, start_angle, rad, 8, false)
+  if offset == nil then
+      return
+  end
 
-	    pos = pos + offset
-	    local child = SpawnPrefab(self.childname)
+  pos = pos + offset
+  local child = SpawnPrefab(childprefab)
 
-		if child ~= nil then
-			child.Transform:SetPosition(pos:Get())
-			if target ~= nil and child.components.combat ~= nil then
-				child.components.combat:SetTarget(target)
-			end
-
-			self.numstore = self.numstore - 1
-			self.inst:PushEvent("onnumstorechange", {numstore = self.numstore})
-			self:StartRegen()
+	if child ~= nil then
+		child.Transform:SetPosition(pos:Get())
+		if target ~= nil and child.components.combat ~= nil then
+			child.components.combat:SetTarget(target)
 		end
 
-		return child
+		self.numstore = self.numstore - 1
+		self.inst:PushEvent("onnumstorechange", {numstore = self.numstore})
+		self:StartRegen()
 	end
+
+	return child
 end
 
 function BeeSummoner:SummonChild(target)

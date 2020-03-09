@@ -28,6 +28,12 @@ Assets = {
   Asset( "ATLAS", "images/map_icons/mutantbeecocoon.xml" ),
   Asset( "IMAGE", "images/map_icons/mutantbeehive.tex" ),
   Asset( "ATLAS", "images/map_icons/mutantbeehive.xml" ),
+  Asset( "IMAGE", "images/map_icons/mutantdefenderhive.tex" ),
+  Asset( "ATLAS", "images/map_icons/mutantdefenderhive.xml" ),
+  Asset( "IMAGE", "images/map_icons/mutantrangerhive.tex" ),
+  Asset( "ATLAS", "images/map_icons/mutantrangerhive.xml" ),
+  Asset( "IMAGE", "images/map_icons/mutantassassinhive.tex" ),
+  Asset( "ATLAS", "images/map_icons/mutantassassinhive.xml" ),
 
   Asset( "IMAGE", "images/avatars/avatar_zeta.tex" ),
   Asset( "ATLAS", "images/avatars/avatar_zeta.xml" ),
@@ -49,6 +55,13 @@ Assets = {
 
   Asset("ANIM", "anim/symbiosis.zip"),
   Asset("ANIM", "anim/pollen_fx.zip"),
+
+  Asset( "IMAGE", "images/inventoryimages/mutantdefenderhive.tex" ),
+  Asset( "ATLAS", "images/inventoryimages/mutantdefenderhive.xml" ),
+  Asset( "IMAGE", "images/inventoryimages/mutantrangerhive.tex" ),
+  Asset( "ATLAS", "images/inventoryimages/mutantrangerhive.xml" ),
+  Asset( "IMAGE", "images/inventoryimages/mutantassassinhive.tex" ),
+  Asset( "ATLAS", "images/inventoryimages/mutantassassinhive.xml" ),
 }
 
 local function CheckDlcEnabled(dlc)
@@ -83,7 +96,7 @@ TUNING.OZZY_MAX_SHARE_TARGETS = 20
 TUNING.OZZY_DEFAUT_SPEED_MULTIPLIER = 0
 TUNING.OZZY_SPRING_SPEED_MULTIPLIER = 0.15
 TUNING.OZZY_WINTER_SPEED_MULTIPLIER = -0.15
-TUNING.OZZY_MAX_SUMMON_BEES = 3
+TUNING.OZZY_MAX_SUMMON_BEES = 4
 TUNING.OZZY_SUMMON_CHANCE = 0.3
 TUNING.OZZY_MAX_BEES_STORE = 7
 TUNING.OZZY_HONEYED_FOOD_BONUS = 0.35
@@ -91,7 +104,7 @@ TUNING.OZZY_PICK_FLOWER_SANITY = -3 * TUNING.SANITY_TINY
 
 -- Mutant bee stats
 TUNING.MUTANT_BEE_HEALTH = 100
-TUNING.MUTANT_BEE_DAMAGE = 10
+TUNING.MUTANT_BEE_DAMAGE = 7
 TUNING.MUTANT_BEE_ATTACK_PERIOD = 1
 TUNING.MUTANT_BEE_TARGET_DIST = 8
 TUNING.MUTANT_BEE_WATCH_DIST = 20
@@ -100,16 +113,25 @@ TUNING.MUTANT_BEE_POISON_DAMAGE = 5
 TUNING.MUTANT_BEE_POISON_PERIOD = 0.75
 TUNING.MUTANT_BEE_EXPLOSIVE_DAMAGE_MULTIPLIER = 3.0
 TUNING.MUTANT_BEE_EXPLOSIVE_RANGE = 8
-TUNING.MUTANT_BEE_FROSTBITE_SPEED_PENALTY_MIN = 0.3
-TUNING.MUTANT_BEE_FROSTBITE_SPEED_PENALTY_MAX = 0.6
-TUNING.MUTANT_BEE_FROSTBITE_ATK_PERIOD_PENALTY_MIN = 1.35
-TUNING.MUTANT_BEE_FROSTBITE_ATK_PERIOD_PENALTY_MAX = 1.65
-TUNING.MUTANT_BEE_COLDNESS_ADD = 0.5
+TUNING.MUTANT_BEE_FROSTBITE_SPEED_PENALTY = -0.5
+TUNING.MUTANT_BEE_FROSTBITE_ATK_PERIOD_PENALTY = 0.65
 TUNING.MUTANT_BEE_WEAPON_ATK_RANGE = 10
 TUNING.MUTANT_BEE_RANGED_TARGET_DIST = 10
 TUNING.MUTANT_BEE_RANGED_ATK_HEALTH_PENALTY = 1 / 10
 TUNING.MUTANT_BEE_RANGED_DAMAGE = 15
 TUNING.MUTANT_BEE_RANGED_ATK_PERIOD = 2.5
+TUNING.MUTANT_BEE_DEFENDER_HEALTH = 400
+TUNING.MUTANT_BEE_DEFENDER_DAMAGE = 5
+TUNING.MUTANT_BEE_DEFENDER_ATTACK_PERIOD = 2
+TUNING.MUTANT_BEE_DEFENDER_ATTACK_RANGE = 1.5
+TUNING.MUTANT_BEE_DEFENDER_ABSORPTION = 0.5
+TUNING.MUTANT_BEE_DEFENDER_TAUNT_DIST = 10
+TUNING.MUTANT_BEE_ASSASSIN_ATTACK_PERIOD = 1.5
+TUNING.MUTANT_BEE_ASSASSIN_BACKSTAB_DAMAGE_MULT = 1.5
+TUNING.MUTANT_BEE_ASSSASIN_HEALTH = 75
+TUNING.MUTANT_BEE_ASSSASIN_DAMAGE = 10
+TUNING.MUTANT_BEE_SOLDIER_HEALTH = 150
+TUNING.MUTANT_BEE_SOLDIER_ABSORPTION = 0.25
 
 -- Mutant beehive stats
 TUNING.MUTANT_BEEHIVE_BEES = 4
@@ -124,6 +146,8 @@ TUNING.MUTANT_BEEHIVE_RECOVER_PER_CHILD = 0.75
 TUNING.MUTANT_BEEHIVE_GROW_TIME = {TUNING.TOTAL_DAY_TIME * 8, TUNING.TOTAL_DAY_TIME * 8}
 TUNING.MUTANT_BEEHIVE_MAX_HONEYS_PER_CYCLE = 3
 TUNING.MUTANT_BEEHIVE_NUM_POLLENS_PER_HONEY = 3
+TUNING.MUTANT_BEEHIVE_MASTER_SLAVE_DIST = 10
+TUNING.MUTANT_BEEHIVE_CHILDREN_PER_SLAVE = 2
 
 -- Armor honey
 TUNING.ARMORHONEY_MAX_ABSORPTION = 0.55
@@ -153,18 +177,6 @@ TUNING.MELISSA_MIN_DAMAGE_HUNGER_THRESHOLD = 0.15
 TUNING.MELISSA_MIN_HUNGER_DRAIN = 1
 TUNING.MELISSA_PERCENT_HUNGER_DRAIN = 0.01
 TUNING.MELISSA_USES = 200
-
--- Mod config
-local num_bees = GetModConfigData("NUM_BEES_IN_HIVE")
-TUNING.MUTANT_BEEHIVE_BEES = TUNING.MUTANT_BEEHIVE_BEES + num_bees * 2
-TUNING.MUTANT_BEEHIVE_DEFAULT_REGEN_TIME = TUNING.MUTANT_BEEHIVE_DEFAULT_REGEN_TIME - num_bees * 10
-
-local bee_damage = GetModConfigData("BEE_DAMAGE")
-TUNING.MUTANT_BEE_DAMAGE = TUNING.MUTANT_BEE_DAMAGE + bee_damage * 5
-TUNING.MUTANT_BEE_ATTACK_PERIOD = TUNING.MUTANT_BEE_ATTACK_PERIOD - bee_damage * 0.5
-TUNING.MUTANT_BEE_POISON_DAMAGE = TUNING.MUTANT_BEE_POISON_DAMAGE - bee_damage * 2
-TUNING.MUTANT_BEE_RANGED_DAMAGE = TUNING.MUTANT_BEE_RANGED_DAMAGE + bee_damage * 5
-TUNING.MUTANT_BEE_RANGED_ATK_PERIOD = TUNING.MUTANT_BEE_RANGED_ATK_PERIOD - bee_damage * 1
 
 
 -- The character select screen lines
@@ -399,41 +411,6 @@ local function WaspHivePostInit(prefab)
 end
 
 AddPrefabPostInit("wasphive", WaspHivePostInit)
-
-local Recipe = GLOBAL.Recipe
-
-local cocoonrecipe = Recipe("mutantbeecocoon",
-  {
-    Ingredient("honeycomb", 1),
-    Ingredient("cutgrass", 4),
-    Ingredient("honey", 1)
-  },
-  RECIPETABS.SURVIVAL,
-  TECH.NONE
-)
-cocoonrecipe.atlas = "images/inventoryimages/mutantbeecocoon.xml"
-
-local armorhoneyrecipe = Recipe("armorhoney",
-  {
-    Ingredient("log", 10),
-    Ingredient("rope", 1),
-    Ingredient("honey", 3)
-  },
-  RECIPETABS.WAR,
-  TECH.NONE
-)
-armorhoneyrecipe.atlas = "images/inventoryimages/armorhoney.xml"
-
-local melissarecipe = Recipe("melissa",
-  {
-    Ingredient("twigs", 2),
-    Ingredient("goldnugget", 1),
-    Ingredient("stinger", 5)
-  },
-  RECIPETABS.WAR,
-  TECH.NONE
-)
-melissarecipe.atlas = "images/inventoryimages/melissa.xml"
 
 local Badge = require("widgets/badge")
 
