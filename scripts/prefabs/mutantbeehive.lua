@@ -325,11 +325,10 @@ end
 local function OnSlave(inst)
   if inst.components.childspawner then
     local slaves = GetSlaves(inst)
-    inst.components.childspawner:SetMaxChildren(
+    inst.components.childspawner.maxchildren =
     	TUNING.MUTANT_BEEHIVE_BEES
     	+ (inst.components.upgradeable.stage - 1) * TUNING.MUTANT_BEEHIVE_DELTA_BEES
     	+ #slaves * TUNING.MUTANT_BEEHIVE_CHILDREN_PER_SLAVE
-    )
   end
 end
 
@@ -482,7 +481,10 @@ local function WatchEnemy(inst)
 				function(guy)
 					return inst.components.combat:CanTarget(guy)
 						and guy.components.combat and guy.components.combat.target
-						and guy.components.combat.target:HasTag("player")
+						and (
+							guy.components.combat.target:HasTag("player")
+							or guy.components.combat.target:HasTag("mutant")
+						)
 				end,
 				nil,
 				{ "mutant", "INLIMBO", "player" },

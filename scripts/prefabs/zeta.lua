@@ -241,7 +241,7 @@ end
 local function GetDefenderHiveIngredients()
 	if SaveGameIndex:IsModePorkland() then
 		return {
-			Ingredient("horn", 2),
+			Ingredient("hippo_antler", 2),
 	    Ingredient("honeycomb", 1),
 	    Ingredient("alloy", 3)
 		}
@@ -287,19 +287,19 @@ local function GetAssassinHiveIngredients()
 		return {
 	    Ingredient("venomgland", 3),
 	    Ingredient("honeycomb", 1),
-	    Ingredient("weevole_carapace", 30)
+	    Ingredient("nightmarefuel", 20)
 	  }
 	elseif SaveGameIndex:IsModeShipwrecked() then
 		return {
 			Ingredient("mosquitosack_yellow", 2),
 	    Ingredient("honeycomb", 1),
-	    Ingredient("palmleaf", 40)
+	    Ingredient("nightmarefuel", 20)
 		}
 	else
 		return {
 			Ingredient("mosquitosack", 4),
 	    Ingredient("honeycomb", 1),
-	    Ingredient("cutstone", 10)
+	    Ingredient("nightmarefuel", 20)
 		}
 	end
 end
