@@ -38,26 +38,25 @@ local SPEECH =
 {
   ATTACK = {
     "KILL 'EM ALL!!!",
-    "ENEMY DETECTED!!!",
-    "PROTECT MASTER!",
-    "PREPARE TO GET STUNG!",
+    "ATTACC!!!",
+    "YOU AIN'T MESS WITH US!",
     "ONTO THE BATTLEFIELD!"
   },
   SPAWN = {
     "TO WORK SHALL WE?",
-    "AHHHH WE SMELL FLOWERS!",
-    "HARDWORKERS WE ARE!",
-    "WE ARE HAPPY HONEYMAKER!"
+    "AHHHH FLOWERS!",
+    "WORK HARD PARTY HARDER!",
+    "LET'S START WORKING COMRADES."
   },
   IGNITE = {
-    "HOME IS BURNING!!!",
+    "THIS IS FINE.",
     "HELP US MASTER!!!",
-    "IT'S SO HOT IN THERE!",
+    "SHIT ON FIRE YO!",
     "BRING SOME WATER!"
   },
   FREEZE = {
     "OUCH! IT'S COLD OUT!",
-    "WE COULD MAKE ICECREAM OUT OF THIS.",
+    "JUST CHILLING IN HERE.",
     "BRRRRRR!"
   },
   HAMMER = {
@@ -483,7 +482,8 @@ local function WatchEnemy(inst)
       function(guy)
         return inst.components.combat:CanTarget(guy)
           and guy.components.combat and guy.components.combat.target
-          and guy.components.combat.target:HasTag("player")
+          and (guy.components.combat.target:HasTag("player")
+            or guy.components.combat.target:HasTag("mutant"))
       end,
       { "_combat", "_health" },
       { "mutant", "INLIMBO", "player" },
@@ -662,6 +662,12 @@ local function AddHoneyProgress(inst)
 
   local pollen = SpawnPrefab("zetapollen")
   inst.components.container:GiveItem(pollen)
+
+  -- One more pollen when fully upgraded
+  if inst.components.upgradeable.stage >= 3 then
+    local pollen = SpawnPrefab("zetapollen")
+    inst.components.container:GiveItem(pollen)
+  end
 end
 
 local function itemtestfn(inst, item, slot)
@@ -671,7 +677,7 @@ end
 local function onchildgoinghome(inst, data)
   if not inst:HasTag("burnt") then
     if data.child and data.child.components.pollinator and data.child.components.pollinator:HasCollectedEnough() then
-        AddHoneyProgress(inst)
+      AddHoneyProgress(inst)
     end
   end
 end
@@ -820,6 +826,7 @@ local function fn()
   inst.OnSlave = OnSlave
   inst.InheritOwner = InheritOwner
   inst.CanSpawn = CanSpawn
+  inst.GetSlaves = GetSlaves
   inst._onplayerjoined = function(src, player) OnPlayerJoined(inst, player) end
   inst:ListenForEvent("ms_playerjoined", inst._onplayerjoined, TheWorld)
 

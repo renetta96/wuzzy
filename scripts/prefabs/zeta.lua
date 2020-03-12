@@ -184,8 +184,20 @@ local function SeasonalChanges(inst, season)
   end
 end
 
+local function CheckHiveUpgrade(inst)
+  if not inst._hive then
+    return
+  end
+
+  local slaves = inst._hive:GetSlaves()
+  inst.components.beesummoner:SetMaxChildren(
+    TUNING.OZZY_MAX_SUMMON_BEES + math.floor(#slaves / 3)
+  )
+end
+
 local function OnInit(inst)
   OnNumStoreChange(inst)
+  inst:DoPeriodicTask(1, CheckHiveUpgrade)
 end
 
 -- This initializes for both the server and client. Tags can be added here.

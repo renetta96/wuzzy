@@ -194,11 +194,6 @@ local function OnStopFollowing(inst)
 	inst:RemoveEventCallback("droppedtarget", OnDroppedTarget)
 end
 
-local function OnKillOther(inst, data)
-	local victim = data.victim
-	metapisutil.SpawnParasitesOnKill(inst, victim)
-end
-
 local function KillerRetarget(inst)
 	return FindTarget(inst, TUNING.MUTANT_BEE_TARGET_DIST)
 end
@@ -226,6 +221,25 @@ end
 local function MakeLessNoise(inst)
 	inst:ListenForEvent("startfollowing", OnStartFollowing)
 	inst:ListenForEvent("stopfollowing", OnStopFollowing)
+end
+
+local function GetHiveUpgradeStage(inst)
+	local hive = nil
+	if inst.components.homeseeker and inst.components.homeseeker.home then
+		hive = inst.components.homeseeker.home
+	elseif inst.components.follower and inst.components.follower.leader and inst.components.follower.leader._hive then
+		hive = inst.components.follower.leader._hive
+	end
+
+	if not hive or hive.prefab ~= 'mutantbeehive' or not hive:IsValid() then
+		return 0
+	end
+
+	if not hive.components.upgradeable then
+		return 0
+	end
+
+	return hive.components.upgradeable.stage
 end
 
 local function commonfn(bank, build, tags)
@@ -319,10 +333,37 @@ local function commonfn(bank, build, tags)
 	return inst
 end
 
-local workerbrain = require("brains/mutantbeebrain")
-local killerbrain = require("brains/mutantkillerbeebrain")
-local rangedkillerbrain = require("brains/rangedkillerbeebrain")
+local function OnInitUpgrade(inst, checkupgradefn, retries)
+	retries = retries + 1
 
+	local check = checkupgradefn(inst)
+
+	if retries >= 5 then
+		return
+	end
+
+	-- Not check upgrade successfully, retry upto 5 times
+	if not check then
+		inst:DoTaskInTime(1, function(inst) OnInitUpgrade(inst, checkupgradefn, retries) end)
+	end
+end
+
+local function CheckWorkerUpgrade(inst)
+	local stage = GetHiveUpgradeStage(inst)
+
+	if stage == 0 then
+		return false
+	end
+
+	inst.components.pollinator.collectcount = math.max(
+		5 - (stage - 1),
+		1
+	)
+
+	return true
+end
+
+local workerbrain = require("brains/mutantbeebrain")
 local function workerbee()
 	--pollinator (from pollinator component) added to pristine state for optimization
 	--for searching: inst:AddTag("pollinator")
@@ -338,11 +379,15 @@ local function workerbee()
 	inst.components.combat:SetDefaultDamage(TUNING.MUTANT_BEE_DAMAGE)
 	inst.components.combat:SetAttackPeriod(TUNING.MUTANT_BEE_ATTACK_PERIOD)
 	inst.components.combat:SetRetargetFunction(2, MutantBeeRetarget)
+
 	inst:AddComponent("pollinator")
+	inst.components.pollinator.collectcount = 5
+
 	inst:SetBrain(workerbrain)
 	inst.sounds = workersounds
 
 	MakeHauntableChangePrefab(inst, "mutantkillerbee")
+	inst:DoTaskInTime(0, function(inst) OnInitUpgrade(inst, CheckWorkerUpgrade, 0) end)
 
 	return inst
 end
@@ -353,6 +398,26 @@ local function OnSpawnedFromHaunt(inst)
 	end
 end
 
+local function CheckSoldierUpgrade(inst)
+	local stage = GetHiveUpgradeStage(inst)
+
+	if stage == 0 then
+		return false
+	end
+
+	if stage >= 2 then
+		inst.components.health:SetAbsorptionAmount(TUNING.MUTANT_BEE_SOLDIER_ABSORPTION)
+	end
+
+	if stage >= 3 then
+		inst.components.combat.areahitdamagepercent = TUNING.MUTANT_BEE_EXPLOSIVE_DAMAGE_MULTIPLIER
+		inst:ListenForEvent("onattackother", OnAttackExplosive)
+	end
+
+	return true
+end
+
+local killerbrain = require("brains/mutantkillerbeebrain")
 local function killerbee()
 	local inst = nil
 
@@ -363,52 +428,20 @@ local function killerbee()
 	end
 
 	inst.components.health:SetMaxHealth(TUNING.MUTANT_BEE_SOLDIER_HEALTH)
-	inst.components.health:SetAbsorptionAmount(TUNING.MUTANT_BEE_SOLDIER_ABSORPTION)
 
 	inst.components.combat:SetDefaultDamage(TUNING.MUTANT_BEE_DAMAGE)
 	inst.components.combat:SetAttackPeriod(TUNING.MUTANT_BEE_ATTACK_PERIOD)
 	inst.components.combat:SetRetargetFunction(1, KillerRetarget)
-	inst.components.combat.areahitdamagepercent = TUNING.MUTANT_BEE_EXPLOSIVE_DAMAGE_MULTIPLIER
 
 	inst:SetBrain(killerbrain)
 	inst.sounds = killersounds
 	inst._attackcount = 0
 
-	inst:ListenForEvent("onattackother", OnAttackExplosive)
-
 	MakeHauntablePanic(inst)
 	inst:ListenForEvent("spawnedfromhaunt", OnSpawnedFromHaunt)
 
 	MakeLessNoise(inst)
-
-	return inst
-end
-
-local function parasitebee()
-	local inst = nil
-
-	inst = commonfn("bee", "mutantbee_angry_build", { "killer", "parasite", "scarytoprey" })
-
-	if not TheWorld.ismastersim then
-		return inst
-	end
-
-	inst:AddComponent("follower")
-
-	inst.components.health:SetMaxHealth(TUNING.MUTANT_BEE_HEALTH * TUNING.METAPIS_PARASITE_HEALTH_RATE)
-	inst.components.combat:SetDefaultDamage(TUNING.MUTANT_BEE_DAMAGE * TUNING.METAPIS_PARASITE_DAMAGE_RATE )
-	inst.components.combat:SetAttackPeriod(TUNING.MUTANT_BEE_ATTACK_PERIOD)
-	inst.components.combat:SetRetargetFunction(1, KillerRetarget)
-
-	inst.components.lootdropper.numrandomloot = 0 -- No loot for parasite
-
-	inst:SetBrain(killerbrain)
-	inst.sounds = killersounds
-
-	MakeHauntablePanic(inst)
-	MakeLessNoise(inst)
-
-	inst.Transform:SetScale(0.8, 0.8, 0.8)
+	inst:DoTaskInTime(0, function(inst) OnInitUpgrade(inst, CheckSoldierUpgrade, 0) end)
 
 	return inst
 end
@@ -420,6 +453,45 @@ local function OnRangedWeaponAttack(inst, attacker, target)
   end
 end
 
+local function OnAttackDoubleHit(inst, data)
+	if inst._doublehitnow then
+		inst.components.combat:ResetCooldown()
+		inst._doublehitnow = false
+	end
+
+	if not inst._doublehittask then
+		inst._doublehittask = inst:DoTaskInTime(TUNING.MUTANT_BEE_RANGED_ATK_PERIOD * 4,
+			function(inst)
+				inst._doublehitnow = true
+				inst._doublehittask = nil
+			end
+		)
+	end
+end
+
+local function CheckRangerUpgrade(inst)
+	local stage = GetHiveUpgradeStage(inst)
+
+	if stage == 0 then
+		return false
+	end
+
+	if stage >= 2 then
+		if inst.weapon and inst.weapon:IsValid() and inst.weapon.components.weapon then
+			inst.weapon.components.weapon:SetElectric()
+			inst.weapon.components.weapon:SetOnAttack(OnRangedWeaponAttack)
+		end
+	end
+
+	if stage >= 3 then
+		inst._doublehitnow = true
+		inst:ListenForEvent("onattackother", OnAttackDoubleHit)
+	end
+
+	return true
+end
+
+local rangedkillerbrain = require("brains/rangedkillerbeebrain")
 local function rangerbee()
 	local inst = commonfn("mutantrangerbee", "mutantrangerbee", { "killer", "ranger", "scarytoprey" })
 
@@ -449,8 +521,7 @@ local function rangerbee()
 		weapon.components.weapon:SetDamage(inst.components.combat.defaultdamage)
 		weapon.components.weapon:SetRange(inst.components.combat.attackrange)
 		weapon.components.weapon:SetProjectile("blowdart_yellow")
-		weapon.components.weapon:SetElectric()
-		weapon.components.weapon:SetOnAttack(OnRangedWeaponAttack)
+
 		weapon:AddComponent("inventoryitem")
 		weapon.persists = false
 		weapon.components.inventoryitem:SetOnDroppedFn(weapon.Remove)
@@ -458,6 +529,8 @@ local function rangerbee()
 		inst.weapon = weapon
 		inst.components.inventory:Equip(inst.weapon)
 	end
+
+	inst:DoTaskInTime(0, function(inst) OnInitUpgrade(inst, CheckRangerUpgrade, 0) end)
 
 	return inst
 end
@@ -492,8 +565,25 @@ local function Unstealth(inst)
 	inst.AnimState:SetMultColour(r, g, b, 1)
 end
 
-local assassinbeebrain = require "brains/assassinbeebrain"
+local function CheckAssassinUpgrade(inst)
+	local stage = GetHiveUpgradeStage(inst)
 
+	if stage == 0 then
+		return false
+	end
+
+	if stage >= 2 then
+		inst:ListenForEvent("onattackother", OnAttackOtherWithPoison)
+	end
+
+	if stage >= 3 then
+		inst:ListenForEvent("onattackother", OnStealthAttack)
+	end
+
+	return true
+end
+
+local assassinbeebrain = require "brains/assassinbeebrain"
 local function assassinbee()
 	local inst = commonfn("mutantassassinbee", "mutantassassinbee", { "killer", "assassin", "scarytoprey" })
 
@@ -502,7 +592,6 @@ local function assassinbee()
 	end
 
 	inst.components.locomotor.groundspeedmultiplier = 1.5
-	inst:ListenForEvent("onattackother", OnAttackOtherWithPoison)
 
 	inst.components.health:SetMaxHealth(TUNING.MUTANT_BEE_ASSSASIN_HEALTH)
 	inst.components.combat:SetDefaultDamage(TUNING.MUTANT_BEE_ASSSASIN_DAMAGE)
@@ -514,7 +603,12 @@ local function assassinbee()
 	MakeHauntablePanic(inst)
 	MakeLessNoise(inst)
 
-	inst:ListenForEvent("onattackother", OnStealthAttack)
+	Stealth(inst)
+
+	inst:DoTaskInTime(0, function(inst) OnInitUpgrade(inst, CheckAssassinUpgrade, 0) end)
+
+	inst:ListenForEvent("newcombattarget", Unstealth)
+	inst:ListenForEvent("droppedtarget", Stealth)
 
 	inst.Stealth = Stealth
 	inst.Unstealth = Unstealth
@@ -638,8 +732,25 @@ local function OnDefenderAttacked(inst, data)
 	CauseFrostBite(attacker)
 end
 
-local defenderbeebrain = require "brains/defenderbeebrain"
+local function CheckDefenderUpgrade(inst)
+	local stage = GetHiveUpgradeStage(inst)
 
+	if stage == 0 then
+		return false
+	end
+
+	if stage >= 2 then
+  	inst.components.health:SetAbsorptionAmount(TUNING.MUTANT_BEE_DEFENDER_ABSORPTION)
+	end
+
+	if stage >= 3 then
+		inst:ListenForEvent("attacked", OnDefenderAttacked)
+	end
+
+	return true
+end
+
+local defenderbeebrain = require "brains/defenderbeebrain"
 local function defenderbee()
 	local inst = CreateEntity()
 
@@ -699,7 +810,6 @@ local function defenderbee()
 
   inst:AddComponent("health")
   inst.components.health:SetMaxHealth(TUNING.MUTANT_BEE_DEFENDER_HEALTH)
-  inst.components.health:SetAbsorptionAmount(TUNING.MUTANT_BEE_DEFENDER_ABSORPTION)
 
   inst:AddComponent("combat")
   inst.components.combat:SetDefaultDamage(TUNING.MUTANT_BEE_DEFENDER_DAMAGE)
@@ -712,7 +822,6 @@ local function defenderbee()
   inst:AddComponent("knownlocations")
 
   inst:ListenForEvent("attacked", beecommon.OnAttacked)
-  inst:ListenForEvent("attacked", OnDefenderAttacked)
 
   MakeSmallBurnableCharacter(inst, "mane")
   MakeSmallFreezableCharacter(inst, "mane")
@@ -727,6 +836,8 @@ local function defenderbee()
 
 	inst:ListenForEvent("newcombattarget", OnDefenderStartCombat)
 	inst:ListenForEvent("droppedtarget", OnDefenderStopCombat)
+
+	inst:DoTaskInTime(0, function(inst) OnInitUpgrade(inst, CheckDefenderUpgrade, 0) end)
 
   inst.sounds = poofysounds
 
@@ -764,7 +875,6 @@ STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTDEFENDERBEE = "Buff and fluffy."
 
 return Prefab("mutantbee", workerbee, assets, prefabs),
 	Prefab("mutantkillerbee", killerbee, assets, prefabs),
-	Prefab("mutantparasitebee", parasitebee, assets, prefabs),
 	Prefab("mutantrangerbee", rangerbee, assets, prefabs),
 	Prefab("mutantassassinbee", assassinbee, assets, prefabs),
 	Prefab("mutantdefenderbee", defenderbee, assets, prefabs)
