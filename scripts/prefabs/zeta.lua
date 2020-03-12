@@ -203,6 +203,7 @@ end
 -- This initializes for both the server and client. Tags can be added here.
 local common_postinit = function(inst)
   inst.soundsname = "zeta"
+  inst.carolsoundoverride = "dontstarve/characters/wilson/carol"
   -- Minimap icon
   inst.MiniMapEntity:SetIcon( "zeta.tex" )
   inst:AddTag("mutant")
