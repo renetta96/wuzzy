@@ -38,28 +38,27 @@ local UPGRADE_STAGES = {
 local SPEECH =
 {
 	ATTACK = {
-		"KILL THEM ALL!!!",
-		"ENEMY DETECTED!!!",
-		"PROTECT MASTER!",
-		"PREPARE TO GET STUNG!",
-		"ONTO THE BATTLEFIELD!"
+		"KILL 'EM ALL!!!",
+    "ATTACC!!!",
+    "YOU AIN'T MESS WITH US!",
+    "ONTO THE BATTLEFIELD!"
 	},
 	SPAWN = {
 		"TO WORK SHALL WE?",
-		"AHHHH WE SMELL FLOWERS!",
-		"HARDWORKERS WE ARE!",
-		"WE ARE HAPPY HONEYMAKERS!"
+    "AHHHH FLOWERS!",
+    "WORK HARD PARTY HARDER!",
+    "LET'S START WORKING COMRADES."
 	},
 	IGNITE = {
-		"HOME IS BURNING!!!",
-		"HELP US MASTER!!!",
-		"IT'S SO HOT IN THERE!",
-		"BRING SOME WATER!"
+		"THIS IS FINE.",
+    "HELP US MASTER!!!",
+    "SHIT ON FIRE YO!",
+    "BRING SOME WATER!"
 	},
 	FREEZE = {
 		"OUCH! IT'S COLD OUT!",
-		"WE COULD MAKE ICECREAM OUT OF THIS.",
-		"BRRRRRR!"
+    "JUST CHILLING IN HERE.",
+    "BRRRRRR!"
 	},
 	HAMMER = {
 		"WELL IF THAT'S YOUR CHOICE THEN...",
@@ -592,6 +591,12 @@ local function AddHoneyProgress(inst)
 
   local pollen = SpawnPrefab("zetapollen")
   inst.components.container:GiveItem(pollen)
+
+  -- One more pollen when fully upgraded
+  if inst.components.upgradeable.stage >= 3 then
+    local pollen = SpawnPrefab("zetapollen")
+    inst.components.container:GiveItem(pollen)
+  end
 end
 
 local function itemtestfn(inst, item, slot)
@@ -762,6 +767,7 @@ local function fn()
 	inst.OnEntitySleep = OnEntitySleep
 	inst.OnEntityWake = OnEntityWake
 	inst.CanSpawn = CanSpawn
+	inst.GetSlaves = GetSlaves
 	inst.OnSave = OnSave
 	inst.OnLoad = OnLoad
 	inst.OnRemoveEntity = OnRemoveEntity

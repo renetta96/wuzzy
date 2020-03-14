@@ -48,8 +48,9 @@ local function CanSummon(inst, prefab)
 end
 
 local function GetChildPrefab(inst)
+	local maxchildren = inst.components.beesummoner.maxchildren
   local expect = {
-    mutantkillerbee = TUNING.OZZY_MAX_SUMMON_BEES,
+    mutantkillerbee = maxchildren,
     mutantdefenderbee = 0,
     mutantrangerbee = 0,
     mutantassassinbee = 0
@@ -59,8 +60,8 @@ local function GetChildPrefab(inst)
 
   for i, prefab in ipairs({"mutantdefenderbee", "mutantrangerbee", "mutantassassinbee"}) do
     if CanSummon(inst, prefab) then
-      expect[prefab] = expect[prefab] + 1
-      expect["mutantkillerbee"] = expect["mutantkillerbee"] - 1
+      expect[prefab] = expect[prefab] + math.floor(maxchildren / 4)
+      expect["mutantkillerbee"] = expect["mutantkillerbee"] - math.floor(maxchildren / 4)
       table.insert(cansummon, prefab)
     end
   end
@@ -202,6 +203,17 @@ local function SeasonalChanges(inst)
 	end
 end
 
+local function CheckHiveUpgrade(inst)
+  if not inst._hive then
+    return
+  end
+
+  local slaves = inst._hive:GetSlaves()
+  inst.components.beesummoner:SetMaxChildren(
+    TUNING.OZZY_MAX_SUMMON_BEES + math.floor(#slaves / 3)
+  )
+end
+
 local function OnEquip(inst)
 	local head = inst.components.inventory:GetEquippedItem(EQUIPSLOTS.HEAD)
 
@@ -216,10 +228,10 @@ local function OnEquip(inst)
 
 		if isopentop then
 			inst.AnimState:Show("HEAD")
-	    	inst.AnimState:Hide("HEAD_HAT")
+	    inst.AnimState:Hide("HEAD_HAT")
 		else
 			inst.AnimState:Hide("HEAD")
-	    	inst.AnimState:Show("HEAD_HAT")
+	    inst.AnimState:Show("HEAD_HAT")
 		end
 	end
 end
@@ -329,6 +341,7 @@ local postinit = function(inst)
 	inst.components.beesummoner:SetMaxStore(TUNING.OZZY_MAX_BEES_STORE)
 	inst.components.beesummoner.childprefabfn = GetChildPrefab
 	inst:ListenForEvent("onnumstorechange", OnNumStoreChange)
+	inst:DoPeriodicTask(1, CheckHiveUpgrade)
 
 	SeasonalChanges(inst)
 	inst:ListenForEvent("seasonChange", function() SeasonalChanges(inst) end, GetWorld())
