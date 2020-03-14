@@ -34,8 +34,9 @@ local function CanSummon(inst, prefab)
 end
 
 local function GetChildPrefab(inst)
+  local maxchildren = inst.components.beesummoner.maxchildren
   local expect = {
-    mutantkillerbee = TUNING.OZZY_MAX_SUMMON_BEES,
+    mutantkillerbee = maxchildren,
     mutantdefenderbee = 0,
     mutantrangerbee = 0,
     mutantassassinbee = 0
@@ -45,8 +46,8 @@ local function GetChildPrefab(inst)
 
   for i, prefab in ipairs({"mutantdefenderbee", "mutantrangerbee", "mutantassassinbee"}) do
     if CanSummon(inst, prefab) then
-      expect[prefab] = expect[prefab] + 1
-      expect["mutantkillerbee"] = expect["mutantkillerbee"] - 1
+      expect[prefab] = expect[prefab] + math.floor(maxchildren / 4)
+      expect["mutantkillerbee"] = expect["mutantkillerbee"] - math.floor(maxchildren / 4)
       table.insert(cansummon, prefab)
     end
   end
