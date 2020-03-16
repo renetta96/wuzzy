@@ -311,6 +311,7 @@ local function commonfn(bank, build, tags)
   inst:AddComponent("health")
   inst:AddComponent("combat")
   inst.components.combat.hiteffectsymbol = "body"
+  inst.components.combat.notags = {"mutant"}
 
   ------------------
 
@@ -776,6 +777,7 @@ local function defenderbee()
   inst.components.combat:SetRange(TUNING.MUTANT_BEE_DEFENDER_ATTACK_RANGE)
   inst.components.combat:SetRetargetFunction(1, KillerRetarget)
   inst.components.combat.hiteffectsymbol = "mane"
+  inst.components.combat.notags = {"mutant"}
 
   inst:AddComponent("knownlocations")
 

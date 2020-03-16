@@ -54,7 +54,6 @@ Assets = {
   Asset("SOUND", "sound/zeta.fsb"),
 
   Asset("ANIM", "anim/symbiosis.zip"),
-  Asset("ANIM", "anim/pollen_fx.zip"),
 
   Asset( "IMAGE", "images/inventoryimages/mutantdefenderhive.tex" ),
   Asset( "ATLAS", "images/inventoryimages/mutantdefenderhive.xml" ),
@@ -182,7 +181,7 @@ TUNING.MELISSA_USES = 200
 -- The character select screen lines
 STRINGS.CHARACTER_TITLES.zeta = "The Buzzy"
 STRINGS.CHARACTER_NAMES.zeta = "Wuzzy"
-STRINGS.CHARACTER_DESCRIPTIONS.zeta = "*Leads his own species and hive\n*Has symbotic bees inside his body\n*Can pick pollen from flowers\n*Loves honeyed foods"
+STRINGS.CHARACTER_DESCRIPTIONS.zeta = "*Leads his own species and hive\n*Has symbotic bees inside his body\n*Can pick pollen from flowers"
 STRINGS.CHARACTER_QUOTES.zeta = "\"Bees together strong.\""
 
 -- Custom speech strings
