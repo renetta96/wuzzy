@@ -616,7 +616,6 @@ local function IsTaunted(guy)
 end
 
 local function Taunt(inst)
-  print("TAUNT")
   local x, y, z = inst.Transform:GetWorldPosition()
   local entities = TheSim:FindEntities(x, y, z,
     TUNING.MUTANT_BEE_DEFENDER_TAUNT_DIST,

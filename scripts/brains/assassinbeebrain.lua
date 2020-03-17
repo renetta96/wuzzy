@@ -43,7 +43,7 @@ local function IsBeingChased(inst)
 		function(guy)
 			return guy.components.combat and guy.components.combat:TargetIs(inst)
 		end,
-		{ "_combat", "_health" },
+		nil,
 		{ "mutant", "INLIMBO", "player" },
 		{ "monster", "insect", "animal", "character" })
 
@@ -55,11 +55,11 @@ local function IsBeingChased(inst)
 end
 
 local function GetClosestDefender(inst)
-	return GetClosestInstWithTag({"mutant", "defender"}, inst, TUNING.MUTANT_BEE_DEFENDER_TAUNT_DIST * 4)
+	return GetClosestInstWithTag("defender", inst, TUNING.MUTANT_BEE_DEFENDER_TAUNT_DIST * 4)
 end
 
 local function FindEpicEnemy(inst)
-	return GetClosestInstWithTag({"epic"}, inst, AVOID_EPIC_DIST)
+	return GetClosestInstWithTag("epic", inst, AVOID_EPIC_DIST)
 end
 
 local estimated_epic_atk_time = 1
