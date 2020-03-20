@@ -22,6 +22,9 @@ Assets = {
 
   Asset( "IMAGE", "bigportraits/zeta.tex" ),
   Asset( "ATLAS", "bigportraits/zeta.xml" ),
+    
+  Asset( "IMAGE", "bigportraits/zeta_rose.tex" ),
+  Asset( "ATLAS", "bigportraits/zeta_rose.xml" ),
 
   Asset( "IMAGE", "images/map_icons/zeta.tex" ),
   Asset( "ATLAS", "images/map_icons/zeta.xml" ),
@@ -625,3 +628,46 @@ local function PlayerPostConstruct(inst)
 end
 
 AddPlayerPostInit(PlayerPostConstruct)
+
+--Skin Stuff Below
+--Hornet: I am currently using wilba as an example, youll want to change all instances of "wilba" to the prefab name of your character!
+--Skins
+local _G = GLOBAL
+local PREFAB_SKINS = _G.PREFAB_SKINS
+local PREFAB_SKINS_IDS = _G.PREFAB_SKINS_IDS
+local SKIN_AFFINITY_INFO = GLOBAL.require("skin_affinity_info")
+
+modimport("skins_api") --Hornet: We import the file! If you named your file something else other than skins_api then youll want to rename this function to the name of the file
+
+SKIN_AFFINITY_INFO.zeta = {
+	"zeta_rose", --Hornet: These skins will show up for the character when the Survivor filter is enabled
+}
+
+--Hornet: The table of skins youre going to have, You can have as many skins as you want!
+
+PREFAB_SKINS["zeta"] = {
+    "zeta_none", 
+    "zeta_rose",
+} --And So on!
+
+PREFAB_SKINS_IDS = {} --Make sure this is after you  change the PREFAB_SKINS["character"] table
+for prefab,skins in pairs(PREFAB_SKINS) do
+    PREFAB_SKINS_IDS[prefab] = {}
+    for k,v in pairs(skins) do
+      	  PREFAB_SKINS_IDS[prefab][v] = k
+    end
+end
+
+
+
+AddSkinnableCharacter("zeta") --Hornet: The character youd like to skin, make sure you use the prefab name. And MAKE sure you run this function AFTER you import the skins_api file
+
+--Skin STRINGS
+
+STRINGS.SKIN_NAMES.zeta_none = "Wuzzy"
+STRINGS.SKIN_QUOTES.zeta_none = "\"Bees Together Strong\""
+STRINGS.SKIN_DESCRIPTIONS.zeta_none = "With all that yellow fuzz it makes your head seem really hugable."
+
+STRINGS.SKIN_NAMES.zeta_rose = "The Roseate"
+STRINGS.SKIN_QUOTES.zeta_rose = "\"I think I got more on me than in the hive!\""
+STRINGS.SKIN_DESCRIPTIONS.zeta_rose = "Wuzzy loves pollinating flowers at dawn with his fuzzy flying compainions."
