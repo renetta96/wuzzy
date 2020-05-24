@@ -123,32 +123,6 @@ local function OnEat(inst, data)
   end
 end
 
-local function OnAttacked(inst, data)
-  local attacker = data and data.attacker
-
-  if not attacker then
-    return
-  end
-
-  if not (attacker:HasTag("mutant") or attacker:HasTag("player")) then
-    inst.components.combat:ShareTarget(attacker, TUNING.OZZY_SHARE_TARGET_DIST,
-      function(dude)
-        return dude:HasTag("mutant") and not (dude:IsInLimbo() or dude.components.health:IsDead())
-      end,
-      TUNING.OZZY_MAX_SHARE_TARGETS)
-
-    local hive = GetClosestInstWithTag("mutantbeehive", inst, TUNING.OZZY_SHARE_TARGET_DIST)
-    if hive then
-      hive:OnHit(attacker)
-    end
-  end
-end
-
-local function OnKillOther(inst, data)
-  local victim = data.victim
-  metapisutil.SpawnParasitesOnKill(inst, victim)
-end
-
 local function OnNumStoreChange(inst)
   local numstore = inst.components.beesummoner.numstore
   local maxstore = inst.components.beesummoner.maxstore
@@ -242,8 +216,6 @@ local master_postinit = function(inst)
 
   inst._eatenpollens = 0
   inst:ListenForEvent("oneat", OnEat)
-  inst:ListenForEvent("attacked", OnAttacked)
-  -- inst:ListenForEvent("killed", OnKillOther)
 
   inst.OnLoad = onload
   inst.OnNewSpawn = onload

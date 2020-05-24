@@ -15,6 +15,7 @@ local assets =
   Asset("ANIM", "anim/mutantdefenderhive.zip"),
   Asset("ANIM", "anim/mutantassassinhive.zip"),
   Asset("ANIM", "anim/mutantrangerhive.zip"),
+  Asset("ANIM", "anim/mutantteleportal.zip"),
   Asset("SOUND", "sound/bee.fsb"),
   Asset("ANIM", "anim/ui_chest_3x2.zip"),
 }
@@ -339,7 +340,29 @@ local tocheck = {
   mutantkillerbee = true
 }
 
+local function GetSource(inst)
+  if not inst._ownerid then
+    return nil
+  end
+
+  for i, player in ipairs(AllPlayers) do
+    if player:HasTag('player') and player.userid == inst._ownerid then
+      return player._hive
+    end
+  end
+
+  return nil
+end
+
 local function CanSpawn(inst, prefab)
+  if inst.prefab == 'mutantteleportal' then
+    inst = GetSource(inst)
+  end
+
+  if not inst then
+    return false
+  end
+
   if prefab == "mutantkillerbee" then
     return true
   end
@@ -466,7 +489,7 @@ local growth_stages =
 
 -- Upgrade and Grow */
 
-local function WatchEnemy(inst)
+local function FindEnemy(inst)
   local nearbyplayer, range = FindClosestPlayerToInst(inst, TUNING.MUTANT_BEEHIVE_WATCH_DIST, true)
 
   local enemy = (nearbyplayer and
@@ -489,6 +512,12 @@ local function WatchEnemy(inst)
       { "mutant", "INLIMBO", "player" },
       { "monster", "insect", "animal", "character" }
     )
+
+  return enemy
+end
+
+local function WatchEnemy(inst)
+  local enemy = FindEnemy(inst)
 
   if enemy then
     inst:Say(SPEECH.ATTACK)
@@ -662,12 +691,6 @@ local function AddHoneyProgress(inst)
 
   local pollen = SpawnPrefab("zetapollen")
   inst.components.container:GiveItem(pollen)
-
-  -- One more pollen when fully upgraded
-  if inst.components.upgradeable.stage >= 3 then
-    local pollen = SpawnPrefab("zetapollen")
-    inst.components.container:GiveItem(pollen)
-  end
 end
 
 local function itemtestfn(inst, item, slot)
@@ -980,6 +1003,138 @@ local function assassinhive()
   return inst
 end
 
+local function onteleportback(inst)
+  local source = GetSource(inst)
+
+  if source and source.components.childspawner then
+    source.components.childspawner:AddEmergencyChildrenInside(1)
+  end
+end
+
+local function WatchEnemyTeleportal(inst)
+  local enemy = FindEnemy(inst)
+
+  if enemy then
+    inst.components.childspawner:ReleaseAllChildren(enemy)
+  end
+end
+
+local function onteleporthammered(inst)
+  if inst.components.burnable ~= nil and inst.components.burnable:IsBurning() then
+    inst.components.burnable:Extinguish()
+  end
+  inst.components.lootdropper:DropLoot()
+  local fx = SpawnPrefab("collapse_small")
+  fx.Transform:SetPosition(inst.Transform:GetWorldPosition())
+  fx:SetMaterial("straw")
+  inst:Remove()
+end
+
+local function teleportal()
+  local inst = CreateEntity()
+
+  inst.entity:AddTransform()
+  inst.entity:AddAnimState()
+  inst.entity:AddSoundEmitter()
+  inst.entity:AddMiniMapEntity()
+  inst.entity:AddNetwork()
+
+  MakeObstaclePhysics(inst, 0.5)
+
+  inst.MiniMapEntity:SetIcon("mutantteleportal.tex")
+
+  inst.AnimState:SetBank("mutantteleportal")
+  inst.AnimState:SetBuild("mutantteleportal")
+  inst.AnimState:PlayAnimation("idle", true)
+
+  inst:AddTag("mutantteleportal")
+
+  ---------------------------
+
+  MakeSnowCoveredPristine(inst)
+
+  inst.entity:SetPristine()
+
+  if not TheWorld.ismastersim then
+    return inst
+  end
+
+  -------------------
+
+  inst:AddComponent("childspawner")
+  inst.components.childspawner.emergencychildname = "mutantkillerbee"
+  inst.components.childspawner.emergencychildrenperplayer = TUNING.MUTANT_BEEHIVE_EMERGENCY_BEES_PER_PLAYER
+  inst.components.childspawner:SetEmergencyRadius(TUNING.MUTANT_BEEHIVE_EMERGENCY_RADIUS)
+  inst.components.childspawner:SetMaxChildren(0)
+  inst.components.childspawner:SetMaxEmergencyChildren(4)
+  inst.components.childspawner:SetRegenPeriod(5)
+  inst:ListenForEvent("childgoinghome", onteleportback)
+
+  local oldSpawnEmergencyChild = inst.components.childspawner.SpawnEmergencyChild
+  inst.components.childspawner.SpawnEmergencyChild = function(comp, target, prefab, ...)
+    local source = GetSource(inst)
+
+    if not source then
+      return
+    end
+
+    local newprefab = PickChildPrefab(inst)
+    local child = oldSpawnEmergencyChild(comp, target, newprefab, ...)
+
+    if child ~= nil then
+      source.components.childspawner.emergencychildreninside = source.components.childspawner.emergencychildreninside - 1
+    end
+
+    return child
+  end
+
+  local oldCanEmergencySpawn = inst.components.childspawner.CanEmergencySpawn
+  inst.components.childspawner.CanEmergencySpawn = function(comp)
+    local source = GetSource(inst)
+
+    if source and source:IsValid() and
+      source.components.childspawner and
+      source.components.childspawner.emergencychildreninside > 0 then
+        return oldCanEmergencySpawn(comp)
+    end
+
+    return false
+  end
+
+  inst:AddComponent("combat")
+
+  inst:DoPeriodicTask(1, WatchEnemyTeleportal)
+
+  ---------------------
+  MakeLargeBurnable(inst)
+  ---------------------
+
+  ---------------------
+  inst:AddComponent("workable")
+  inst.components.workable:SetWorkAction(ACTIONS.HAMMER)
+  inst.components.workable:SetWorkLeft(5)
+  inst.components.workable:SetOnFinishCallback(onteleporthammered)
+
+  ---------------------
+  inst:AddComponent("lootdropper")
+
+  ---------------------
+  MakeLargePropagator(inst)
+  MakeSnowCovered(inst)
+
+  ---------------------
+
+  inst:AddComponent("inspectable")
+
+  inst.OnSave = OnSave
+  inst.OnLoad = OnLoad
+  inst.GetSource = GetSource
+
+  inst:ListenForEvent("onbuilt", onbuilt)
+
+  return inst
+end
+
 STRINGS.MUTANTBEEHIVE = "Metapis Mother Hive"
 STRINGS.NAMES.MUTANTBEEHIVE = "Metapis Mother Hive"
 STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTBEEHIVE = "\"Apis\" is the Latin word for \"bee\"."
@@ -999,10 +1154,17 @@ STRINGS.NAMES.MUTANTASSASSINHIVE = "Metapis Assasin Hive"
 STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTASSASSINHIVE = "Spiky."
 STRINGS.RECIPE_DESC.MUTANTASSASSINHIVE = "Adds Metapis Assasin to Mother Hive."
 
+STRINGS.MUTANTTELEPORTAL = "Metapis Teleportal"
+STRINGS.NAMES.MUTANTTELEPORTAL = "Metapis Teleportal"
+STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTTELEPORTAL = "Magical transportation."
+STRINGS.RECIPE_DESC.MUTANTTELEPORTAL = "Summons Metapis from Mother Hive."
+
 return Prefab("mutantbeehive", fn, assets, prefabs),
   Prefab("mutantdefenderhive", defenderhive, assets, prefabs),
   MakePlacer("mutantdefenderhive_placer", "mutantdefenderhive", "mutantdefenderhive", "idle"),
   Prefab("mutantrangerhive", rangerhive, assets, prefabs),
   MakePlacer("mutantrangerhive_placer", "mutantrangerhive", "mutantrangerhive", "idle"),
   Prefab("mutantassassinhive", assassinhive, assets, prefabs),
-  MakePlacer("mutantassassinhive_placer", "mutantassassinhive", "mutantassassinhive", "idle")
+  MakePlacer("mutantassassinhive_placer", "mutantassassinhive", "mutantassassinhive", "idle"),
+  Prefab("mutantteleportal", teleportal, assets, prefabs),
+  MakePlacer("mutantteleportal_placer", "mutantteleportal", "mutantteleportal", "idle")

@@ -23,7 +23,10 @@ local function OnAttacked(inst, data)
 		local home = inst.components.homeseeker.home
 		if home and home.components.childspawner then
 			targetshares = targetshares - home.components.childspawner.childreninside
-			home:OnHit(attacker)
+
+			if home.OnHit then
+				home:OnHit(attacker)
+			end
 		end
 	end
 	inst.components.combat:ShareTarget(attacker, SHARE_TARGET_DIST, function(dude)
@@ -32,7 +35,10 @@ local function OnAttacked(inst, data)
 				return false
 			end
 		end
-		return dude:HasTag("mutant") and not (dude:IsInLimbo() or dude.components.health:IsDead())
+		return dude:HasTag("mutant") and
+			not (dude:IsInLimbo() or
+				(dude.components.health and dude.components.health:IsDead())
+			)
 	end, targetshares)
 end
 

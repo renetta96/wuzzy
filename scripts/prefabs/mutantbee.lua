@@ -231,6 +231,10 @@ local function GetHiveUpgradeStage(inst)
 		hive = inst.components.follower.leader._hive
 	end
 
+	if hive and hive.prefab == 'mutantteleportal' then
+		hive = hive:GetSource()
+	end
+
 	if not hive or hive.prefab ~= 'mutantbeehive' or not hive:IsValid() then
 		return 0
 	end

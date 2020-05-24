@@ -35,6 +35,8 @@ Assets = {
   Asset( "ATLAS", "images/map_icons/mutantrangerhive.xml" ),
   Asset( "IMAGE", "images/map_icons/mutantassassinhive.tex" ),
   Asset( "ATLAS", "images/map_icons/mutantassassinhive.xml" ),
+  Asset( "IMAGE", "images/map_icons/mutantteleportal.tex" ),
+  Asset( "ATLAS", "images/map_icons/mutantteleportal.xml" ),
 
   Asset( "IMAGE", "images/avatars/avatar_zeta.tex" ),
   Asset( "ATLAS", "images/avatars/avatar_zeta.xml" ),
@@ -64,6 +66,8 @@ Assets = {
   Asset( "ATLAS", "images/inventoryimages/mutantrangerhive.xml" ),
   Asset( "IMAGE", "images/inventoryimages/mutantassassinhive.tex" ),
   Asset( "ATLAS", "images/inventoryimages/mutantassassinhive.xml" ),
+  Asset( "IMAGE", "images/inventoryimages/mutantteleportal.tex" ),
+  Asset( "ATLAS", "images/inventoryimages/mutantteleportal.xml" ),
 }
 
 RemapSoundEvent( "dontstarve/characters/zeta/hurt", "zeta/zeta/hurt" )
@@ -199,6 +203,7 @@ AddMinimapAtlas("images/map_icons/mutantbeehive.xml")
 AddMinimapAtlas("images/map_icons/mutantdefenderhive.xml")
 AddMinimapAtlas("images/map_icons/mutantrangerhive.xml")
 AddMinimapAtlas("images/map_icons/mutantassassinhive.xml")
+AddMinimapAtlas("images/map_icons/mutantteleportal.xml")
 
 -- Add mod character to mod character list. Also specify a gender. Possible genders are MALE, FEMALE, ROBOT, NEUTRAL, and PLURAL.
 AddModCharacter("zeta", "MALE")
@@ -519,7 +524,7 @@ local mutantassassinhive_rec = AddRecipe("mutantassassinhive",
   {
     Ingredient("houndstooth", 15),
     Ingredient("honeycomb", 1),
-    Ingredient("nightmarefuel", 40)
+    Ingredient("nightmarefuel", 20)
   },
   RECIPETABS.TOWN,
   TECH.SCIENCE_TWO,
@@ -529,6 +534,21 @@ local mutantassassinhive_rec = AddRecipe("mutantassassinhive",
   "images/inventoryimages/mutantassassinhive.xml",
   "mutantassassinhive.tex",
   slavehivetestfn
+)
+
+local mutantteleportal_rec = AddRecipe("mutantteleportal",
+  {
+    Ingredient("honeycomb", 1),
+    Ingredient("nightmarefuel", 4),
+    Ingredient("purplegem", 3),
+  },
+  RECIPETABS.MAGIC,
+  TECH.MAGIC_THREE,
+  "mutantteleportal_placer",
+  nil, nil, nil,
+  "beemaster",
+  "images/inventoryimages/mutantteleportal.xml",
+  "mutantteleportal.tex"
 )
 
 GLOBAL.ACTIONS.UPGRADE.priority = GLOBAL.ACTIONS.STORE.priority + 1 -- To show over ACTIONS.STORE
