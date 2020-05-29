@@ -68,6 +68,8 @@ Assets = {
   Asset( "ATLAS", "images/inventoryimages/mutantassassinhive.xml" ),
   Asset( "IMAGE", "images/inventoryimages/mutantteleportal.tex" ),
   Asset( "ATLAS", "images/inventoryimages/mutantteleportal.xml" ),
+  Asset("ATLAS", "images/inventoryimages/mutantbeecocoon.xml"),
+  Asset("IMAGE", "images/inventoryimages/mutantbeecocoon.tex"),
 }
 
 RemapSoundEvent( "dontstarve/characters/zeta/hurt", "zeta/zeta/hurt" )
@@ -88,9 +90,9 @@ local TECH = GLOBAL.TECH
 local SpawnPrefab = GLOBAL.SpawnPrefab
 
 -- Stats
-TUNING.OZZY_MAX_HEALTH = 175
-TUNING.OZZY_MAX_SANITY = 100
-TUNING.OZZY_MAX_HUNGER = 125
+TUNING.ZETA_HEALTH = 175
+TUNING.ZETA_SANITY = 100
+TUNING.ZETA_HUNGER = 125
 TUNING.OZZY_DEFAULT_DAMAGE_MULTIPLIER = 0.75
 TUNING.OZZY_HUNGER_SCALE = 1.1
 TUNING.OZZY_NUM_POLLENS_PER_HONEY = 5
@@ -102,8 +104,21 @@ TUNING.OZZY_WINTER_SPEED_MULTIPLIER = 0.85
 TUNING.OZZY_MAX_SUMMON_BEES = 4
 TUNING.OZZY_SUMMON_CHANCE = 0.3
 TUNING.OZZY_MAX_BEES_STORE = 7
-TUNING.OZZY_HONEYED_FOOD_BONUS = 0.35
+TUNING.OZZY_HONEYED_FOOD_BONUS = 0.15
 TUNING.OZZY_PICK_FLOWER_SANITY = -3 * TUNING.SANITY_TINY
+
+TUNING.GAMEMODE_STARTING_ITEMS.DEFAULT.ZETA = {
+  "mutantbeecocoon",
+  "honey",
+  "honey",
+  "honey"
+}
+TUNING.GAMEMODE_STARTING_ITEMS.LAVAARENA.ZETA = {}
+TUNING.GAMEMODE_STARTING_ITEMS.QUAGMIRE.ZETA = {}
+TUNING.STARTING_ITEM_IMAGE_OVERRIDE.mutantbeecocoon = {
+  atlas = "images/inventoryimages/mutantbeecocoon.xml",
+  image = "mutantbeecocoon.tex"
+}
 
 -- Mutant bee stats
 TUNING.MUTANT_BEE_HEALTH = 100
@@ -188,8 +203,9 @@ TUNING.MELISSA_USES = 200
 -- The character select screen lines
 STRINGS.CHARACTER_TITLES.zeta = "The Buzzy"
 STRINGS.CHARACTER_NAMES.zeta = "Wuzzy"
-STRINGS.CHARACTER_DESCRIPTIONS.zeta = "*Leads his own species and hive\n*Has symbotic bees inside his body\n*Can pick pollen from flowers\n*Loves honeyed foods"
+STRINGS.CHARACTER_DESCRIPTIONS.zeta = "*Leads his own species and hive\n*Fights alongside his symbiotic bees\n*Can pick pollen from flowers\n*Loves honeyed foods"
 STRINGS.CHARACTER_QUOTES.zeta = "\"Bees together strong.\""
+STRINGS.CHARACTER_SURVIVABILITY.zeta = "Grim"
 
 -- Custom speech strings
 STRINGS.CHARACTERS.ZETA = require "speech_zeta"

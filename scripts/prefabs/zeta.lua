@@ -5,24 +5,24 @@ local assets = {
   Asset("SCRIPT", "scripts/prefabs/player_common.lua"),
   Asset("ANIM", "anim/zeta.zip"),
 }
+
 local prefabs = {
   "mutantbeecocoon",
   "honey"
 }
 
--- Custom starting items
-local start_inv = {
-  "mutantbeecocoon",
-  "honey",
-  "honey",
-  "honey"
-}
+local start_inv = {}
+for k, v in pairs(TUNING.GAMEMODE_STARTING_ITEMS) do
+    start_inv[string.lower(k)] = v.ZETA or {}
+end
+
+prefabs = FlattenTree({ prefabs, start_inv }, true)
 
 local tagtoprefab = {
-  defender="mutantdefenderbee",
-  soldier="mutantkillerbee",
-  ranger="mutantrangerbee",
-  assassin="mutantassassinbee"
+  defender = "mutantdefenderbee",
+  soldier = "mutantkillerbee",
+  ranger = "mutantrangerbee",
+  assassin = "mutantassassinbee"
 }
 
 local function CanSummon(inst, prefab)
@@ -130,25 +130,6 @@ local function OnNumStoreChange(inst)
   inst.components.temperature.inherentinsulation = (TUNING.INSULATION_MED / maxstore) * numstore - TUNING.INSULATION_SMALL
 end
 
--- When the character is revived from human
-local function onbecamehuman(inst)
-end
-
-local function onbecameghost(inst)
-end
-
--- When loading or spawning the character
-local function onload(inst)
-  inst:ListenForEvent("ms_respawnedfromghost", onbecamehuman)
-  inst:ListenForEvent("ms_becameghost", onbecameghost)
-
-  if inst:HasTag("playerghost") then
-    onbecameghost(inst)
-  else
-    onbecamehuman(inst)
-  end
-end
-
 local function SeasonalChanges(inst, season)
   if season == SEASONS.SPRING then
     inst.components.locomotor:SetExternalSpeedMultiplier(inst, "season_speed_mod", TUNING.OZZY_SPRING_SPEED_MULTIPLIER)
@@ -191,18 +172,17 @@ end
 
 -- This initializes for the server only. Components are added here.
 local master_postinit = function(inst)
-  -- choose which sounds this character will play
-
-  -- Uncomment if "wathgrithr"(Wigfrid) or "webber" voice is used
-  -- inst.talker_path_override = "dontstarve_DLC001/characters/"
+  inst.starting_inventory = start_inv[TheNet:GetServerGameMode()] or start_inv.default
 
   -- Stats
-  inst.components.health:SetMaxHealth(TUNING.OZZY_MAX_HEALTH)
-  inst.components.hunger:SetMax(TUNING.OZZY_MAX_HUNGER)
-  inst.components.sanity:SetMax(TUNING.OZZY_MAX_SANITY)
+  inst.components.health:SetMaxHealth(TUNING.ZETA_HEALTH)
+  inst.components.hunger:SetMax(TUNING.ZETA_HUNGER)
+  inst.components.sanity:SetMax(TUNING.ZETA_SANITY)
   inst.components.hunger.hungerrate = TUNING.WILSON_HUNGER_RATE * TUNING.OZZY_HUNGER_SCALE
   inst.components.combat.damagemultiplier = TUNING.OZZY_DEFAULT_DAMAGE_MULTIPLIER
   inst.components.temperature.inherentinsulation = -TUNING.INSULATION_SMALL
+
+  inst.components.foodaffinity:AddPrefabAffinity("honeyham", TUNING.AFFINITY_15_CALORIES_LARGE)
 
   inst:AddComponent("beesummoner")
   inst.components.beesummoner:SetMaxChildren(TUNING.OZZY_MAX_SUMMON_BEES)
@@ -217,10 +197,7 @@ local master_postinit = function(inst)
   inst._eatenpollens = 0
   inst:ListenForEvent("oneat", OnEat)
 
-  inst.OnLoad = onload
-  inst.OnNewSpawn = onload
-
   inst:DoTaskInTime(0, OnInit)
 end
 
-return MakePlayerCharacter("zeta", prefabs, assets, common_postinit, master_postinit, start_inv)
+return MakePlayerCharacter("zeta", prefabs, assets, common_postinit, master_postinit)
