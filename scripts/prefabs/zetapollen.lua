@@ -6,23 +6,25 @@ local assets =
 }
 
 local function OnPutInInventory(inst, owner)
-  if owner and owner.prefab == 'mutantbeehive' then
+  if owner and owner.prefab == 'mutantbeehive' and inst.components.perishable then
     inst.components.perishable:StopPerishing()
   end
 end
 
 local function onremovedfn(inst, owner)
-  if owner and owner.prefab == "mutantbeehive" then
+  if owner and owner.prefab == "mutantbeehive" and inst.components.perishable then
     inst.components.perishable:StartPerishing()
   end
 end
 
 local function checkiswet(inst)
-  if inst:GetIsWet() then
-    inst.components.perishable:SetLocalMultiplier(5)
-  else
-    inst.components.perishable:SetLocalMultiplier(1)
-  end
+	if inst.components.perishable then
+	  if inst:GetIsWet() then
+	    inst.components.perishable:SetLocalMultiplier(5)
+	  else
+	    inst.components.perishable:SetLocalMultiplier(1)
+	  end
+	end
 end
 
 local function onperish(inst)
