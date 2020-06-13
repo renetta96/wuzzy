@@ -88,6 +88,7 @@ local Ingredient = GLOBAL.Ingredient
 local RECIPETABS = GLOBAL.RECIPETABS
 local TECH = GLOBAL.TECH
 local SpawnPrefab = GLOBAL.SpawnPrefab
+local Action = GLOBAL.Action
 
 -- Stats
 TUNING.ZETA_HEALTH = 175
@@ -102,7 +103,7 @@ TUNING.OZZY_DEFAUT_SPEED_MULTIPLIER = 1.0
 TUNING.OZZY_SPRING_SPEED_MULTIPLIER = 1.15
 TUNING.OZZY_WINTER_SPEED_MULTIPLIER = 0.85
 TUNING.OZZY_MAX_SUMMON_BEES = 4
-TUNING.OZZY_SUMMON_CHANCE = 0.3
+TUNING.OZZY_SUMMON_CHANCE = 0.4
 TUNING.OZZY_MAX_BEES_STORE = 7
 TUNING.OZZY_HONEYED_FOOD_BONUS = 0.15
 TUNING.OZZY_PICK_FLOWER_SANITY = -3 * TUNING.SANITY_TINY
@@ -568,6 +569,20 @@ local mutantteleportal_rec = AddRecipe("mutantteleportal",
 )
 
 GLOBAL.ACTIONS.UPGRADE.priority = GLOBAL.ACTIONS.STORE.priority + 1 -- To show over ACTIONS.STORE
+GLOBAL.ACTIONS.MUTANTBEE_DESPAWN = Action()
+GLOBAL.ACTIONS.MUTANTBEE_DESPAWN.fn = function(act)
+  if act.target ~= nil then
+    if act.target.components.beesummoner then
+      return act.target.components.beesummoner:Despawn(act.doer)
+    end
+
+    act.doer:Remove()
+    return true
+  elseif act.pos ~= nil then
+      act.doer:Remove()
+      return true
+  end
+end
 
 local Badge = require("widgets/badge")
 

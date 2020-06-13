@@ -53,8 +53,29 @@ local function GoHomeAction(inst)
 	end
 end
 
+local function ShouldDespawn(inst)
+	if inst._lastcombattime ~= nil and GetTime() <= inst._lastcombattime + 10 then
+		return false
+	end
+
+	return true
+end
+
+local function DespawnAction(inst)
+	local follower = inst.components.follower
+	if follower and follower.leader
+		and follower.leader:IsValid()
+		and follower.leader.components.health
+		and not follower.leader.components.health:IsDead()
+	then
+		return BufferedAction(inst, follower.leader, ACTIONS.MUTANTBEE_DESPAWN)
+	end
+end
+
 return {
 	GoHomeAction = GoHomeAction,
+	ShouldDespawn = ShouldDespawn,
+	DespawnAction = DespawnAction,
 	OnAttacked = OnAttacked,
 	RUN_AWAY_DIST = RUN_AWAY_DIST,
 	SEE_FLOWER_DIST = SEE_FLOWER_DIST,

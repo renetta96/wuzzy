@@ -123,10 +123,13 @@ function AssassinBeeBrain:OnStart()
 			),
 			WhileNode( function() return self.inst.components.combat.target == nil or not self.inst.components.combat:InCooldown() end, "AttackMomentarily", ChaseAndAttack(self.inst, MAX_CHASE_TIME, MAX_CHASE_DIST) ),
 
+			IfNode(function() return beecommon.ShouldDespawn(self.inst) end, "TryDespawn",
+				DoAction(self.inst, function() return beecommon.DespawnAction(self.inst) end, "Despawn", true)
+			),
 			Follow(self.inst, function() return GetLeader(self.inst) end, MIN_FOLLOW_DIST, TARGET_FOLLOW_DIST, MAX_FOLLOW_DIST),
 			IfNode(function() return GetLeader(self.inst) ~= nil end, "HasLeader",
 				FaceEntity(self.inst, GetFaceTargetFn, KeepFaceTargetFn )),
-			DoAction(self.inst, function() return beecommon.GoHomeAction(self.inst) end, "go home", true ),
+			DoAction(self.inst, function() return beecommon.GoHomeAction(self.inst) end, "go home", true),
 			Wander(self.inst, function() return self.inst.components.knownlocations:GetLocation("home") end, beecommon.MAX_WANDER_DIST)
 		}, 0.25)
 

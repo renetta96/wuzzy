@@ -45,6 +45,10 @@ function DefenderBeeBrain:OnStart()
 				"Attack",
 				ChaseAndAttack(self.inst, MAX_CHASE_TIME, MAX_CHASE_DIST)
 			),
+
+			IfNode(function() return beecommon.ShouldDespawn(self.inst) end, "TryDespawn",
+				DoAction(self.inst, function() return beecommon.DespawnAction(self.inst) end, "Despawn", true)
+			),
 			Follow(self.inst, function() return GetLeader(self.inst) end, MIN_FOLLOW_DIST, TARGET_FOLLOW_DIST, MAX_FOLLOW_DIST),
 			IfNode(function() return GetLeader(self.inst) ~= nil end, "HasLeader",
 				FaceEntity(self.inst, GetFaceTargetFn, KeepFaceTargetFn )),

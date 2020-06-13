@@ -2,7 +2,8 @@ require("stategraphs/commonstates")
 
 local actionhandlers =
 {
-    ActionHandler(ACTIONS.GOHOME, "action")
+    ActionHandler(ACTIONS.GOHOME, "action"),
+    ActionHandler(ACTIONS.MUTANTBEE_DESPAWN, 'action')
 }
 
 local events =
@@ -354,4 +355,4 @@ CommonStates.AddFrozenStates(states,
         RaiseFlyingCreature(inst)
     end)
 
-return StateGraph("SGdefenderbee", states, events, "idle", actionhandlers)
+return StateGraph("mutantdefenderbee", states, events, "idle", actionhandlers)

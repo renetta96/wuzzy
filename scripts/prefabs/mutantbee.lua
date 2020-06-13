@@ -246,6 +246,11 @@ local function GetHiveUpgradeStage(inst)
 	return hive.components.upgradeable.stage
 end
 
+local function TrackLastCombatTime(inst)
+	inst:ListenForEvent('onattackother', function(inst) inst._lastcombattime = GetTime() end)
+	inst:ListenForEvent('attacked', function(inst) inst._lastcombattime = GetTime() end)
+end
+
 local function commonfn(bank, build, tags)
 	local inst = CreateEntity()
 
@@ -288,7 +293,7 @@ local function commonfn(bank, build, tags)
 	inst:AddComponent("locomotor") -- locomotor must be constructed before the stategraph
 	inst.components.locomotor:EnableGroundSpeedMultiplier(false)
 	inst.components.locomotor:SetTriggersCreep(false)
-	inst:SetStateGraph("SGbee")
+	inst:SetStateGraph("SGmutantbee")
 
 	---------------------
 
@@ -328,6 +333,8 @@ local function commonfn(bank, build, tags)
 
 	inst:ListenForEvent("attacked", beecommon.OnAttacked)
 	inst.Transform:SetScale(1.2, 1.2, 1.2)
+
+	TrackLastCombatTime(inst)
 
 	inst.buzzing = true
 	inst.EnableBuzz = EnableBuzz
@@ -435,7 +442,7 @@ local function killerbee()
 
 	inst.components.combat:SetDefaultDamage(TUNING.MUTANT_BEE_DAMAGE)
 	inst.components.combat:SetAttackPeriod(TUNING.MUTANT_BEE_ATTACK_PERIOD)
-	inst.components.combat:SetRetargetFunction(1, KillerRetarget)
+	inst.components.combat:SetRetargetFunction(0.5, KillerRetarget)
 
 	inst:SetBrain(killerbrain)
 	inst.sounds = killersounds
@@ -819,7 +826,7 @@ local function defenderbee()
   inst.components.combat:SetDefaultDamage(TUNING.MUTANT_BEE_DEFENDER_DAMAGE)
   inst.components.combat:SetAttackPeriod(TUNING.MUTANT_BEE_DEFENDER_ATTACK_PERIOD)
   inst.components.combat:SetRange(TUNING.MUTANT_BEE_DEFENDER_ATTACK_RANGE)
-  inst.components.combat:SetRetargetFunction(1, KillerRetarget)
+  inst.components.combat:SetRetargetFunction(0.5, KillerRetarget)
   inst.components.combat.battlecryenabled = false
   inst.components.combat.hiteffectsymbol = "mane"
 
@@ -840,6 +847,8 @@ local function defenderbee()
 
 	inst:ListenForEvent("newcombattarget", OnDefenderStartCombat)
 	inst:ListenForEvent("droppedtarget", OnDefenderStopCombat)
+
+	TrackLastCombatTime(inst)
 
 	inst:DoTaskInTime(0, function(inst) OnInitUpgrade(inst, CheckDefenderUpgrade, 0) end)
 

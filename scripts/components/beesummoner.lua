@@ -187,19 +187,30 @@ function BeeSummoner:GetRegenTickPercent()
 	return self.currenttick / self.maxticks
 end
 
-local function DoRegenTick(inst, self)
-	self.currenttick = self.currenttick + 1
+function BeeSummoner:SetTick(tick)
+	self.currenttick = tick
 	self.inst:PushEvent("onregentick", {currenttick = self.currenttick})
+end
+
+function BeeSummoner:AddNumStore(num)
+	self.numstore = math.min(math.max(0, self.numstore + num), self:GetTotalStore())
+	self.inst:PushEvent("onnumstorechange", {numstore = self.numstore})
+
+	if self.numstore >= self:GetTotalStore() then
+		self:SetTick(0)
+		self:StopRegen()
+	end
+end
+
+local function DoRegenTick(inst, self)
+	self:SetTick(self.currenttick + 1)
 	-- print("REGEN, TICK : ", self.currenttick)
 
 	if self.currenttick >= self.maxticks then
-		self.numstore = math.min(self.numstore + 1, self:GetTotalStore())
-		self.currenttick = 0
-		self.inst:PushEvent("onregentick", {currenttick = self.currenttick})
-		self.inst:PushEvent("onnumstorechange", {numstore = self.numstore})
+		self:AddNumStore(1)
+		self:SetTick(0)
 
-		if self.numstore == self:GetTotalStore() then
-			self:StopRegen()
+		if self.numstore >= self:GetTotalStore() then
 			return
 		end
 	end
@@ -224,7 +235,7 @@ function BeeSummoner:StartRegen(tick)
 	end
 
 	if not self.regentask then
-		self.currenttick = tick or 0
+		self:SetTick(tick or 0)
 		local regentick = self:GetRegenTick()
 		-- print("START REGEN, REGEN TICK : ", regentick)
 		self.regentask = self.inst:DoTaskInTime(regentick, DoRegenTick, self)
@@ -276,8 +287,7 @@ function BeeSummoner:DoSummonChild(target)
 			child.components.combat:SetTarget(target)
 		end
 
-		self.numstore = self.numstore - 1
-		self.inst:PushEvent("onnumstorechange", {numstore = self.numstore})
+		self:AddNumStore(-1)
 		self:StartRegen()
 	end
 
@@ -288,6 +298,14 @@ function BeeSummoner:SummonChild(target)
 	local child = self:DoSummonChild(target)
 	if child ~= nil then
 		self:TakeOwnership(child)
+	end
+end
+
+function BeeSummoner:Despawn(child)
+	if self.children[child] then
+		child:Remove()
+		self:AddNumStore(1)
+		return true
 	end
 end
 
