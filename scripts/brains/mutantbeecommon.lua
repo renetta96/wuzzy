@@ -11,6 +11,11 @@ local MAX_TARGET_SHARES = 10
 
 local function OnAttacked(inst, data)
 	local attacker = data and data.attacker
+
+	if not attacker then
+		return
+	end
+
 	inst.components.combat:SetTarget(attacker)
 
 	-- If attacker has tag "mutant" or "beemaster" then don't share target
