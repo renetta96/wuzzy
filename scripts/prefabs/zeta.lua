@@ -1,5 +1,4 @@
 local MakePlayerCharacter = require "prefabs/player_common"
-local metapisutil = require "metapisutil"
 
 local assets = {
   Asset("SCRIPT", "scripts/prefabs/player_common.lua"),
@@ -96,31 +95,31 @@ local function OnEat(inst, data)
     return
   end
 
-  if data.food and data.food:HasTag("honeyed") then
-    local food = data.food
-    local bonus = TUNING.OZZY_HONEYED_FOOD_BONUS
+  -- if data.food and data.food:HasTag("honeyed") then
+  --   local food = data.food
+  --   local bonus = TUNING.OZZY_HONEYED_FOOD_BONUS
 
-    if inst.components.health then
-      local delta = food.components.edible:GetHealth(inst) * inst.components.eater.healthabsorption * bonus
-      if delta > 0 then
-        inst.components.health:DoDelta(delta, nil, food.prefab)
-      end
-    end
+  --   if inst.components.health then
+  --     local delta = food.components.edible:GetHealth(inst) * inst.components.eater.healthabsorption * bonus
+  --     if delta > 0 then
+  --       inst.components.health:DoDelta(delta, nil, food.prefab)
+  --     end
+  --   end
 
-    if inst.components.hunger then
-      local delta = food.components.edible:GetHunger(inst) * inst.components.eater.hungerabsorption * bonus
-      if delta > 0 then
-        inst.components.hunger:DoDelta(delta)
-      end
-    end
+  --   if inst.components.hunger then
+  --     local delta = food.components.edible:GetHunger(inst) * inst.components.eater.hungerabsorption * bonus
+  --     if delta > 0 then
+  --       inst.components.hunger:DoDelta(delta)
+  --     end
+  --   end
 
-    if inst.components.sanity then
-      local delta = food.components.edible:GetSanity(inst) * inst.components.eater.sanityabsorption * bonus
-      if delta > 0 then
-        inst.components.sanity:DoDelta(delta)
-      end
-    end
-  end
+  --   if inst.components.sanity then
+  --     local delta = food.components.edible:GetSanity(inst) * inst.components.eater.sanityabsorption * bonus
+  --     if delta > 0 then
+  --       inst.components.sanity:DoDelta(delta)
+  --     end
+  --   end
+  -- end
 end
 
 local function OnNumStoreChange(inst)
@@ -154,6 +153,33 @@ end
 local function OnInit(inst)
   OnNumStoreChange(inst)
   inst:DoPeriodicTask(1, CheckHiveUpgrade)
+
+  if inst.components.eater then
+    local oldeatfn = inst.components.eater.Eat
+    inst.components.eater.Eat = function (comp, food, ...)
+      local healthabsorption = comp.healthabsorption
+      local hungerabsorption = comp.hungerabsorption
+      local sanityabsorption = comp.sanityabsorption
+
+      if food and food:HasTag('honeyed') then
+        comp.healthabsorption = TUNING.OZZY_HONEYED_FOOD_ABSORPTION
+        comp.hungerabsorption = TUNING.OZZY_HONEYED_FOOD_ABSORPTION
+        comp.sanityabsorption = TUNING.OZZY_HONEYED_FOOD_ABSORPTION
+      else
+        comp.healthabsorption = TUNING.OZZY_NON_HONEYED_FOOD_ABSORPTION
+        comp.hungerabsorption = TUNING.OZZY_NON_HONEYED_FOOD_ABSORPTION
+        comp.sanityabsorption = TUNING.OZZY_NON_HONEYED_FOOD_ABSORPTION
+      end
+
+      local result = oldeatfn(comp, food, ...)
+
+      comp.healthabsorption = healthabsorption
+      comp.hungerabsorption = hungerabsorption
+      comp.sanityabsorption = sanityabsorption
+
+      return result
+    end
+  end
 end
 
 -- This initializes for both the server and client. Tags can be added here.

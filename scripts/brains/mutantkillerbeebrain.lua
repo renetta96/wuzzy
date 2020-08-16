@@ -9,7 +9,7 @@ require "behaviours/faceentity"
 
 local beecommon = require "brains/mutantbeecommon"
 
-local MAX_CHASE_DIST = 25
+local MAX_CHASE_DIST = 30
 local MAX_CHASE_TIME = 10
 
 local RUN_AWAY_DIST = 3

@@ -30,12 +30,10 @@ local function DoHealing(inst)
                 TUNING.ARMORHONEY_MAX_HEAL_PERCENT,
                 inst.components.perishable:GetPercent()
             )
-            local extra = Lerp(
-                TUNING.ARMORHONEY_MIN_HEAL_EXTRA,
-                TUNING.ARMORHONEY_MAX_HEAL_EXTRA,
-                inst.components.perishable:GetPercent()
+            local delta = math.max(
+                1,
+                math.floor((owner.components.health.maxhealth - owner.components.health.currenthealth) * percent)
             )
-            local delta = (owner.components.health.maxhealth - owner.components.health.currenthealth) * percent + extra
             owner.components.health:DoDelta(delta, nil, "armorhoney_health")
         end
     end

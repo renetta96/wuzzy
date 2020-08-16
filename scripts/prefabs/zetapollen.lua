@@ -45,6 +45,7 @@ local function fn()
   inst.AnimState:PlayAnimation("idle")
 
   inst.entity:SetPristine()
+  inst:AddTag('honeyed')
 
   if not TheWorld.ismastersim then
       return inst
@@ -69,7 +70,7 @@ local function fn()
 
   inst:AddComponent("edible")
   inst.components.edible.healthvalue = TUNING.HEALING_TINY
-  inst.components.edible.hungervalue = TUNING.CALORIES_TINY / 4
+  inst.components.edible.hungervalue = 0
 
   inst:AddComponent("inspectable")
 

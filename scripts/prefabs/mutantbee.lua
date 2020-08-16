@@ -1,5 +1,4 @@
 local beecommon = require "brains/mutantbeecommon"
-local metapisutil = require "metapisutil"
 
 local assets =
 {
@@ -869,10 +868,6 @@ STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTBEE = "Meta...apis? Metabee? Like meta
 STRINGS.MUTANTKILLERBEE = "Metapis Soldier"
 STRINGS.NAMES.MUTANTKILLERBEE = "Metapis Soldier"
 STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTKILLERBEE = "Little grunt."
-
-STRINGS.MUTANTPARASITEBEE = "Metapis Parasite"
-STRINGS.NAMES.MUTANTPARASITEBEE = "Metapis Parasite"
-STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTPARASITEBEE = "It's spawned from the dead body of an enemy."
 
 STRINGS.MUTANTRANGERBEE = "Metapis Ranger"
 STRINGS.NAMES.MUTANTRANGERBEE = "Metapis Ranger"
