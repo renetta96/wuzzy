@@ -142,14 +142,6 @@ local function OnRemoveEntity(inst)
   end
 end
 
-local function OnEntityWake(inst)
-  inst.SoundEmitter:PlaySound("dontstarve/bee/bee_hive_LP", "loop")
-end
-
-local function OnEntitySleep(inst)
-  inst.SoundEmitter:KillSound("loop")
-end
-
 local function StartSpawning(inst)
   if inst.components.childspawner ~= nil
     and not (inst.components.freezable ~= nil and inst.components.freezable:IsFrozen()) then
@@ -602,6 +594,10 @@ local function OnSave(inst, data)
   if inst._ownerid then
     data._ownerid = inst._ownerid
   end
+
+  if inst._gathertick then
+    data._gathertick = inst._gathertick
+  end
 end
 
 local function OnPlayerJoined(inst, player)
@@ -624,6 +620,10 @@ end
 local function OnLoad(inst, data)
   if data and data._ownerid then
     inst._ownerid = data._ownerid
+  end
+
+  if data and data._gathertick then
+    inst._gathertick = data._gathertick
   end
 end
 
@@ -705,6 +705,52 @@ local function onchildgoinghome(inst, data)
   end
 end
 
+local function DoGather(inst)
+  if not inst.components.upgradeable then
+    return
+  end
+
+  inst._gathertick = inst._gathertick or 0
+
+  local x, y, z = inst.Transform:GetWorldPosition()
+  local entities = TheSim:FindEntities(x, y, z, TUNING.MUTANT_BEEHIVE_WATCH_DIST, { "flower" })
+  local numflowers = #entities
+
+  if numflowers >= 5 - (inst.components.upgradeable.stage - 1) then
+    inst._gathertick = inst._gathertick + 1
+  end
+
+  -- stage 1: 8 ticks, stage 2: 7 ticks, stage 3: 6 ticks
+  local requiredticks = 9 - inst.components.upgradeable.stage
+  if inst._gathertick >= requiredticks then
+    inst._gathertick = inst._gathertick - requiredticks
+    AddHoneyProgress(inst)
+  end
+end
+
+local function StartBackgroundGatherTask(inst)
+  if inst._gathertask == nil then
+    inst._gathertask = inst:DoPeriodicTask(10, DoGather)
+  end
+end
+
+local function StopBackgroundGatherTask(inst)
+  if inst._gathertask then
+    inst._gathertask:Cancel()
+    inst._gathertask = nil
+  end
+end
+
+local function OnEntityWake(inst)
+  inst.SoundEmitter:PlaySound("dontstarve/bee/bee_hive_LP", "loop")
+  StopBackgroundGatherTask(inst)
+end
+
+local function OnEntitySleep(inst)
+  inst.SoundEmitter:KillSound("loop")
+  StartBackgroundGatherTask(inst)
+end
+
 local function fn()
   local inst = CreateEntity()
 
@@ -751,6 +797,8 @@ local function fn()
 
   -------------------
   inst:AddComponent("childspawner")
+  inst.components.childspawner.allowwater = true
+  inst.components.childspawner.allowboats = true
   inst.components.childspawner.childname = "mutantbee"
   inst.components.childspawner.emergencychildname = "mutantkillerbee"
   inst.components.childspawner.emergencychildrenperplayer = TUNING.MUTANT_BEEHIVE_EMERGENCY_BEES_PER_PLAYER
@@ -1062,6 +1110,8 @@ local function teleportal()
   -------------------
 
   inst:AddComponent("childspawner")
+  inst.components.childspawner.allowwater = true
+  inst.components.childspawner.allowboats = true
   inst.components.childspawner.emergencychildname = "mutantkillerbee"
   inst.components.childspawner.emergencychildrenperplayer = TUNING.MUTANT_BEEHIVE_EMERGENCY_BEES_PER_PLAYER
   inst.components.childspawner:SetEmergencyRadius(TUNING.MUTANT_BEEHIVE_EMERGENCY_RADIUS)
