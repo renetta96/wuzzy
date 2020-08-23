@@ -1,3 +1,17 @@
+local require = GLOBAL.require
+local STRINGS = GLOBAL.STRINGS
+local TUNING = GLOBAL.TUNING
+local Ingredient = GLOBAL.Ingredient
+local RECIPETABS = GLOBAL.RECIPETABS
+local TECH = GLOBAL.TECH
+local SpawnPrefab = GLOBAL.SpawnPrefab
+local Action = GLOBAL.Action
+--
+local _G = GLOBAL
+local PREFAB_SKINS = _G.PREFAB_SKINS
+local PREFAB_SKINS_IDS = _G.PREFAB_SKINS_IDS
+local SKIN_AFFINITY_INFO = GLOBAL.require("skin_affinity_info")
+
 PrefabFiles = {
   "mutantbeecocoon",
   "mutantbee",
@@ -70,6 +84,8 @@ Assets = {
   Asset( "ATLAS", "images/inventoryimages/mutantteleportal.xml" ),
   Asset("ATLAS", "images/inventoryimages/mutantbeecocoon.xml"),
   Asset("IMAGE", "images/inventoryimages/mutantbeecocoon.tex"),
+  Asset("ATLAS", "images/inventoryimages/armor_honey.xml"),
+  Asset("IMAGE", "images/inventoryimages/armor_honey.tex"),
 }
 
 RemapSoundEvent( "dontstarve/characters/zeta/hurt", "zeta/zeta/hurt" )
@@ -79,16 +95,6 @@ RemapSoundEvent( "dontstarve/characters/zeta/emote", "zeta/zeta/emote" ) --dst
 RemapSoundEvent( "dontstarve/characters/zeta/pose", "zeta/zeta/pose" ) --dst
 RemapSoundEvent( "dontstarve/characters/zeta/yawn", "zeta/zeta/yawn" ) --dst
 RemapSoundEvent( "dontstarve/characters/zeta/ghost_LP", "zeta/zeta/ghost_LP" ) --dst
-
-
-local require = GLOBAL.require
-local STRINGS = GLOBAL.STRINGS
-local TUNING = GLOBAL.TUNING
-local Ingredient = GLOBAL.Ingredient
-local RECIPETABS = GLOBAL.RECIPETABS
-local TECH = GLOBAL.TECH
-local SpawnPrefab = GLOBAL.SpawnPrefab
-local Action = GLOBAL.Action
 
 -- Stats
 TUNING.ZETA_HEALTH = 175
@@ -198,6 +204,8 @@ STRINGS.CHARACTER_NAMES.zeta = "Wuzzy"
 STRINGS.CHARACTER_DESCRIPTIONS.zeta = "*Leads his own species and hive\n*Fights alongside his symbiotic bees\n*Can pick pollen from flowers\n*Loves honeyed foods"
 STRINGS.CHARACTER_QUOTES.zeta = "\"Bees together strong.\""
 STRINGS.CHARACTER_SURVIVABILITY.zeta = "Grim"
+STRINGS.SKIN_NAMES.zeta_none = 'Wuzzy'
+STRINGS.SKIN_DESCRIPTIONS.zeta_none = 'The look of the bee master'
 
 -- Custom speech strings
 STRINGS.CHARACTERS.ZETA = require "speech_zeta"
@@ -212,6 +220,19 @@ AddMinimapAtlas("images/map_icons/mutantdefenderhive.xml")
 AddMinimapAtlas("images/map_icons/mutantrangerhive.xml")
 AddMinimapAtlas("images/map_icons/mutantassassinhive.xml")
 AddMinimapAtlas("images/map_icons/mutantteleportal.xml")
+
+--Skins api
+modimport("scripts/tools/skins_api")
+PREFAB_SKINS["zeta"] = {
+  "zeta_none"
+}
+PREFAB_SKINS_IDS = {}
+for prefab,skins in pairs(PREFAB_SKINS) do
+    PREFAB_SKINS_IDS[prefab] = {}
+    for k,v in pairs(skins) do
+          PREFAB_SKINS_IDS[prefab][v] = k
+    end
+end
 
 -- Add mod character to mod character list. Also specify a gender. Possible genders are MALE, FEMALE, ROBOT, NEUTRAL, and PLURAL.
 local skin_modes = {
@@ -461,7 +482,7 @@ AddRecipe("mutantbeecocoon",
   "mutantbeecocoon.tex"
 )
 
-local armorhoney_rec = AddRecipe("armorhoney",
+local armorhoney_rec = AddRecipe("armor_honey",
   {
     Ingredient("log", 10),
     Ingredient("rope", 1),

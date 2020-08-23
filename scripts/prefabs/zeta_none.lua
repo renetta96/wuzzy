@@ -10,17 +10,15 @@ local skins =
 	ghost_skin = "ghost_zeta_build",
 }
 
-local base_prefab = "zeta"
-
-local tags = {"ZETA", "CHARACTER"}
-
 return CreatePrefabSkin("zeta_none",
 {
-	base_prefab = base_prefab,
+	base_prefab = 'zeta',
+	build_name_override = 'zeta',
+	type = 'base',
+	rarity = "Character",
 	skins = skins,
 	assets = assets,
-	tags = tags,
-
+	skin_tags = { "BASE", "ZETA" },
 	skip_item_gen = true,
 	skip_giftable_gen = true,
 })

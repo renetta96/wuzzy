@@ -146,7 +146,6 @@ local function fn()
     inst:AddComponent("inspectable")
 
     inst:AddComponent("inventoryitem")
-    inst.components.inventoryitem.imagename = "armor_honey"
     inst.components.inventoryitem.atlasname = "images/inventoryimages/armor_honey.xml"
 
     inst:AddComponent("armor")
@@ -171,9 +170,9 @@ local function fn()
     return inst
 end
 
-STRINGS.ARMORHONEY = "Honey Suit"
-STRINGS.NAMES.ARMORHONEY = "Honey Suit"
-STRINGS.RECIPE_DESC.ARMORHONEY = "Sweet and protective"
-STRINGS.CHARACTERS.GENERIC.DESCRIBE.ARMORHONEY = "It's so sticky wearing it."
+STRINGS.ARMOR_HONEY = "Honey Suit"
+STRINGS.NAMES.ARMOR_HONEY = "Honey Suit"
+STRINGS.RECIPE_DESC.ARMOR_HONEY = "Sweet and protective"
+STRINGS.CHARACTERS.GENERIC.DESCRIBE.ARMOR_HONEY = "It's so sticky wearing it."
 
-return Prefab("armorhoney", fn, assets, prefabs)
+return Prefab("armor_honey", fn, assets, prefabs)
