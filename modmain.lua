@@ -214,7 +214,16 @@ AddMinimapAtlas("images/map_icons/mutantassassinhive.xml")
 AddMinimapAtlas("images/map_icons/mutantteleportal.xml")
 
 -- Add mod character to mod character list. Also specify a gender. Possible genders are MALE, FEMALE, ROBOT, NEUTRAL, and PLURAL.
-AddModCharacter("zeta", "MALE")
+local skin_modes = {
+  {
+    type = "ghost_skin",
+    anim_bank = "ghost",
+    idle_anim = "idle",
+    scale = 0.75,
+    offset = { 0, -25 }
+  },
+}
+AddModCharacter("zeta", "MALE", skin_modes)
 
 local function MakeHoneycombUpgrader(prefab)
   if not GLOBAL.TheWorld.ismastersim then
