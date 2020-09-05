@@ -6,6 +6,7 @@ local RECIPETABS = GLOBAL.RECIPETABS
 local TECH = GLOBAL.TECH
 local SpawnPrefab = GLOBAL.SpawnPrefab
 local Action = GLOBAL.Action
+local SEASONS = GLOBAL.SEASONS
 --
 local _G = GLOBAL
 local PREFAB_SKINS = _G.PREFAB_SKINS
@@ -289,6 +290,9 @@ end
 
 AddPrefabPostInit("honey", HandleHoneyPerishingInMetapisHive)
 
+local POLLEN_TICK_INTERVAL = 60
+local POLLEN_MAX_TICKS = 16
+
 local function removefx(inst)
   if inst._pollenfx then
     inst._pollenfx:Remove()
@@ -316,22 +320,38 @@ end
 local function ontick(inst)
   inst.pollenticks = inst.pollenticks - 1
   if inst.pollenticks > 0 then
-    inst:DoTaskInTime(100, ontick)
+    inst._pollentask = inst:DoTaskInTime(POLLEN_TICK_INTERVAL, ontick)
   else
+    inst._pollentask = nil
     inst.pollenpicked = false
     checkfx(inst)
+  end
+end
+
+local function startpollentask(inst)
+  if inst.pollenticks > 0 and
+    not inst._pollentask and
+    GLOBAL.TheWorld.state.season ~= SEASONS.WINTER then
+      inst._pollentask = inst:DoTaskInTime(POLLEN_TICK_INTERVAL, ontick)
+  end
+end
+
+local function stoppollentask(inst)
+  if inst._pollentask then
+    inst._pollentask:Cancel()
+    inst._pollentask = nil
   end
 end
 
 local function onpickedflowerfn(inst, picker)
   if picker ~= nil and not inst.pollenpicked then
     if picker.components.sanity ~= nil and not picker:HasTag("plantkin") then
-      picker.components.sanity:DoDelta(TUNING.SANITY_TINY)
+      picker.components.sanity:DoDelta(TUNING.SANITY_SUPERTINY)
     end
 
     inst.pollenpicked = true
-    inst.pollenticks = 5
-    inst:DoTaskInTime(100, ontick)
+    inst.pollenticks = POLLEN_MAX_TICKS
+    startpollentask(inst)
     checkfx(inst)
   end
 end
@@ -342,6 +362,22 @@ local function onplayerjoined(inst, player)
   else
     removefx(inst)
   end
+end
+
+local function onseasonchange(inst, season)
+  if not season then
+    season = GLOBAL.TheWorld.state.season
+  end
+
+  if season == SEASONS.WINTER then
+    inst.pollenpicked = true
+    inst.pollenticks = POLLEN_MAX_TICKS
+    stoppollentask(inst)
+  else
+    startpollentask(inst)
+  end
+
+  checkfx(inst)
 end
 
 local function FlowerPostInit(prefab)
@@ -358,7 +394,9 @@ local function FlowerPostInit(prefab)
   prefab.pollenpicked = false
   prefab.pollenticks = 0
 
-  prefab:DoTaskInTime(0, checkfx)
+  prefab:DoTaskInTime(0, onseasonchange)
+
+  prefab:WatchWorldState("season", onseasonchange)
 
   if prefab.components.pickable then
     local oldonpickedfn = prefab.components.pickable.onpickedfn
@@ -386,9 +424,12 @@ local function FlowerPostInit(prefab)
       if picker and picker.prefab == 'zeta' then
         if not comp.inst.pollenpicked then
           local product = comp.product
+          local numtoharvest = comp.numtoharvest
           comp.product = 'zetapollen'
+          comp.numtoharvest = (GLOBAL.TheWorld.state.season == SEASONS.SPRING and math.random() <= 0.5) and 2 or 1
           PickFn(comp, picker, ...)
           comp.product = product
+          comp.numtoharvest = numtoharvest
         else
           PickFn(comp, picker, ...)
         end
@@ -412,13 +453,9 @@ local function FlowerPostInit(prefab)
       OldOnLoad(inst, data)
       inst.pollenpicked = data ~= nil and data.pollenpicked or false
       inst.pollenticks = data ~= nil and data.pollenticks or 0
-      if inst.pollenticks > 0 then
-        inst:DoTaskInTime(100, ontick)
-      end
 
-      checkfx(inst)
+      inst:DoTaskInTime(0, onseasonchange)
     end
-
   end
 end
 
