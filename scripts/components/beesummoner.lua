@@ -274,7 +274,7 @@ function BeeSummoner:DoSummonChild(target)
   if self.inst.Physics then
       rad = rad + self.inst.Physics:GetRadius()
   end
-  local offset = FindWalkableOffset(pos, start_angle, rad, 8, false, true, NoHoles)
+  local offset = FindWalkableOffset(pos, start_angle, rad, 8, false, true, NoHoles, true, true)
   if offset == nil then
       return
   end
