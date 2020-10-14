@@ -94,32 +94,6 @@ local function OnEat(inst, data)
 
     return
   end
-
-  -- if data.food and data.food:HasTag("honeyed") then
-  --   local food = data.food
-  --   local bonus = TUNING.OZZY_HONEYED_FOOD_BONUS
-
-  --   if inst.components.health then
-  --     local delta = food.components.edible:GetHealth(inst) * inst.components.eater.healthabsorption * bonus
-  --     if delta > 0 then
-  --       inst.components.health:DoDelta(delta, nil, food.prefab)
-  --     end
-  --   end
-
-  --   if inst.components.hunger then
-  --     local delta = food.components.edible:GetHunger(inst) * inst.components.eater.hungerabsorption * bonus
-  --     if delta > 0 then
-  --       inst.components.hunger:DoDelta(delta)
-  --     end
-  --   end
-
-  --   if inst.components.sanity then
-  --     local delta = food.components.edible:GetSanity(inst) * inst.components.eater.sanityabsorption * bonus
-  --     if delta > 0 then
-  --       inst.components.sanity:DoDelta(delta)
-  --     end
-  --   end
-  -- end
 end
 
 local function OnNumStoreChange(inst)
