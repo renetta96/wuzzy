@@ -15,6 +15,7 @@ local assets =
   Asset("ANIM", "anim/mutantdefenderhive.zip"),
   Asset("ANIM", "anim/mutantassassinhive.zip"),
   Asset("ANIM", "anim/mutantrangerhive.zip"),
+  Asset("ANIM", "anim/mutantshadowhive.zip"),
   Asset("ANIM", "anim/mutantteleportal.zip"),
   Asset("SOUND", "sound/bee.fsb"),
   Asset("ANIM", "anim/ui_chest_3x2.zip"),
@@ -329,6 +330,7 @@ local tocheck = {
   mutantdefenderbee = "mutantdefenderhive",
   mutantrangerbee = "mutantrangerhive",
   mutantassassinbee = "mutantassassinhive",
+  mutantshadowbee = "mutantshadowhive",
   mutantkillerbee = true
 }
 
@@ -378,29 +380,30 @@ local function CanSpawn(inst, prefab)
 end
 
 local function PickChildPrefab(inst)
+  local numprefabs = 5
   local ratio = {
-    mutantkillerbee = 4,
+    mutantkillerbee = numprefabs,
     mutantdefenderbee = 0,
     mutantrangerbee = 0,
-    mutantassassinbee = 0
+    mutantassassinbee = 0,
+    mutantshadowbee = 0
   }
 
   local canspawnprefabs = {"mutantkillerbee"}
 
-  for i, prefab in ipairs({"mutantdefenderbee", "mutantrangerbee", "mutantassassinbee"}) do
-    if CanSpawn(inst, prefab) then
+  for prefab, v in pairs(ratio) do
+    if prefab ~= "mutantkillerbee" and CanSpawn(inst, prefab) then
       ratio[prefab] = 1
       ratio["mutantkillerbee"] = ratio["mutantkillerbee"] - 1
       table.insert(canspawnprefabs, prefab)
     end
   end
 
-  local currentcount = {
-    mutantkillerbee = 0,
-    mutantdefenderbee = 0,
-    mutantrangerbee = 0,
-    mutantassassinbee = 0
-  }
+  local currentcount = {}
+  for k,v in pairs(ratio) do
+    currentcount[k] = 0
+  end
+
   local total = 0
 
   if inst.components.childspawner then
@@ -416,7 +419,7 @@ local function PickChildPrefab(inst)
 
   if total > 0 then
     for prefab, cnt in pairs(currentcount) do
-      if cnt / total < ratio[prefab] / 4 then
+      if cnt / total < ratio[prefab] / numprefabs then
         table.insert(prefabstopick, prefab)
       end
     end
@@ -1051,6 +1054,11 @@ local function assassinhive()
   return inst
 end
 
+local function shadowhive()
+  local inst = commonslavefn("mutantshadowhive", "mutantshadowhive", {"mutantshadowhive"}, "mutantshadowhive.tex")
+  return inst
+end
+
 local function onteleportback(inst)
   local source = GetSource(inst)
 
@@ -1116,7 +1124,7 @@ local function teleportal()
   inst.components.childspawner.emergencychildrenperplayer = TUNING.MUTANT_BEEHIVE_EMERGENCY_BEES_PER_PLAYER
   inst.components.childspawner:SetEmergencyRadius(TUNING.MUTANT_BEEHIVE_EMERGENCY_RADIUS)
   inst.components.childspawner:SetMaxChildren(0)
-  inst.components.childspawner:SetMaxEmergencyChildren(4)
+  inst.components.childspawner:SetMaxEmergencyChildren(5)
   inst.components.childspawner:SetRegenPeriod(5)
   inst:ListenForEvent("childgoinghome", onteleportback)
 
@@ -1199,10 +1207,15 @@ STRINGS.NAMES.MUTANTRANGERHIVE = "Metapis Ranger Hive"
 STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTRANGERHIVE = "Looks like an ancient symbol."
 STRINGS.RECIPE_DESC.MUTANTRANGERHIVE = "Adds Metapis Ranger to Mother Hive."
 
-STRINGS.MUTANTASSASSINHIVE = "Metapis Assasin Hive"
-STRINGS.NAMES.MUTANTASSASSINHIVE = "Metapis Assasin Hive"
+STRINGS.MUTANTASSASSINHIVE = "Metapis Assassin Hive"
+STRINGS.NAMES.MUTANTASSASSINHIVE = "Metapis Assassin Hive"
 STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTASSASSINHIVE = "Spiky."
-STRINGS.RECIPE_DESC.MUTANTASSASSINHIVE = "Adds Metapis Assasin to Mother Hive."
+STRINGS.RECIPE_DESC.MUTANTASSASSINHIVE = "Adds Metapis Assassin to Mother Hive."
+
+STRINGS.MUTANTSHADOWHIVE = "Metapis Shadow Hive"
+STRINGS.NAMES.MUTANTSHADOWHIVE = "Metapis Shadow Hive"
+STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTSHADOWHIVE = "It's made from ancient technology."
+STRINGS.RECIPE_DESC.MUTANTSHADOWHIVE = "Adds Metapis Shadow to Mother Hive."
 
 STRINGS.MUTANTTELEPORTAL = "Metapis Teleportal"
 STRINGS.NAMES.MUTANTTELEPORTAL = "Metapis Teleportal"
@@ -1216,5 +1229,7 @@ return Prefab("mutantbeehive", fn, assets, prefabs),
   MakePlacer("mutantrangerhive_placer", "mutantrangerhive", "mutantrangerhive", "idle"),
   Prefab("mutantassassinhive", assassinhive, assets, prefabs),
   MakePlacer("mutantassassinhive_placer", "mutantassassinhive", "mutantassassinhive", "idle"),
+  Prefab("mutantshadowhive", shadowhive, assets, prefabs),
+  MakePlacer("mutantshadowhive_placer", "mutantshadowhive", "mutantshadowhive", "idle"),
   Prefab("mutantteleportal", teleportal, assets, prefabs),
   MakePlacer("mutantteleportal_placer", "mutantteleportal", "mutantteleportal", "idle")

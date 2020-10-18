@@ -1,5 +1,33 @@
 require("stategraphs/commonstates")
 
+
+local function shouldteleportafterhit(inst)
+    return inst:HasTag("shadowbee") and inst.canteleport
+end
+
+local function getteleportdelta()
+    local mindist = 5
+    local delta = math.random(mindist, mindist * 1.5)
+    if math.random() < 0.5 then
+        delta = -delta
+    end
+
+    return delta
+end
+
+local function teleportnearby(inst)
+    local max_tries = 4
+    for k = 1, max_tries do
+        local x, y, z = inst.Transform:GetWorldPosition()
+        x = x + getteleportdelta()
+        z = z + getteleportdelta()
+        if TheWorld.Map:IsPassableAtPoint(x, y, z) then
+            inst.Physics:Teleport(x, y, z)
+            break
+        end
+    end
+end
+
 local actionhandlers =
 {
     ActionHandler(ACTIONS.GOHOME, "action"),
@@ -138,6 +166,21 @@ local states =
                 inst.AnimState:PlayAnimation(animname, true)
             end
         end,
+    },
+
+    State{
+        name = "appear",
+        tags = { "busy" },
+
+        onenter = function(inst)
+            inst.AnimState:PlayAnimation("appear")
+            inst.Physics:Stop()
+        end,
+
+        events =
+        {
+            EventHandler("animover", function(inst) inst.sg:GoToState("idle") end)
+        },
     },
 
     State{
@@ -309,14 +352,25 @@ local states =
 
         onenter = function(inst)
             inst.SoundEmitter:PlaySound(inst.sounds.hit)
-            inst.AnimState:PlayAnimation("hit")
+
+            if shouldteleportafterhit(inst) then
+                inst.AnimState:PlayAnimation("disappear")
+            else
+                inst.AnimState:PlayAnimation("hit")
+            end
+
             inst.Physics:Stop()
         end,
 
         events =
         {
             EventHandler("animover", function(inst)
-                inst.sg:GoToState("idle")
+                if shouldteleportafterhit(inst) then
+                    teleportnearby(inst)
+                    inst.sg:GoToState("appear")
+                else
+                    inst.sg:GoToState("idle")
+                end
             end),
         },
     },

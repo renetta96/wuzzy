@@ -1,3 +1,4 @@
 exported/zeta/zeta.zip
 *.autosave.scml
 build/
+calc.py

@@ -7,6 +7,7 @@ local assets =
 	Asset("ANIM", "anim/mutantdefenderbee.zip"),
 	Asset("ANIM", "anim/mutantworkerbee.zip"),
 	Asset("ANIM", "anim/mutantsoldierbee.zip"),
+	Asset("ANIM", "anim/mutantshadowbee.zip"),
 	Asset("SOUND", "sound/bee.fsb"),
 }
 
@@ -96,37 +97,10 @@ local function OnAttackOtherWithPoison(inst, data)
 	end
 end
 
-local function OnAttackExplosive(inst, data)
-	inst._attackcount = inst._attackcount + 1
-
-	if inst._attackcount >= 7 then
-		inst._attackcount = 0
-		local target = data.target
-
-		if target then
-			inst.components.combat:DoAreaAttack(
-				target,
-				TUNING.MUTANT_BEE_EXPLOSIVE_RANGE, nil,
-				function(guy)
-					return guy:HasTag("monster") or
-						(
-							guy.components.combat and guy.components.combat:HasTarget()
-							and (
-								guy.components.combat.target:HasTag("player")
-								or guy.components.combat.target:HasTag("mutant")
-							)
-						)
-				end,
-				nil, { "INLIMBO", "mutant", "player" })
-			SpawnPrefab("explode_small").Transform:SetPosition(target.Transform:GetWorldPosition())
-		end
-	end
-end
-
-local function OnSuicidalAttack(inst, data)
-	if data.projectile then
-		local delta = -inst.components.health.maxhealth * TUNING.MUTANT_BEE_RANGED_ATK_HEALTH_PENALTY
-		inst.components.health:DoDelta(delta, nil, "suicidal_attack", nil, nil, true)
+local function OnAttackRegen(inst, data)
+	if inst.components.health then
+		local amount = Lerp(1, 5, 1 - inst.components.health:GetPercent())
+		inst.components.health:DoDelta(amount)
 	end
 end
 
@@ -250,7 +224,7 @@ local function TrackLastCombatTime(inst)
 	inst:ListenForEvent('attacked', function(inst) inst._lastcombattime = GetTime() end)
 end
 
-local function commonfn(bank, build, tags)
+local function commonfn(bank, build, tags, options)
 	local inst = CreateEntity()
 
 	inst.entity:AddTransform()
@@ -304,8 +278,13 @@ local function commonfn(bank, build, tags)
 
 	------------------
 
-	MakeSmallBurnableCharacter(inst, "body", Vector3(0, -1, 1))
-	MakeTinyFreezableCharacter(inst, "body", Vector3(0, -1, 1))
+	if not(options and options.notburnable) then
+		MakeSmallBurnableCharacter(inst, "body", Vector3(0, -1, 1))
+	end
+
+	if not(options and options.notfreezable) then
+		MakeTinyFreezableCharacter(inst, "body", Vector3(0, -1, 1))
+	end
 
 	------------------
 
@@ -317,9 +296,11 @@ local function commonfn(bank, build, tags)
 
 	------------------
 
-	inst:AddComponent("sleeper")
-	inst.components.sleeper:SetSleepTest(ShouldSleep)
-	inst.components.sleeper:SetWakeTest(ShouldWakeUp)
+	if not(options and options.notsleep) then
+		inst:AddComponent("sleeper")
+		inst.components.sleeper:SetSleepTest(ShouldSleep)
+		inst.components.sleeper:SetWakeTest(ShouldWakeUp)
+	end
 	------------------
 
 	inst:AddComponent("knownlocations")
@@ -420,8 +401,7 @@ local function CheckSoldierUpgrade(inst)
 	end
 
 	if stage >= 3 then
-		inst.components.combat.areahitdamagepercent = TUNING.MUTANT_BEE_EXPLOSIVE_DAMAGE_MULTIPLIER
-		inst:ListenForEvent("onattackother", OnAttackExplosive)
+		inst:ListenForEvent("onattackother", OnAttackRegen)
 	end
 
 	return true
@@ -622,6 +602,135 @@ local function assassinbee()
 
 	inst.Stealth = Stealth
 	inst.Unstealth = Unstealth
+
+	return inst
+end
+
+local function DoSpike(inst, target, onlyfx)
+	if not target or not inst:IsValid() or not inst.components.combat:CanTarget(target) then
+		return
+	end
+
+	local spikefx = SpawnPrefab("shadowspike_fx")
+	if spikefx then
+		spikefx.Transform:SetPosition(target.Transform:GetWorldPosition())
+	end
+
+	if not onlyfx then
+		inst.components.combat:DoAttack(target, nil, nil, "spikeattack")
+	end
+end
+
+local function Spike(inst, origin)
+	local x, y, z = origin.Transform:GetWorldPosition()
+	local entities = TheSim:FindEntities(x, y, z,
+		5,
+		{ "_combat", "_health" },
+		{ "mutant", "INLIMBO", "player" },
+		{ "monster", "insect", "animal", "character" })
+
+	local nearbyplayer, range = FindClosestPlayerToInst(inst, TUNING.MUTANT_BEE_WATCH_DIST, true)
+
+	local validtargets = {}
+
+	for i, e in ipairs(entities) do
+		local valid = false
+
+		if inst.components.combat:CanTarget(e) then
+			if e.components.combat and e.components.combat.target then
+				local target = e.components.combat.target
+				if target:HasTag("player") or target:HasTag("mutant") then
+					valid = true
+				end
+			end
+
+			if nearbyplayer and e:HasTag("monster") then
+				valid = true
+			end
+		end
+
+		if valid and e ~= origin then
+			table.insert(validtargets, e)
+		end
+	end
+
+	DoSpike(inst, origin, true)
+
+	if not(inst._numspikes and inst._numspikes > 0) then
+		return
+	end
+
+	for i, target in ipairs(validtargets) do
+		if i > inst._numspikes then
+			break
+		end
+
+		-- random delay from 0.25 to 0.75 sec
+		inst:DoTaskInTime(math.random(25, 75) / 100, function() DoSpike(inst, target) end)
+	end
+end
+
+local function OnShadowAttack(inst, data)
+	if data.stimuli and data.stimuli == "spikeattack" then
+		return
+	end
+
+	if data.target then
+		Spike(inst, data.target)
+	end
+end
+
+local function CheckShadowUpgrade(inst)
+	local stage = GetHiveUpgradeStage(inst)
+
+	if stage == 0 then
+		return false
+	end
+
+	-- Add teleport
+	if stage >= 2 then
+		inst.canteleport = true
+	end
+
+	-- Add 1 more spike
+	if stage >= 3 then
+		inst._numspikes = TUNING.MUTANT_BEE_SHADOW_DEFAULT_NUM_SPIKES + 1
+	end
+
+	return true
+end
+
+local shadowbeebrain = require "brains/shadowbeebrain"
+local function shadowbee()
+	local inst = commonfn(
+		"mutantshadowbee", "mutantshadowbee",
+		{ "shadowbee", "killer", "scarytoprey" },
+		{ notburnable = true, notfreezable = true, notsleep = true }
+	)
+
+	local r, g, b = inst.AnimState:GetMultColour()
+	inst.AnimState:SetMultColour(r, g, b, 0.6)
+
+	if not TheWorld.ismastersim then
+		return inst
+	end
+
+	inst.components.health:SetMaxHealth(TUNING.MUTANT_BEE_SHADOW_HEALTH)
+
+	inst.components.combat:SetDefaultDamage(TUNING.MUTANT_BEE_SHADOW_DAMAGE)
+	inst.components.combat:SetAttackPeriod(TUNING.MUTANT_BEE_SHADOW_ATK_PERIOD)
+	inst.components.combat:SetRange(TUNING.MUTANT_BEE_SHADOW_ATK_RANGE, TUNING.MUTANT_BEE_SHADOW_ATK_RANGE + 3)
+	inst.components.combat:SetRetargetFunction(0.5, KillerRetarget)
+
+	inst._numspikes = TUNING.MUTANT_BEE_SHADOW_DEFAULT_NUM_SPIKES
+	inst.canteleport = false
+	inst:ListenForEvent("onattackother", OnShadowAttack)
+
+	inst:SetBrain(shadowbeebrain)
+	inst.sounds = killersounds
+
+	MakeLessNoise(inst)
+	inst:DoTaskInTime(0, function(inst) OnInitUpgrade(inst, CheckShadowUpgrade, 0) end)
 
 	return inst
 end
@@ -881,8 +990,13 @@ STRINGS.MUTANTDEFENDERBEE = "Metapis Guardian"
 STRINGS.NAMES.MUTANTDEFENDERBEE = "Metapis Guardian"
 STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTDEFENDERBEE = "Buff and fluffy."
 
+STRINGS.MUTANTSHADOWBEE = "Metapis Shadow"
+STRINGS.NAMES.MUTANTSHADOWBEE = "Metapis Shadow"
+STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTSHADOWBEE = "Nightmare."
+
 return Prefab("mutantbee", workerbee, assets, prefabs),
 	Prefab("mutantkillerbee", killerbee, assets, prefabs),
 	Prefab("mutantrangerbee", rangerbee, assets, prefabs),
 	Prefab("mutantassassinbee", assassinbee, assets, prefabs),
-	Prefab("mutantdefenderbee", defenderbee, assets, prefabs)
+	Prefab("mutantdefenderbee", defenderbee, assets, prefabs),
+	Prefab("mutantshadowbee", shadowbee, assets, prefabs)

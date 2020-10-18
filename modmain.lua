@@ -2,11 +2,11 @@ local require = GLOBAL.require
 local STRINGS = GLOBAL.STRINGS
 local TUNING = GLOBAL.TUNING
 local Ingredient = GLOBAL.Ingredient
-local RECIPETABS = GLOBAL.RECIPETABS
 local TECH = GLOBAL.TECH
 local SpawnPrefab = GLOBAL.SpawnPrefab
 local Action = GLOBAL.Action
 local SEASONS = GLOBAL.SEASONS
+local RECIPETABS = GLOBAL.RECIPETABS
 --
 local _G = GLOBAL
 local PREFAB_SKINS = _G.PREFAB_SKINS
@@ -22,7 +22,8 @@ PrefabFiles = {
   "armor_honey",
   "zetapollen",
   "pollen_fx",
-  "melissa"
+  "melissa",
+  "shadowspike_fx"
 }
 
 Assets = {
@@ -31,7 +32,6 @@ Assets = {
 
   Asset( "IMAGE", "images/selectscreen_portraits/zeta.tex" ),
   Asset( "ATLAS", "images/selectscreen_portraits/zeta.xml" ),
-
   Asset( "IMAGE", "images/selectscreen_portraits/zeta_silho.tex" ),
   Asset( "ATLAS", "images/selectscreen_portraits/zeta_silho.xml" ),
 
@@ -50,15 +50,15 @@ Assets = {
   Asset( "ATLAS", "images/map_icons/mutantrangerhive.xml" ),
   Asset( "IMAGE", "images/map_icons/mutantassassinhive.tex" ),
   Asset( "ATLAS", "images/map_icons/mutantassassinhive.xml" ),
+  Asset( "IMAGE", "images/map_icons/mutantshadowhive.tex" ),
+  Asset( "ATLAS", "images/map_icons/mutantshadowhive.xml" ),
   Asset( "IMAGE", "images/map_icons/mutantteleportal.tex" ),
   Asset( "ATLAS", "images/map_icons/mutantteleportal.xml" ),
 
   Asset( "IMAGE", "images/avatars/avatar_zeta.tex" ),
   Asset( "ATLAS", "images/avatars/avatar_zeta.xml" ),
-
   Asset( "IMAGE", "images/avatars/avatar_ghost_zeta.tex" ),
   Asset( "ATLAS", "images/avatars/avatar_ghost_zeta.xml" ),
-
   Asset( "IMAGE", "images/avatars/self_inspect_zeta.tex" ),
   Asset( "ATLAS", "images/avatars/self_inspect_zeta.xml" ),
 
@@ -81,12 +81,16 @@ Assets = {
   Asset( "ATLAS", "images/inventoryimages/mutantrangerhive.xml" ),
   Asset( "IMAGE", "images/inventoryimages/mutantassassinhive.tex" ),
   Asset( "ATLAS", "images/inventoryimages/mutantassassinhive.xml" ),
+  Asset( "IMAGE", "images/inventoryimages/mutantshadowhive.tex" ),
+  Asset( "ATLAS", "images/inventoryimages/mutantshadowhive.xml" ),
   Asset( "IMAGE", "images/inventoryimages/mutantteleportal.tex" ),
   Asset( "ATLAS", "images/inventoryimages/mutantteleportal.xml" ),
   Asset("ATLAS", "images/inventoryimages/mutantbeecocoon.xml"),
   Asset("IMAGE", "images/inventoryimages/mutantbeecocoon.tex"),
   Asset("ATLAS", "images/inventoryimages/armor_honey.xml"),
   Asset("IMAGE", "images/inventoryimages/armor_honey.tex"),
+  Asset("ATLAS", "images/inventoryimages/metapis_tab.xml"),
+  Asset("IMAGE", "images/inventoryimages/metapis_tab.tex"),
 }
 
 RemapSoundEvent( "dontstarve/characters/zeta/hurt", "zeta/zeta/hurt" )
@@ -138,8 +142,6 @@ TUNING.MUTANT_BEE_WATCH_DIST = 20
 TUNING.MUTANT_BEE_MAX_POISON_TICKS = 5
 TUNING.MUTANT_BEE_POISON_DAMAGE = 5
 TUNING.MUTANT_BEE_POISON_PERIOD = 0.75
-TUNING.MUTANT_BEE_EXPLOSIVE_DAMAGE_MULTIPLIER = 1.0
-TUNING.MUTANT_BEE_EXPLOSIVE_RANGE = 3
 TUNING.MUTANT_BEE_FROSTBITE_SPEED_PENALTY = 0.5
 TUNING.MUTANT_BEE_FROSTBITE_ATK_PERIOD_PENALTY = 1.25
 TUNING.MUTANT_BEE_WEAPON_ATK_RANGE = 8
@@ -159,6 +161,11 @@ TUNING.MUTANT_BEE_ASSSASIN_HEALTH = 75
 TUNING.MUTANT_BEE_ASSSASIN_DAMAGE = 10
 TUNING.MUTANT_BEE_SOLDIER_HEALTH = 100
 TUNING.MUTANT_BEE_SOLDIER_ABSORPTION = 0.25
+TUNING.MUTANT_BEE_SHADOW_HEALTH = 65
+TUNING.MUTANT_BEE_SHADOW_DAMAGE = 12
+TUNING.MUTANT_BEE_SHADOW_ATK_PERIOD = 5
+TUNING.MUTANT_BEE_SHADOW_ATK_RANGE = 5
+TUNING.MUTANT_BEE_SHADOW_DEFAULT_NUM_SPIKES = 1
 
 -- Mutant beehive stats
 TUNING.MUTANT_BEEHIVE_DEFAULT_EMERGENCY_BEES = 0
@@ -220,6 +227,7 @@ AddMinimapAtlas("images/map_icons/mutantbeehive.xml")
 AddMinimapAtlas("images/map_icons/mutantdefenderhive.xml")
 AddMinimapAtlas("images/map_icons/mutantrangerhive.xml")
 AddMinimapAtlas("images/map_icons/mutantassassinhive.xml")
+AddMinimapAtlas("images/map_icons/mutantshadowhive.xml")
 AddMinimapAtlas("images/map_icons/mutantteleportal.xml")
 
 --Skins api
@@ -475,6 +483,7 @@ local function BeeBoxPostInit(prefab)
 end
 
 AddPrefabPostInit("beebox", BeeBoxPostInit)
+AddPrefabPostInit("beebox_hermit", BeeBoxPostInit)
 
 local function WaspHivePostInit(prefab)
   if prefab.components.playerprox then
@@ -494,6 +503,26 @@ end
 
 AddPrefabPostInit("wasphive", WaspHivePostInit)
 
+
+local function RangerHiveBlueprintPostInit(prefab)
+  if not GLOBAL.TheWorld.ismastersim then
+    return
+  end
+
+  if prefab.components.teacher then
+    local oldTeach = prefab.components.teacher.Teach
+    prefab.components.teacher.Teach = function(comp, target, ...)
+      if target and not target:HasTag("beemaster") then
+        return false, "CANTLEARN"
+      end
+
+      return oldTeach(comp, target, ...)
+    end
+  end
+end
+
+AddPrefabPostInit("mutantrangerhive_blueprint", RangerHiveBlueprintPostInit)
+
 local containers = GLOBAL.require("containers")
 local oldwidgetsetup = containers.widgetsetup
 local MyChests = {
@@ -505,49 +534,56 @@ containers.widgetsetup = function(container, prefab, data)
   oldwidgetsetup(container, prefab, data)
 end
 
-AddRecipe("mutantbeecocoon",
-  {
-    Ingredient("honeycomb", 1),
-    Ingredient("cutgrass", 4),
-    Ingredient("honey", 1)
-  },
-  RECIPETABS.SURVIVAL,
-  TECH.NONE,
-  nil, nil, nil, nil,
-  "beemaster",
-  "images/inventoryimages/mutantbeecocoon.xml",
-  "mutantbeecocoon.tex"
+
+local metapis_tab = AddRecipeTab(
+  "Metapis",
+  999,
+  "images/inventoryimages/metapis_tab.xml",
+  "metapis_tab.tex",
+  "beemaster"
 )
 
-local armorhoney_rec = AddRecipe("armor_honey",
+AddRecipe("armor_honey",
   {
     Ingredient("log", 10),
     Ingredient("rope", 1),
     Ingredient("honey", 3)
   },
-  RECIPETABS.WAR,
+  metapis_tab,
   TECH.NONE,
   nil, nil, nil, nil,
   "beemaster",
   "images/inventoryimages/armor_honey.xml",
   "armor_honey.tex"
 )
-armorhoney_rec.sortkey = -1
 
-local melissa_rec = AddRecipe("melissa",
+AddRecipe("melissa",
   {
     Ingredient("twigs", 2),
     Ingredient("goldnugget", 1),
     Ingredient("stinger", 5)
   },
-  RECIPETABS.WAR,
+  metapis_tab,
   TECH.NONE,
   nil, nil, nil, nil,
   "beemaster",
   "images/inventoryimages/melissa.xml",
   "melissa.tex"
 )
-melissa_rec.sortkey = -2
+
+AddRecipe("mutantbeecocoon",
+  {
+    Ingredient("honeycomb", 1),
+    Ingredient("cutgrass", 4),
+    Ingredient("honey", 1)
+  },
+  metapis_tab,
+  TECH.NONE,
+  nil, nil, nil, nil,
+  "beemaster",
+  "images/inventoryimages/mutantbeecocoon.xml",
+  "mutantbeecocoon.tex"
+)
 
 local function slavehivetestfn(pt, rot)
   local x, y, z = pt:Get()
@@ -563,14 +599,14 @@ local function slavehivetestfn(pt, rot)
   return false
 end
 
-local mutantdefenderhive_rec = AddRecipe("mutantdefenderhive",
+AddRecipe("mutantdefenderhive",
   {
     Ingredient("horn", 2),
     Ingredient("honeycomb", 1),
     Ingredient("moonrocknugget", 10)
   },
-  RECIPETABS.TOWN,
-  TECH.SCIENCE_TWO,
+  metapis_tab,
+  TECH.CELESTIAL_ONE,
   "mutantdefenderhive_placer",
   nil, nil, nil,
   "beemaster",
@@ -579,30 +615,42 @@ local mutantdefenderhive_rec = AddRecipe("mutantdefenderhive",
   slavehivetestfn
 )
 
-local mutantrangerhive_rec = AddRecipe("mutantrangerhive",
+AddRecipe("mutantrangerhive",
   {
     Ingredient("lightninggoathorn", 2),
     Ingredient("honeycomb", 1),
     Ingredient("driftwood_log", 10)
   },
-  RECIPETABS.TOWN,
-  TECH.SCIENCE_TWO,
+  metapis_tab,
+  TECH.LOST,
   "mutantrangerhive_placer",
   nil, nil, nil,
-  "beemaster",
+  nil,
   "images/inventoryimages/mutantrangerhive.xml",
   "mutantrangerhive.tex",
   slavehivetestfn
 )
 
-local mutantassassinhive_rec = AddRecipe("mutantassassinhive",
+AddRecipe(
+  "hermitshop_mutantrangerhive_blueprint",
   {
-    Ingredient("houndstooth", 15),
-    Ingredient("honeycomb", 1),
-    Ingredient("nightmarefuel", 20)
+    Ingredient("messagebottleempty", 3)
   },
-  RECIPETABS.TOWN,
-  TECH.SCIENCE_TWO,
+  RECIPETABS.HERMITCRABSHOP, TECH.HERMITCRABSHOP_FIVE,
+  nil, nil, true, nil, "beemaster", nil, "blueprint.tex", nil, "mutantrangerhive_blueprint"
+)
+
+STRINGS.RECIPE_DESC.MUTANTRANGERHIVE_BLUEPRINT = "Adds Metapis Ranger to Mother Hive."
+STRINGS.NAMES.MUTANTRANGERHIVE_BLUEPRINT = "Metapis Ranger Hive Blueprint"
+
+AddRecipe("mutantassassinhive",
+  {
+    Ingredient("moonbutterflywings", 8),
+    Ingredient("honeycomb", 1),
+    Ingredient("moonglass", 10)
+  },
+  metapis_tab,
+  TECH.MOON_ALTAR_TWO,
   "mutantassassinhive_placer",
   nil, nil, nil,
   "beemaster",
@@ -611,13 +659,29 @@ local mutantassassinhive_rec = AddRecipe("mutantassassinhive",
   slavehivetestfn
 )
 
-local mutantteleportal_rec = AddRecipe("mutantteleportal",
+AddRecipe("mutantshadowhive",
+  {
+    Ingredient("nightmarefuel", 10),
+    Ingredient("honeycomb", 1),
+    Ingredient("thulecite", 6)
+  },
+  metapis_tab,
+  TECH.ANCIENT_FOUR,
+  "mutantshadowhive_placer",
+  nil, nil, nil,
+  "beemaster",
+  "images/inventoryimages/mutantshadowhive.xml",
+  "mutantshadowhive.tex",
+  slavehivetestfn
+)
+
+AddRecipe("mutantteleportal",
   {
     Ingredient("honeycomb", 1),
     Ingredient("nightmarefuel", 4),
     Ingredient("purplegem", 3),
   },
-  RECIPETABS.MAGIC,
+  metapis_tab,
   TECH.MAGIC_THREE,
   "mutantteleportal_placer",
   nil, nil, nil,

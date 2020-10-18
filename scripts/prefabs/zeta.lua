@@ -17,13 +17,6 @@ end
 
 prefabs = FlattenTree({ prefabs, start_inv }, true)
 
-local tagtoprefab = {
-  defender = "mutantdefenderbee",
-  soldier = "mutantkillerbee",
-  ranger = "mutantrangerbee",
-  assassin = "mutantassassinbee"
-}
-
 local function CanSummon(inst, prefab)
   if not inst._hive then
     return false
@@ -34,29 +27,30 @@ end
 
 local function GetChildPrefab(inst)
   local maxchildren = inst.components.beesummoner.maxchildren
+  local numprefabs = 5
   local expect = {
     mutantkillerbee = maxchildren,
     mutantdefenderbee = 0,
     mutantrangerbee = 0,
-    mutantassassinbee = 0
+    mutantassassinbee = 0,
+    mutantshadowbee = 0
   }
 
   local cansummon = {"mutantkillerbee"}
 
-  for i, prefab in ipairs({"mutantdefenderbee", "mutantrangerbee", "mutantassassinbee"}) do
-    if CanSummon(inst, prefab) then
-      expect[prefab] = expect[prefab] + math.floor(maxchildren / 4)
-      expect["mutantkillerbee"] = expect["mutantkillerbee"] - math.floor(maxchildren / 4)
+  for prefab, v in pairs(expect) do
+    if prefab ~= "mutantkillerbee" and CanSummon(inst, prefab) then
+      expect[prefab] = expect[prefab] + (maxchildren / numprefabs)
+      expect["mutantkillerbee"] = expect["mutantkillerbee"] - (maxchildren / numprefabs)
       table.insert(cansummon, prefab)
     end
   end
 
-  local prefabcount = {
-    mutantdefenderbee = 0,
-    mutantkillerbee = 0,
-    mutantrangerbee = 0,
-    mutantassassinbee = 0
-  }
+  local prefabcount = {}
+  for k, v in pairs(expect) do
+    prefabcount[k] = 0
+    expect[k] = math.floor(v + 0.5)
+  end
 
   for i, child in pairs(inst.components.beesummoner.children) do
     if child ~= nil and child:IsValid() then
