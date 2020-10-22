@@ -289,6 +289,8 @@ function BeeSummoner:DoSummonChild(target)
 
 		self:AddNumStore(-1)
 		self:StartRegen()
+
+		self.inst:PushEvent("onsummonchild", { child = child })
 	end
 
 	return child

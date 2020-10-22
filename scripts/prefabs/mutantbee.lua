@@ -224,6 +224,22 @@ local function TrackLastCombatTime(inst)
 	inst:ListenForEvent('attacked', function(inst) inst._lastcombattime = GetTime() end)
 end
 
+local function OnCommonSave(inst, data)
+	data.buffed = inst.buffed
+end
+
+local function OnCommonLoad(inst, data)
+	if data then
+		inst.buffed = data.buffed
+	end
+end
+
+local function OnCommonInit(inst)
+	if inst.buffed then
+		inst:Buff()
+	end
+end
+
 local function commonfn(bank, build, tags, options)
 	local inst = CreateEntity()
 
@@ -320,6 +336,15 @@ local function commonfn(bank, build, tags, options)
 	inst.EnableBuzz = EnableBuzz
 	inst.OnEntityWake = OnWake
 	inst.OnEntitySleep = OnSleep
+	inst.OnSave = OnCommonSave
+	inst.OnLoad = OnCommonLoad
+	inst.Buff = function(inst)
+		inst.buffed = true
+		if options.buff then
+			options.buff(inst)
+		end
+	end
+	inst:DoTaskInTime(0, OnCommonInit)
 
 	return inst
 end
@@ -407,11 +432,20 @@ local function CheckSoldierUpgrade(inst)
 	return true
 end
 
+local function SoldierBuff(inst)
+	inst.components.combat:SetAttackPeriod(TUNING.MUTANT_BEE_ATTACK_PERIOD - 0.5)
+end
+
 local killerbrain = require("brains/mutantkillerbeebrain")
 local function killerbee()
 	local inst = nil
 
-	inst = commonfn("mutantsoldierbee", "mutantsoldierbee", { "soldier", "killer", "scarytoprey" })
+	inst = commonfn(
+		"mutantsoldierbee",
+		"mutantsoldierbee",
+		{ "soldier", "killer", "scarytoprey" },
+		{ buff = SoldierBuff }
+	)
 
 	if not TheWorld.ismastersim then
 		return inst
@@ -481,9 +515,18 @@ local function CheckRangerUpgrade(inst)
 	return true
 end
 
+local function RangerBuff(inst)
+	inst.components.combat:SetAttackPeriod(TUNING.MUTANT_BEE_RANGED_ATK_PERIOD - 1)
+end
+
 local rangedkillerbrain = require("brains/rangedkillerbeebrain")
 local function rangerbee()
-	local inst = commonfn("mutantrangerbee", "mutantrangerbee", { "killer", "ranger", "scarytoprey" })
+	local inst = commonfn(
+		"mutantrangerbee",
+		"mutantrangerbee",
+		{ "killer", "ranger", "scarytoprey" },
+		{ buff = RangerBuff }
+	)
 
 	if not TheWorld.ismastersim then
 		return inst
@@ -573,9 +616,18 @@ local function CheckAssassinUpgrade(inst)
 	return true
 end
 
+local function AssassinBuff(inst)
+	inst.components.combat:SetDefaultDamage(TUNING.MUTANT_BEE_ASSSASIN_DAMAGE + 3)
+end
+
 local assassinbeebrain = require "brains/assassinbeebrain"
 local function assassinbee()
-	local inst = commonfn("mutantassassinbee", "mutantassassinbee", { "killer", "assassin", "scarytoprey" })
+	local inst = commonfn(
+		"mutantassassinbee",
+		"mutantassassinbee",
+		{ "killer", "assassin", "scarytoprey" },
+		{ buff = AssassinBuff }
+	)
 
 	if not TheWorld.ismastersim then
 		return inst
@@ -700,12 +752,16 @@ local function CheckShadowUpgrade(inst)
 	return true
 end
 
+local function ShadowBuff(inst)
+	inst.components.combat:SetDefaultDamage(TUNING.MUTANT_BEE_SHADOW_DAMAGE + 3)
+end
+
 local shadowbeebrain = require "brains/shadowbeebrain"
 local function shadowbee()
 	local inst = commonfn(
 		"mutantshadowbee", "mutantshadowbee",
 		{ "shadowbee", "killer", "scarytoprey" },
-		{ notburnable = true, notfreezable = true, notsleep = true }
+		{ notburnable = true, notfreezable = true, notsleep = true, buff = ShadowBuff }
 	)
 
 	local r, g, b = inst.AnimState:GetMultColour()
@@ -869,6 +925,11 @@ local function CheckDefenderUpgrade(inst)
 	return true
 end
 
+local function GuardianBuff(inst)
+	inst.buffed = true
+	inst.components.health:SetMaxHealth(TUNING.MUTANT_BEE_DEFENDER_HEALTH + 25)
+end
+
 local defenderbeebrain = require "brains/defenderbeebrain"
 local function defenderbee()
 	local inst = CreateEntity()
@@ -966,6 +1027,10 @@ local function defenderbee()
 	inst.EnableBuzz = EnableBuzz
 	inst.OnEntityWake = OnWake
 	inst.OnEntitySleep = OnSleep
+	inst.OnSave = OnCommonSave
+	inst.OnLoad = OnCommonLoad
+	inst.Buff = GuardianBuff
+	inst:DoTaskInTime(0, OnCommonInit)
 
 	return inst
 end
