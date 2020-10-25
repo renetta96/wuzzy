@@ -4,7 +4,7 @@
         <file id="0" name="body/body-0.png" width="80" height="120" pivot_x="0.465306" pivot_y="0.778338"/>
     </folder>
     <folder id="1" name="arm">
-        <file id="0" name="arm/arm-0.png" width="36" height="48" pivot_x="0.515264" pivot_y="0.760427"/>
+        <file id="0" name="arm/arm-0.png" width="100" height="100" pivot_x="0.505495" pivot_y="0.625004"/>
     </folder>
     <folder id="2" name="inner wing">
         <file id="0" name="inner wing/inner wing-0.png" width="97" height="36" pivot_x="0.478508" pivot_y="0.502792"/>
@@ -16,8 +16,8 @@
         <file id="0" name="stinger/stinger-0.png" width="36" height="64" pivot_x="0.492347" pivot_y="0.817195"/>
     </folder>
     <folder id="5" name="face">
-        <file id="0" name="face/face-0.png" width="100" height="100" pivot_x="0.496867" pivot_y="0.49964"/>
-        <file id="1" name="face/face-1.png" width="56" height="72" pivot_x="0.559812" pivot_y="0.475354"/>
+        <file id="0" name="face/face-0.png" width="200" height="200" pivot_x="0.498433" pivot_y="0.49982"/>
+        <file id="1" name="face/face-1.png" width="56" height="300" pivot_x="0.559812" pivot_y="0.494084"/>
     </folder>
     <folder id="6" name="foot">
         <file id="0" name="foot/foot-0.png" width="36" height="75" pivot_x="0.515264" pivot_y="0.760427"/>

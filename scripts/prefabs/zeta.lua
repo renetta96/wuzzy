@@ -113,8 +113,18 @@ local function CheckHiveUpgrade(inst)
   end
 
   local slaves = inst._hive:GetSlaves()
+  local count = 0
+  local checked = {}
+
+  for i, slave in ipairs(slaves) do
+    if not checked[slave.prefab] then
+      count = count + 1
+      checked[slave.prefab] = true
+    end
+  end
+
   inst.components.beesummoner:SetMaxChildren(
-    TUNING.OZZY_MAX_SUMMON_BEES + math.floor(#slaves / 3)
+    math.max(TUNING.OZZY_MAX_SUMMON_BEES, count + 1)
   )
 end
 

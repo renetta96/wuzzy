@@ -283,7 +283,7 @@ function BeeSummoner:DoSummonChild(target)
 
 	if child ~= nil then
 		child.Transform:SetPosition(pos.x + offset.x, 0, pos.z + offset.z)
-		if target ~= nil and child.components.combat ~= nil then
+		if target ~= nil and target ~= self.inst and child.components.combat ~= nil then
 			child.components.combat:SetTarget(target)
 		end
 

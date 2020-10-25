@@ -16,7 +16,7 @@
         <file id="0" name="stinger/stinger-0.png" width="36" height="64" pivot_x="0.492347" pivot_y="0.817195"/>
     </folder>
     <folder id="5" name="face">
-        <file id="0" name="face/face-0.png" width="100" height="100" pivot_x="0.496867" pivot_y="0.49964"/>
+        <file id="0" name="face/face-0.png" width="100" height="106" pivot_x="0.496867" pivot_y="0.49966"/>
         <file id="1" name="face/face-1.png" width="56" height="72" pivot_x="0.559812" pivot_y="0.475354"/>
     </folder>
     <folder id="6" name="foot">
