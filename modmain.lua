@@ -188,11 +188,11 @@ TUNING.MUTANT_BEEHIVE_CHILDREN_PER_SLAVE = 2
 
 -- Armor honey
 TUNING.ARMORHONEY_MAX_ABSORPTION = 0.7
-TUNING.ARMORHONEY_MIN_ABSORPTION = 0.35
+TUNING.ARMORHONEY_MIN_ABSORPTION = 0.55
 TUNING.ARMORHONEY_HEAL_TICKS = 3
-TUNING.ARMORHONEY_HEAL_INTERVAL = 5
-TUNING.ARMORHONEY_MIN_HEAL_PERCENT = 0.01
-TUNING.ARMORHONEY_MAX_HEAL_PERCENT = 0.03
+TUNING.ARMORHONEY_HEAL_INTERVAL = 3
+TUNING.ARMORHONEY_MIN_HEAL_PERCENT = 0.03
+TUNING.ARMORHONEY_MAX_HEAL_PERCENT = 0.05
 TUNING.ARMORHONEY_ADD_STORE = 1
 TUNING.ARMORHONEY_MULT_REGEN_TICK = 2 / 3
 
@@ -517,6 +517,32 @@ local function RangerHiveBlueprintPostInit(prefab)
 end
 
 AddPrefabPostInit("mutantrangerhive_blueprint", RangerHiveBlueprintPostInit)
+
+local function wrapRetargetFn(fn)
+  return function(...)
+    local target = fn(...)
+    if target and target:HasTag("mutant") then
+      return nil
+    end
+    return target
+  end
+end
+
+local function AbigailPostInit(prefab)
+  if not GLOBAL.TheWorld.ismastersim then
+    return
+  end
+
+  if prefab.components.combat then
+    local oldSetRetargetFunction = prefab.components.combat.SetRetargetFunction
+    prefab.components.combat.SetRetargetFunction = function(comp, period, fn, ...)
+      local newFn = wrapRetargetFn(fn)
+      return oldSetRetargetFunction(comp, period, newFn, ...)
+    end
+  end
+end
+
+AddPrefabPostInit("abigail", AbigailPostInit)
 
 local containers = GLOBAL.require("containers")
 local oldwidgetsetup = containers.widgetsetup
