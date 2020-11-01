@@ -4,7 +4,7 @@
         <file id="0" name="spike/spike-0.png" width="200" height="600" pivot_x="0.49505" pivot_y="0.08804"/>
     </folder>
     <entity id="0" name="shadowspike_fx">
-        <animation id="0" name="strike_2" length="400" looping="false">
+        <animation id="0" name="strike_2" length="934" looping="false">
             <mainline>
                 <key id="0">
                     <object_ref id="0" name="spike-0_001" folder="0" file="0" abs_x="-1.34398" abs_y="-3.541112" abs_pivot_x="0.49505" abs_pivot_y="0.08804" abs_angle="29.880013" abs_scale_x="1" abs_scale_y="0.03868" abs_a="1" timeline="0" key="0" z_index="0"/>
@@ -15,6 +15,7 @@
                 <key id="2" time="400">
                     <object_ref id="0" timeline="0" key="2" z_index="0"/>
                 </key>
+                <key id="3" time="401"/>
             </mainline>
             <timeline id="0" name="spike-0_001">
                 <key id="0" spin="0">
@@ -24,11 +25,14 @@
                     <object folder="0" file="0" x="-12.973612" y="22.180691" angle="29.880013" scale_y="1.5"/>
                 </key>
                 <key id="2" time="400" spin="0">
-                    <object folder="0" file="0" x="-1.34398" y="-3.54111" angle="29.880013" scale_y="0.03868"/>
+                    <object folder="0" file="0" x="-1.34398" y="-3.54111" angle="29.880013" scale_y="0.01"/>
+                </key>
+                <key id="3" time="401" spin="0">
+                    <object folder="0" file="0" x="-1.34398" y="-3.54111" angle="29.880013" scale_y="0.01"/>
                 </key>
             </timeline>
         </animation>
-        <animation id="1" name="strike_1" length="400" looping="false">
+        <animation id="1" name="strike_1" length="934" looping="false">
             <mainline>
                 <key id="0">
                     <object_ref id="0" name="spike-0_000" folder="0" file="0" abs_x="-3.687106" abs_y="-6.015343" abs_pivot_x="0.49505" abs_pivot_y="0.08804" abs_angle="332.268308" abs_scale_x="1" abs_scale_y="0.04588" abs_a="1" timeline="0" key="0" z_index="0"/>
@@ -39,6 +43,7 @@
                 <key id="2" time="400">
                     <object_ref id="0" timeline="0" key="2" z_index="0"/>
                 </key>
+                <key id="3" time="401"/>
             </mainline>
             <timeline id="0" name="spike-0_000">
                 <key id="0" spin="0">
@@ -48,11 +53,14 @@
                     <object folder="0" file="0" x="12.84371" y="25.450572" angle="332.268308" scale_y="1.5"/>
                 </key>
                 <key id="2" time="400" spin="0">
-                    <object folder="0" file="0" x="-3.68711" y="-6.01534" angle="332.268308" scale_y="0.04588"/>
+                    <object folder="0" file="0" x="-3.68711" y="-6.01534" angle="332.268308" scale_y="0.01"/>
+                </key>
+                <key id="3" time="401" spin="0">
+                    <object folder="0" file="0" x="-3.68711" y="-6.01534" angle="332.268308" scale_y="0.01"/>
                 </key>
             </timeline>
         </animation>
-        <animation id="2" name="strike_0" length="400" looping="false">
+        <animation id="2" name="strike_0" length="934" looping="false">
             <mainline>
                 <key id="0">
                     <object_ref id="0" name="spike-0" folder="0" file="0" abs_x="1.556484" abs_y="0.011143" abs_pivot_x="0.508973" abs_pivot_y="0.299985" abs_angle="0" abs_scale_x="1" abs_scale_y="0.02446" abs_a="1" timeline="0" key="0" z_index="0"/>
@@ -63,6 +71,7 @@
                 <key id="2" time="400">
                     <object_ref id="0" timeline="0" key="2" z_index="0"/>
                 </key>
+                <key id="3" time="401"/>
             </mainline>
             <timeline id="0" name="spike-0">
                 <key id="0" spin="0">
@@ -72,7 +81,10 @@
                     <object folder="0" file="0" x="1.556484" y="196.011143" pivot_x="0.508973" pivot_y="0.299985" angle="0" scale_y="1.38208"/>
                 </key>
                 <key id="2" time="400" spin="0">
-                    <object folder="0" file="0" x="1.556484" y="0.01114" pivot_x="0.508973" pivot_y="0.299985" angle="0" scale_y="0.02446"/>
+                    <object folder="0" file="0" x="1.556484" y="0.01114" pivot_x="0.508973" pivot_y="0.299985" angle="0" scale_y="0.01"/>
+                </key>
+                <key id="3" time="401" spin="0">
+                    <object folder="0" file="0" x="1.556484" y="0.01114" pivot_x="0.508973" pivot_y="0.299985" angle="0" scale_y="0.01"/>
                 </key>
             </timeline>
         </animation>

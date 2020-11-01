@@ -42,7 +42,7 @@ local function fn()
   end
 
   inst.persists = false
-  inst:DoTaskInTime(2, inst.Remove) -- cleanup just in case
+  inst:DoTaskInTime(1, inst.Remove) -- cleanup just in case
 
   return inst
 end
