@@ -180,7 +180,6 @@ TUNING.MUTANT_BEEHIVE_DELTA_REGEN_TIME = 5
 TUNING.MUTANT_BEEHIVE_UPGRADES_PER_STAGE = 3
 TUNING.MUTANT_BEEHIVE_WATCH_DIST = 25
 TUNING.MUTANT_BEEHIVE_RECOVER_PER_CHILD = 0.75
-TUNING.MUTANT_BEEHIVE_GROW_TIME = {TUNING.TOTAL_DAY_TIME * 10, TUNING.TOTAL_DAY_TIME * 10}
 TUNING.MUTANT_BEEHIVE_MAX_HONEYS_PER_CYCLE = 3
 TUNING.MUTANT_BEEHIVE_NUM_POLLENS_PER_HONEY = 7
 TUNING.MUTANT_BEEHIVE_MASTER_SLAVE_DIST = 10
@@ -250,7 +249,7 @@ local skin_modes = {
 }
 AddModCharacter("zeta", "MALE", skin_modes)
 
-local function MakeHoneycombUpgrader(prefab)
+local function MakeUpgrader(prefab)
   if not GLOBAL.TheWorld.ismastersim then
     return
   end
@@ -260,7 +259,8 @@ local function MakeHoneycombUpgrader(prefab)
   end
 end
 
-AddPrefabPostInit("honeycomb", MakeHoneycombUpgrader)
+AddPrefabPostInit("honeycomb", MakeUpgrader)
+AddPrefabPostInit("royal_jelly", MakeUpgrader)
 
 local function HandleHoneyPerishingInMetapisHive(prefab)
   if prefab.components.perishable and prefab.components.inventoryitem then

@@ -192,8 +192,7 @@ local function OnFreeze(inst)
   inst:Say(SPEECH.FREEZE)
   inst.SoundEmitter:PlaySound("dontstarve/common/freezecreature")
   inst.AnimState:PlayAnimation("frozen", true)
-  -- inst.AnimState:OverrideSymbol("swap_frozen", "frozen", "frozen")
-  inst.AnimState:Show("frozen_fx")
+  inst.AnimState:OverrideSymbol("swap_frozen", "frozen", "frozen")
 
   StopSpawning(inst)
 end
@@ -201,15 +200,13 @@ end
 local function OnThaw(inst)
   inst.AnimState:PlayAnimation("frozen_loop_pst", true)
   inst.SoundEmitter:PlaySound("dontstarve/common/freezethaw", "thawing")
-  -- inst.AnimState:OverrideSymbol("swap_frozen", "frozen", "frozen")
-  inst.AnimState:Show("frozen_fx")
+  inst.AnimState:OverrideSymbol("swap_frozen", "frozen", "frozen")
 end
 
 local function OnUnFreeze(inst)
   inst.AnimState:PlayAnimation("cocoon_small", true)
   inst.SoundEmitter:KillSound("thawing")
-  -- inst.AnimState:ClearOverrideSymbol("swap_frozen")
-  inst.AnimState:Hide("frozen_fx")
+  inst.AnimState:ClearOverrideSymbol("swap_frozen")
 
   StartSpawning(inst)
 end
@@ -432,57 +429,45 @@ local function PickChildPrefab(inst)
   return prefabstopick[math.random(#prefabstopick)]
 end
 
--- /* Upgrade and Grow
-local function MakeSetStageFn(stage)
-  return function(inst)
-    if stage > 1 then
-      Shake(inst)
-    end
-
-    local scale = UPGRADE_STAGES[stage].SIZE_SCALE
-    inst.Transform:SetScale(scale, scale, scale)
-    inst.components.health:SetMaxHealth(UPGRADE_STAGES[stage].HEALTH)
-
-    inst.components.childspawner:SetRegenPeriod(TUNING.MUTANT_BEEHIVE_DEFAULT_REGEN_TIME - (stage - 1) * TUNING.MUTANT_BEEHIVE_DELTA_REGEN_TIME)
-    inst.components.childspawner:SetSpawnPeriod(TUNING.MUTANT_BEEHIVE_DEFAULT_RELEASE_TIME - (stage - 1) * TUNING.MUTANT_BEEHIVE_DELTA_RELEASE_TIME)
-    inst.components.childspawner:SetMaxEmergencyChildren(TUNING.MUTANT_BEEHIVE_DEFAULT_EMERGENCY_BEES + (stage - 1) * TUNING.MUTANT_BEEHIVE_DELTA_BEES)
-
-    inst.components.upgradeable:SetStage(stage)
-
-    local loots = {}
-    local numhoneycombs = math.floor(TUNING.MUTANT_BEEHIVE_UPGRADES_PER_STAGE * (stage - 1))
-    for i = 1, numhoneycombs do
-      table.insert(loots, "honeycomb")
-    end
-
-    inst.components.lootdropper:SetLoot(loots)
-    OnSlave(inst)
-  end
-end
-
+-- /* Upgrade
 local function OnUpgrade(inst)
   inst:Say(SPEECH.UPGRADE)
   Shake(inst)
 end
 
+local function SetStage(inst, stage)
+	if stage > 1 then
+    Shake(inst)
+  end
+
+  local scale = UPGRADE_STAGES[stage].SIZE_SCALE
+  inst.Transform:SetScale(scale, scale, scale)
+  inst.components.health:SetMaxHealth(UPGRADE_STAGES[stage].HEALTH)
+
+  inst.components.childspawner:SetRegenPeriod(TUNING.MUTANT_BEEHIVE_DEFAULT_REGEN_TIME - (stage - 1) * TUNING.MUTANT_BEEHIVE_DELTA_REGEN_TIME)
+  inst.components.childspawner:SetSpawnPeriod(TUNING.MUTANT_BEEHIVE_DEFAULT_RELEASE_TIME - (stage - 1) * TUNING.MUTANT_BEEHIVE_DELTA_RELEASE_TIME)
+  inst.components.childspawner:SetMaxEmergencyChildren(TUNING.MUTANT_BEEHIVE_DEFAULT_EMERGENCY_BEES + (stage - 1) * TUNING.MUTANT_BEEHIVE_DELTA_BEES)
+
+  inst.components.upgradeable:SetStage(stage)
+
+  local loots = {}
+  local numhoneycombs = TUNING.MUTANT_BEEHIVE_UPGRADES_PER_STAGE * (math.min(stage, 2) - 1)
+  for i = 1, numhoneycombs do
+    table.insert(loots, "honeycomb")
+  end
+
+  inst.components.lootdropper:SetLoot(loots)
+  OnSlave(inst)
+end
+
 local function OnStageAdvance(inst)
   inst:Say(SPEECH.STAGE_ADVANCE)
-  inst.components.growable:DoGrowth()
+
+  SetStage(inst, inst.components.upgradeable.stage)
+
   return true
 end
-
-local function GetGrowTime(inst, stage)
-  return TUNING.MUTANT_BEEHIVE_GROW_TIME[stage] * (1 + math.random())
-end
-
-local growth_stages =
-{
-  { name = "small", time = GetGrowTime, fn = MakeSetStageFn(1) },
-  { name = "med", time = GetGrowTime, fn = MakeSetStageFn(2) },
-  { name = "large", fn = MakeSetStageFn(3) },
-}
-
--- Upgrade and Grow */
+-- Upgrade */
 
 local function FindEnemy(inst)
   local nearbyplayer, range = FindClosestPlayerToInst(inst, TUNING.MUTANT_BEEHIVE_WATCH_DIST, true)
@@ -668,7 +653,7 @@ local function OnInit(inst)
     StartSpawning(inst)
   end
 
-  inst.components.growable:SetStage(inst.components.upgradeable.stage)
+  SetStage(inst, inst.components.upgradeable.stage)
 
   inst:DoPeriodicTask(3, SelfRepair)
   inst:DoPeriodicTask(60, ConvertPollenToHoney)
@@ -752,6 +737,22 @@ end
 local function OnEntitySleep(inst)
   inst.SoundEmitter:KillSound("loop")
   StartBackgroundGatherTask(inst)
+end
+
+local function canupgrade(inst, obj, performer)
+	if not performer or not performer:HasTag("beemaster") then
+		return false
+	end
+
+	if inst.components.upgradeable.stage == 1 and obj.prefab ~= "honeycomb" then
+		return false
+	end
+
+	if inst.components.upgradeable.stage == 2 and obj.prefab ~= "royal_jelly" then
+		return false
+	end
+
+	return true
 end
 
 local function fn()
@@ -851,13 +852,11 @@ local function fn()
   inst.components.upgradeable.onupgradefn = OnUpgrade
   inst.components.upgradeable.onstageadvancefn = OnStageAdvance
   inst.components.upgradeable.upgradesperstage = TUNING.MUTANT_BEEHIVE_UPGRADES_PER_STAGE
-
-  ---------------------
-
-  inst:AddComponent("growable")
-  inst.components.growable.springgrowth = true
-  inst.components.growable.stages = growth_stages
-  inst.components.growable:StartGrowing()
+  local oldUpgrade = inst.components.upgradeable.Upgrade
+  inst.components.upgradeable.Upgrade = function(comp, obj, upgrade_performer)
+  	if not canupgrade(comp.inst, obj, upgrade_performer) then return false end
+  	return oldUpgrade(comp, obj, upgrade_performer)
+	end
 
   ---------------------
   inst:AddComponent("workable")
