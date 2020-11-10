@@ -470,7 +470,7 @@ end
 -- Upgrade */
 
 local function FindEnemy(inst)
-  local nearbyplayer, range = FindClosestPlayerToInst(inst, TUNING.MUTANT_BEEHIVE_WATCH_DIST, true)
+  local nearbyplayer = GetClosestInstWithTag("beemaster", inst, TUNING.MUTANT_BEEHIVE_WATCH_DIST)
 
   local enemy = (nearbyplayer and
     FindEntity(inst, TUNING.MUTANT_BEEHIVE_WATCH_DIST,
@@ -485,7 +485,7 @@ local function FindEnemy(inst)
       function(guy)
         return inst.components.combat:CanTarget(guy)
           and guy.components.combat and guy.components.combat.target
-          and (guy.components.combat.target:HasTag("player")
+          and (guy.components.combat.target:HasTag("beemaster")
             or guy.components.combat.target:HasTag("mutant"))
       end,
       { "_combat", "_health" },
@@ -933,22 +933,6 @@ local function CheckMaster(inst)
     OnSlaveHammered(inst)
     return
   end
-
-  -- local master = FindEntity(inst, TUNING.MUTANT_BEEHIVE_MASTER_SLAVE_DIST,
-  --   function(guy)
-  --     return guy:IsValid()
-  --       and guy.prefab == 'mutantbeehive'
-  --       and guy._ownerid == inst._ownerid
-  --   end,
-  --   { "_combat", "_health" },
-  --   { "INLIMBO", "player" },
-  --   { "mutantbeehive" }
-  -- )
-
-  -- if not master then
-  --   OnSlaveHammered(inst)
-  --   return
-  -- end
 end
 
 local function OnSlaveKilled(inst)

@@ -38,8 +38,16 @@ local killersounds =
 	death = "dontstarve/bee/killerbee_death",
 }
 
+local function IsNearbyPlayer(inst)
+	return GetClosestInstWithTag("beemaster", inst, TUNING.MUTANT_BEE_WATCH_DIST)
+end
+
+local function IsAlly(inst)
+	return inst and (inst:HasTag("beemaster") or inst:HasTag("mutant"))
+end
+
 local function FindTarget(inst, dist)
-	local nearbyplayer, range = FindClosestPlayerToInst(inst, TUNING.MUTANT_BEE_WATCH_DIST, true)
+	local nearbyplayer = IsNearbyPlayer(inst)
 
 	return (nearbyplayer and FindEntity(inst, dist,
 		function(guy)
@@ -51,8 +59,7 @@ local function FindTarget(inst, dist)
 		or FindEntity(inst, dist,
 		function(guy)
 			return inst.components.combat:CanTarget(guy)
-				and guy.components.combat and guy.components.combat.target
-				and guy.components.combat.target:HasTag("player")
+				and guy.components.combat and IsAlly(guy.components.combat.target)
 		end,
 		{ "_combat", "_health" },
 		{ "mutant", "INLIMBO", "player" },
@@ -681,7 +688,7 @@ local function Spike(inst, origin)
 		{ "mutant", "INLIMBO", "player" },
 		{ "monster", "insect", "animal", "character" })
 
-	local nearbyplayer, range = FindClosestPlayerToInst(inst, TUNING.MUTANT_BEE_WATCH_DIST, true)
+	local nearbyplayer = IsNearbyPlayer(inst)
 
 	local validtargets = {}
 
@@ -689,11 +696,8 @@ local function Spike(inst, origin)
 		local valid = false
 
 		if inst.components.combat:CanTarget(e) then
-			if e.components.combat and e.components.combat.target then
-				local target = e.components.combat.target
-				if target:HasTag("player") or target:HasTag("mutant") then
-					valid = true
-				end
+			if e.components.combat and IsAlly(e.components.combat.target) then
+				valid = true
 			end
 
 			if nearbyplayer and e:HasTag("monster") then
@@ -813,14 +817,11 @@ local function Taunt(inst)
 		{ "mutant", "INLIMBO", "player" },
 		{ "monster", "insect", "animal", "character" })
 
-	local nearbyplayer, range = FindClosestPlayerToInst(inst, TUNING.MUTANT_BEE_WATCH_DIST, true)
+	local nearbyplayer = IsNearbyPlayer(inst)
 
 	for i, e in ipairs(entities) do
-		if e.components.combat and e.components.combat.target and not IsTaunted(e) then
-			local target = e.components.combat.target
-			if target:HasTag("player") or target:HasTag("mutant") then
-				e.components.combat:SetTarget(inst)
-			end
+		if e.components.combat and IsAlly(e.components.combat.target) and not IsTaunted(e) then
+			e.components.combat:SetTarget(inst)
 		end
 
 		if nearbyplayer and e:HasTag("monster") and e.components.combat and not IsTaunted(e) then
