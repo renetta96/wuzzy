@@ -463,10 +463,10 @@ local function killerbee()
 	inst.components.combat:SetDefaultDamage(TUNING.MUTANT_BEE_DAMAGE)
 	inst.components.combat:SetAttackPeriod(TUNING.MUTANT_BEE_ATTACK_PERIOD)
 	inst.components.combat:SetRetargetFunction(0.5, KillerRetarget)
+	inst.components.combat:SetRange(3, 6)
 
 	inst:SetBrain(killerbrain)
 	inst.sounds = killersounds
-	inst._attackcount = 0
 
 	MakeHauntablePanic(inst)
 	inst:ListenForEvent("spawnedfromhaunt", OnSpawnedFromHaunt)
@@ -646,6 +646,7 @@ local function assassinbee()
 	inst.components.combat:SetDefaultDamage(TUNING.MUTANT_BEE_ASSSASIN_DAMAGE)
 	inst.components.combat:SetAttackPeriod(TUNING.MUTANT_BEE_ASSASSIN_ATTACK_PERIOD)
 	inst.components.combat:SetRetargetFunction(0.25, KillerRetarget)
+	inst.components.combat:SetRange(3, 6)
 	inst:SetBrain(assassinbeebrain)
 	inst.sounds = killersounds
 
