@@ -7,7 +7,8 @@ local assets = {
 
 local prefabs = {
   "mutantbeecocoon",
-  "honey"
+  "honey",
+  "pollen_fx"
 }
 
 local start_inv = {}
@@ -160,6 +161,73 @@ local function OnInit(inst)
   end
 end
 
+local function UpdatePollenFx(inst)
+  local oldfx = {}
+  for flower, fx in pairs(inst._activefx) do
+    oldfx[flower] = fx
+  end
+
+  local x, y, z = inst.Transform:GetWorldPosition()
+  local flowers = TheSim:FindEntities(x, y, z, 25, {"flower"})
+
+  for i, flower in ipairs(flowers) do
+    if flower.net_pollenpicked ~= nil then
+      local pollenpicked = flower.net_pollenpicked:value()
+
+      if not pollenpicked then
+        if inst._activefx[flower] == nil then
+          local fx = SpawnPrefab("pollen_fx")
+          fx.entity:SetParent(flower.entity)
+          fx.entity:AddFollower():FollowSymbol(flower.GUID, 'flowers01', 0, 0, 0)
+
+          inst._activefx[flower] = fx
+        else
+          oldfx[flower] = nil
+        end
+      else
+        if inst._activefx[flower] ~= nil then
+          inst._activefx[flower]:Remove()
+          inst._activefx[flower] = nil
+          oldfx[flower] = nil
+        end
+      end
+    end
+  end
+
+  for flower, fx in pairs(oldfx) do
+    inst._activefx[flower] = nil
+    if fx:IsValid() then
+      ErodeAway(fx, 0.5)
+    end
+  end
+end
+
+local function DisablePollenFx(inst)
+  if inst._pollenfx_task then
+    inst._pollenfx_task:Cancel()
+    inst._pollenfx_task = nil
+  end
+
+  for flower, fx in pairs(inst._activefx) do
+    if fx:IsValid() then
+      fx:Remove()
+    end
+  end
+
+  inst._activefx = {}
+end
+
+local function EnablePollenFx(inst)
+  if inst.player_classified ~= nil then
+    inst:ListenForEvent("playerdeactivated", DisablePollenFx)
+    if inst._pollenfx_task == nil then
+      inst._pollenfx_task = inst:DoPeriodicTask(0.1, UpdatePollenFx)
+    end
+  else
+    inst:RemoveEventCallback("playeractivated", EnablePollenFx)
+  end
+end
+
 -- This initializes for both the server and client. Tags can be added here.
 local common_postinit = function(inst)
   inst.soundsname = "zeta"
@@ -172,6 +240,11 @@ local common_postinit = function(inst)
   inst:AddTag(UPGRADETYPES.DEFAULT.."_upgradeuser")
 
   inst.components.talker.colour = Vector3(.9, .9, .3)
+
+  if not TheNet:IsDedicated() then
+    inst._activefx = {}
+    inst:ListenForEvent("playeractivated", EnablePollenFx)
+  end
 end
 
 -- This initializes for the server only. Components are added here.

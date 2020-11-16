@@ -227,6 +227,7 @@ local function GetHiveUpgradeStage(inst)
 end
 
 local function TrackLastCombatTime(inst)
+	inst._lastcombattime = GetTime()
 	inst:ListenForEvent('onattackother', function(inst) inst._lastcombattime = GetTime() end)
 	inst:ListenForEvent('attacked', function(inst) inst._lastcombattime = GetTime() end)
 end

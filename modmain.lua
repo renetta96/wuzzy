@@ -73,7 +73,6 @@ Assets = {
 
   Asset("ANIM", "anim/status_symbiosis.zip"),
   Asset("ANIM", "anim/status_meter_symbiosis.zip"),
-  Asset("ANIM", "anim/pollen_fx.zip"),
 
   Asset( "IMAGE", "images/inventoryimages/mutantdefenderhive.tex" ),
   Asset( "ATLAS", "images/inventoryimages/mutantdefenderhive.xml" ),
@@ -114,7 +113,7 @@ TUNING.OZZY_DEFAUT_SPEED_MULTIPLIER = 1.0
 TUNING.OZZY_SPRING_SPEED_MULTIPLIER = 1.15
 TUNING.OZZY_WINTER_SPEED_MULTIPLIER = 0.85
 TUNING.OZZY_MAX_SUMMON_BEES = 4
-TUNING.OZZY_SUMMON_CHANCE = 0.4
+TUNING.OZZY_SUMMON_CHANCE = 0.7
 TUNING.OZZY_MAX_BEES_STORE = 7
 TUNING.OZZY_HONEYED_FOOD_ABSORPTION = 1.2
 TUNING.OZZY_NON_HONEYED_FOOD_ABSORPTION = 0.5
@@ -198,7 +197,6 @@ TUNING.ARMORHONEY_MULT_REGEN_TICK = 2 / 3
 -- Melissa
 TUNING.MELISSA_DAMAGE = 40
 TUNING.MELISSA_USES = 200
-
 
 -- The character select screen lines
 STRINGS.CHARACTER_TITLES.zeta = "The Buzzy"
@@ -296,30 +294,6 @@ AddPrefabPostInit("honey", HandleHoneyPerishingInMetapisHive)
 local POLLEN_TICK_INTERVAL = 60
 local POLLEN_MAX_TICKS = 16
 
-local function removefx(inst)
-  if inst._pollenfx then
-    inst._pollenfx:Remove()
-    inst._pollenfx = nil
-  end
-end
-
-local function spawnfx(inst)
-  removefx(inst)
-
-  local fx = SpawnPrefab("pollen_fx")
-  fx.entity:SetParent(inst.entity)
-  fx.entity:AddFollower():FollowSymbol(inst.GUID, 'flowers01', 0, 0, 0)
-  inst._pollenfx = fx
-end
-
-local function checkfx(inst)
-  if not inst.pollenpicked then
-    spawnfx(inst)
-  else
-    removefx(inst)
-  end
-end
-
 local function ontick(inst)
   inst.pollenticks = inst.pollenticks - 1
   if inst.pollenticks > 0 then
@@ -327,7 +301,7 @@ local function ontick(inst)
   else
     inst._pollentask = nil
     inst.pollenpicked = false
-    checkfx(inst)
+    inst.net_pollenpicked:set(false)
   end
 end
 
@@ -353,17 +327,9 @@ local function onpickedflowerfn(inst, picker)
     end
 
     inst.pollenpicked = true
+    inst.net_pollenpicked:set(true)
     inst.pollenticks = POLLEN_MAX_TICKS
     startpollentask(inst)
-    checkfx(inst)
-  end
-end
-
-local function onplayerjoined(inst, player)
-  if player:HasTag("beemaster") then
-    checkfx(inst)
-  else
-    removefx(inst)
   end
 end
 
@@ -374,27 +340,27 @@ local function onseasonchange(inst, season)
 
   if season == SEASONS.WINTER then
     inst.pollenpicked = true
+    inst.net_pollenpicked:set(true)
     inst.pollenticks = POLLEN_MAX_TICKS
     stoppollentask(inst)
   else
     startpollentask(inst)
   end
-
-  checkfx(inst)
 end
 
 local function FlowerPostInit(prefab)
+  prefab.net_pollenpicked = GLOBAL.net_bool(prefab.GUID, "flower.pollenpicked", "pollenpickeddirty")
+
   if not GLOBAL.TheWorld.ismastersim then
     return
   end
 
-  if not GLOBAL.TheNet:IsDedicated() then
-    prefab:ListenForEvent("ms_playerjoined", function(src, player)
-      onplayerjoined(prefab, player)
-    end, GLOBAL.TheWorld)
-  end
-
   prefab.pollenpicked = false
+  prefab.net_pollenpicked:set(false)
+  prefab:DoTaskInTime(0, function()
+    prefab.net_pollenpicked:set(prefab.pollenpicked)
+  end)
+
   prefab.pollenticks = 0
 
   prefab:DoTaskInTime(0, onseasonchange)
@@ -455,6 +421,7 @@ local function FlowerPostInit(prefab)
     prefab.OnLoad = function(inst, data)
       OldOnLoad(inst, data)
       inst.pollenpicked = data ~= nil and data.pollenpicked or false
+      inst.net_pollenpicked:set(inst.pollenpicked)
       inst.pollenticks = data ~= nil and data.pollenticks or 0
 
       inst:DoTaskInTime(0, onseasonchange)
