@@ -8,7 +8,7 @@ local assets =
 	Asset("ANIM", "anim/mutantworkerbee.zip"),
 	Asset("ANIM", "anim/mutantsoldierbee.zip"),
 	Asset("ANIM", "anim/mutantshadowbee.zip"),
-	Asset("ANIM", "anim/shadowbee_teleport.zip"),
+	Asset("ANIM", "anim/mutantbee_teleport.zip"),
 	Asset("SOUND", "sound/bee.fsb"),
 }
 
@@ -766,7 +766,6 @@ local function shadowbee()
 		{ "shadowbee", "killer", "scarytoprey" },
 		{ notburnable = true, notfreezable = true, notsleep = true, buff = ShadowBuff }
 	)
-	inst.AnimState:AddOverrideBuild("shadowbee_teleport")
 
 	local r, g, b = inst.AnimState:GetMultColour()
 	inst.AnimState:SetMultColour(r, g, b, 0.6)
