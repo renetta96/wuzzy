@@ -28,7 +28,6 @@ end
 
 local function GetChildPrefab(inst)
   local maxchildren = inst.components.beesummoner.maxchildren
-  local numprefabs = 5
   local expect = {
     mutantkillerbee = maxchildren,
     mutantdefenderbee = 0,
@@ -41,8 +40,8 @@ local function GetChildPrefab(inst)
 
   for prefab, v in pairs(expect) do
     if prefab ~= "mutantkillerbee" and CanSummon(inst, prefab) then
-      expect[prefab] = expect[prefab] + (maxchildren / numprefabs)
-      expect["mutantkillerbee"] = expect["mutantkillerbee"] - (maxchildren / numprefabs)
+      expect[prefab] = expect[prefab] + 1
+      expect["mutantkillerbee"] = expect["mutantkillerbee"] - 1
       table.insert(cansummon, prefab)
     end
   end
@@ -50,7 +49,6 @@ local function GetChildPrefab(inst)
   local prefabcount = {}
   for k, v in pairs(expect) do
     prefabcount[k] = 0
-    expect[k] = math.floor(v + 0.5)
   end
 
   for i, child in pairs(inst.components.beesummoner.children) do
@@ -255,7 +253,6 @@ local master_postinit = function(inst)
   inst.components.health:SetMaxHealth(TUNING.ZETA_HEALTH)
   inst.components.hunger:SetMax(TUNING.ZETA_HUNGER)
   inst.components.sanity:SetMax(TUNING.ZETA_SANITY)
-  inst.components.hunger.hungerrate = TUNING.WILSON_HUNGER_RATE * TUNING.OZZY_HUNGER_SCALE
   inst.components.combat.damagemultiplier = TUNING.OZZY_DEFAULT_DAMAGE_MULTIPLIER
   inst.components.temperature.inherentinsulation = -TUNING.INSULATION_SMALL
 

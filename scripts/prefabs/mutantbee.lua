@@ -8,6 +8,7 @@ local assets =
 	Asset("ANIM", "anim/mutantworkerbee.zip"),
 	Asset("ANIM", "anim/mutantsoldierbee.zip"),
 	Asset("ANIM", "anim/mutantshadowbee.zip"),
+	Asset("ANIM", "anim/shadowbee_teleport.zip"),
 	Asset("SOUND", "sound/bee.fsb"),
 }
 
@@ -391,9 +392,7 @@ local workerbrain = require("brains/mutantbeebrain")
 local function workerbee()
 	--pollinator (from pollinator component) added to pristine state for optimization
 	--for searching: inst:AddTag("pollinator")
-	local inst = nil
-
-	inst = commonfn("mutantworkerbee", "mutantworkerbee", { "worker", "pollinator" })
+	local inst = commonfn("bee", "mutantworkerbee", { "worker", "pollinator" })
 
 	if not TheWorld.ismastersim then
 		return inst
@@ -446,10 +445,8 @@ end
 
 local killerbrain = require("brains/mutantkillerbeebrain")
 local function killerbee()
-	local inst = nil
-
-	inst = commonfn(
-		"mutantsoldierbee",
+	local inst = commonfn(
+		"bee",
 		"mutantsoldierbee",
 		{ "soldier", "killer", "scarytoprey" },
 		{ buff = SoldierBuff }
@@ -530,7 +527,7 @@ end
 local rangedkillerbrain = require("brains/rangedkillerbeebrain")
 local function rangerbee()
 	local inst = commonfn(
-		"mutantrangerbee",
+		"bee",
 		"mutantrangerbee",
 		{ "killer", "ranger", "scarytoprey" },
 		{ buff = RangerBuff }
@@ -631,7 +628,7 @@ end
 local assassinbeebrain = require "brains/assassinbeebrain"
 local function assassinbee()
 	local inst = commonfn(
-		"mutantassassinbee",
+		"bee",
 		"mutantassassinbee",
 		{ "killer", "assassin", "scarytoprey" },
 		{ buff = AssassinBuff }
@@ -765,10 +762,11 @@ end
 local shadowbeebrain = require "brains/shadowbeebrain"
 local function shadowbee()
 	local inst = commonfn(
-		"mutantshadowbee", "mutantshadowbee",
+		"bee", "mutantshadowbee",
 		{ "shadowbee", "killer", "scarytoprey" },
 		{ notburnable = true, notfreezable = true, notsleep = true, buff = ShadowBuff }
 	)
+	inst.AnimState:AddOverrideBuild("shadowbee_teleport")
 
 	local r, g, b = inst.AnimState:GetMultColour()
 	inst.AnimState:SetMultColour(r, g, b, 0.6)
@@ -951,7 +949,7 @@ local function defenderbee()
 
   MakeFlyingCharacterPhysics(inst, 1.5, 0.1)
 
-  inst.AnimState:SetBank("mutantdefenderbee")
+  inst.AnimState:SetBank("bee_guard")
   inst.AnimState:SetBuild("mutantdefenderbee")
   inst.AnimState:PlayAnimation("idle", true)
 
