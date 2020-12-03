@@ -97,8 +97,13 @@ function BeeSummoner:SetSummonChance(chance)
 end
 
 local function Refresh(self)
+	local currentnumstore = self.numstore
+
 	self.numstore = math.min(self.numstore, self:GetTotalStore())
-	self.inst:PushEvent("onnumstorechange", {numstore = self.numstore})
+
+	if currentnumstore ~= self.numstore then
+		self.inst:PushEvent("onnumstorechange", {numstore = self.numstore})
+	end
 
 	if self.numstore < self:GetTotalStore() then
 		self:StartRegen()

@@ -672,12 +672,19 @@ local function onclose(inst)
     end
 end
 
-local function AddHoneyProgress(inst)
+local function AddHoneyProgress(inst, child)
   if not inst.components.container then
     return
   end
 
+  local numpollens = 1
+
+  if child and inst.components.upgradeable then
+    numpollens = 1 + inst.components.upgradeable.stage
+  end
+
   local pollen = SpawnPrefab("zetapollen")
+  pollen.components.stackable:SetStackSize(numpollens)
   inst.components.container:GiveItem(pollen)
 end
 
@@ -688,7 +695,7 @@ end
 local function onchildgoinghome(inst, data)
   if not inst:HasTag("burnt") then
     if data.child and data.child.components.pollinator and data.child.components.pollinator:HasCollectedEnough() then
-      AddHoneyProgress(inst)
+      AddHoneyProgress(inst, data.child)
     end
   end
 end

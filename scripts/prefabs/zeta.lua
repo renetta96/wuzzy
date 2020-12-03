@@ -108,10 +108,22 @@ end
 
 local function CheckHiveUpgrade(inst)
   if not inst._hive then
+    inst.components.beesummoner:RemoveStoreModifier_Additive('motherhive')
+    inst.components.beesummoner:RemoveStoreModifier_Additive('childhives')
     return
   end
 
+  if inst._hive.components.upgradeable then
+    inst.components.beesummoner:AddStoreModifier_Additive(
+      'motherhive',
+      inst._hive.components.upgradeable.stage - 1
+    )
+  end
+
   local slaves = inst._hive:GetSlaves()
+
+  inst.components.beesummoner:AddStoreModifier_Additive('childhives', math.floor(#slaves / 2))
+
   local count = 0
   local checked = {}
 
