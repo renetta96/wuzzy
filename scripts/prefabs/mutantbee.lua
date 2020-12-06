@@ -67,6 +67,22 @@ local function FindTarget(inst, dist)
 		{ "monster", "insect", "animal", "character" })
 end
 
+local function PushColour(inst, src, r, g, b, a)
+    if inst.components.colouradder ~= nil then
+        inst.components.colouradder:PushColour(src, r, g, b, a)
+    else
+        inst.AnimState:SetAddColour(r, g, b, a)
+    end
+end
+
+local function PopColour(inst, src)
+    if inst.components.colouradder ~= nil then
+        inst.components.colouradder:PopColour(src)
+    else
+        inst.AnimState:SetAddColour(0, 0, 0, 0)
+    end
+end
+
 -- /* Mutant effects
 local function DoPoisonDamage(inst)
 	if inst._poisonticks <= 0 or inst.components.health:IsDead() then
@@ -848,7 +864,7 @@ end
 
 local function CauseFrostBite(inst)
 	inst._frostbite_expire = GetTime() + 9.75
-	inst.AnimState:SetAddColour(82 / 255, 115 / 255, 124 / 255, 0)
+	PushColour(inst, 'mutant_frostbite', 82 / 255, 115 / 255, 124 / 255, 0)
 
 	if inst.components.combat and not inst._currentattackperiod then
 		inst._currentattackperiod = inst.components.combat.min_attack_period
@@ -856,12 +872,12 @@ local function CauseFrostBite(inst)
 	end
 
 	if inst.components.locomotor.enablegroundspeedmultiplier then
-		inst.components.locomotor:SetExternalSpeedMultiplier(inst, "frostbite", TUNING.MUTANT_BEE_FROSTBITE_SPEED_PENALTY)
+		inst.components.locomotor:SetExternalSpeedMultiplier(inst, "mutant_frostbite", TUNING.MUTANT_BEE_FROSTBITE_SPEED_PENALTY)
 		inst:DoTaskInTime(10,
 			function (inst)
 				if GetTime() >= inst._frostbite_expire then
-					inst.AnimState:SetAddColour(0, 0, 0, 0)
-					inst.components.locomotor:RemoveExternalSpeedMultiplier(inst, "frostbite")
+					PopColour(inst, 'mutant_frostbite')
+					inst.components.locomotor:RemoveExternalSpeedMultiplier(inst, "mutant_frostbite")
 					if inst.components.combat and inst._currentattackperiod then
 						inst.components.combat:SetAttackPeriod(inst._currentattackperiod)
 						inst._currentattackperiod = nil
@@ -879,7 +895,7 @@ local function CauseFrostBite(inst)
 	inst:DoTaskInTime(10,
 		function (inst)
 			if GetTime() >= inst._frostbite_expire then
-				inst.AnimState:SetAddColour(0, 0, 0, 0)
+				PopColour(inst, 'mutant_frostbite')
 				if inst._currentspeed then
 					inst.components.locomotor.groundspeedmultiplier = inst._currentspeed
 					inst._currentspeed = nil

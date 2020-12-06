@@ -634,7 +634,7 @@ local function ConvertPollenToHoney(inst)
   for i=1,maxhoneys do
     local numpollens = math.random(
       TUNING.MUTANT_BEEHIVE_NUM_POLLENS_PER_HONEY,
-      TUNING.MUTANT_BEEHIVE_NUM_POLLENS_PER_HONEY + 1)
+      TUNING.MUTANT_BEEHIVE_NUM_POLLENS_PER_HONEY + 2)
     local has, numfound = inst.components.container:Has("zetapollen", numpollens)
     if not has then
       break
