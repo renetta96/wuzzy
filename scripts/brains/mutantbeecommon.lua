@@ -40,10 +40,13 @@ local function OnAttacked(inst, data)
 				return false
 			end
 		end
+
+		if dude.components.follower and dude.components.follower.leader then
+			return false
+		end
+
 		return dude:HasTag("mutant") and
-			not (dude:IsInLimbo() or
-				(dude.components.health and dude.components.health:IsDead())
-			)
+			not (dude:IsInLimbo() or (dude.components.health and dude.components.health:IsDead()))
 	end, targetshares)
 end
 

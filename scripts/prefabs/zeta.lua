@@ -139,6 +139,12 @@ local function CheckHiveUpgrade(inst)
   )
 end
 
+local honeyed_foods = {
+  leafymeatsouffle = true,
+  sweettea = true,
+  icecream = true
+}
+
 local function OnInit(inst)
   OnNumStoreChange(inst)
   inst:DoPeriodicTask(1, CheckHiveUpgrade)
@@ -150,7 +156,7 @@ local function OnInit(inst)
       local hungerabsorption = comp.hungerabsorption
       local sanityabsorption = comp.sanityabsorption
 
-      if food and food:HasTag('honeyed') then
+      if food and (food:HasTag('honeyed') or honeyed_foods[food.prefab]) then
         comp.healthabsorption = TUNING.OZZY_HONEYED_FOOD_ABSORPTION
         comp.hungerabsorption = TUNING.OZZY_HONEYED_FOOD_ABSORPTION
         comp.sanityabsorption = TUNING.OZZY_HONEYED_FOOD_ABSORPTION

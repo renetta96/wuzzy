@@ -228,6 +228,10 @@ local function OnKilled(inst)
   inst.SoundEmitter:PlaySound("dontstarve/bee/beehive_destroy")
   inst.components.lootdropper:DropLoot(inst:GetPosition())
   SpawnCocoon(inst)
+
+  if inst.components.container ~= nil then
+    inst.components.container:DropEverything()
+  end
 end
 
 local function OnHammered(inst, worker)
@@ -236,6 +240,10 @@ local function OnHammered(inst, worker)
   inst.SoundEmitter:PlaySound("dontstarve/bee/beehive_destroy")
   inst.components.lootdropper:DropLoot(inst:GetPosition())
   SpawnCocoon(inst)
+
+  if inst.components.container ~= nil then
+    inst.components.container:DropEverything()
+  end
 
   local collapse = inst.components.upgradeable.stage >= 2 and "collapse_big" or "collapse_small"
   local fx = SpawnPrefab(collapse)
@@ -282,6 +290,11 @@ local function OnHit(inst, attacker, damage)
 end
 
 local function OnWork(inst, worker, workleft)
+  if inst.components.container ~= nil then
+    inst.components.container:DropEverything()
+    inst.components.container:Close()
+  end
+
   if IsValidOwner(inst, worker) then
     inst:Say(SPEECH.HAMMER)
   else

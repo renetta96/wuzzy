@@ -47,7 +47,25 @@ local function IsAlly(inst)
 	return inst and (inst:HasTag("beemaster") or inst:HasTag("mutant"))
 end
 
+local MAX_DIST_FROM_LEADER = 10
+local function IsWithinLeaderRange(inst)
+	if inst.components.follower and inst.components.follower.leader then
+		return inst:GetDistanceSqToInst(inst.components.follower.leader) < MAX_DIST_FROM_LEADER * MAX_DIST_FROM_LEADER
+	end
+
+	return true
+end
+
+
+local function keeptargetfn(inst, target)
+	return IsWithinLeaderRange(inst)
+end
+
 local function FindTarget(inst, dist)
+	if not IsWithinLeaderRange(inst) then
+		return nil
+	end
+
 	local nearbyplayer = IsNearbyPlayer(inst)
 
 	return (nearbyplayer and FindEntity(inst, dist,
@@ -121,10 +139,31 @@ local function OnAttackOtherWithPoison(inst, data)
 	end
 end
 
+local function HealAllies(inst, amount)
+	local x, y, z = inst.Transform:GetWorldPosition()
+	local allies = TheSim:FindEntities(x, y, z,
+		TUNING.MUTANT_BEE_SOLDIER_HEAL_DIST,
+		{ "_combat", "_health" },
+		{ "INLIMBO", "soldier" },
+		{ "mutant", "beemaster" }
+	)
+
+	for i, ally in ipairs(allies) do
+		if ally:IsValid() and
+			ally.components.health and not ally.components.health:IsDead() and
+			ally.components.locomotor and
+			ally.components.combat and not IsAlly(ally.components.combat.target) then
+				ally.components.health:DoDelta(amount)
+		end
+	end
+end
+
 local function OnAttackRegen(inst, data)
 	if inst.components.health then
 		local amount = Lerp(1, 5, 1 - inst.components.health:GetPercent())
 		inst.components.health:DoDelta(amount)
+
+		HealAllies(inst, amount / 2)
 	end
 end
 
@@ -334,6 +373,7 @@ local function commonfn(bank, build, tags, options)
 	inst.components.combat:SetRange(TUNING.BEE_ATTACK_RANGE)
 	inst.components.combat.hiteffectsymbol = "body"
 	inst.components.combat:SetPlayerStunlock(PLAYERSTUNLOCK.RARELY)
+	inst.components.combat:SetKeepTargetFunction(keeptargetfn)
 
 	------------------
 
@@ -1012,6 +1052,7 @@ local function defenderbee()
   inst.components.combat:SetAttackPeriod(TUNING.MUTANT_BEE_DEFENDER_ATTACK_PERIOD)
   inst.components.combat:SetRange(TUNING.MUTANT_BEE_DEFENDER_ATTACK_RANGE)
   inst.components.combat:SetRetargetFunction(0.5, KillerRetarget)
+  inst.components.combat:SetKeepTargetFunction(keeptargetfn)
   inst.components.combat.battlecryenabled = false
   inst.components.combat.hiteffectsymbol = "mane"
 
