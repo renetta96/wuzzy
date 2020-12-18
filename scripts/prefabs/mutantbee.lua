@@ -49,7 +49,11 @@ end
 
 local MAX_DIST_FROM_LEADER = 10
 local function IsWithinLeaderRange(inst)
-	if inst.components.follower and inst.components.follower.leader then
+	if not inst:IsValid() then
+		return false
+	end
+
+	if inst.components.follower and inst.components.follower.leader and inst.components.follower.leader:IsValid() then
 		return inst:GetDistanceSqToInst(inst.components.follower.leader) < MAX_DIST_FROM_LEADER * MAX_DIST_FROM_LEADER
 	end
 
