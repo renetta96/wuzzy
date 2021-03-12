@@ -826,6 +826,7 @@ local function fn()
   inst.components.childspawner.childname = "mutantbee"
   inst.components.childspawner.emergencychildname = "mutantkillerbee"
   inst.components.childspawner.emergencychildrenperplayer = TUNING.MUTANT_BEEHIVE_EMERGENCY_BEES_PER_PLAYER
+  inst.components.childspawner.canemergencyspawn = true
   inst.components.childspawner:SetEmergencyRadius(TUNING.MUTANT_BEEHIVE_EMERGENCY_RADIUS)
   inst.components.childspawner:SetMaxChildren(TUNING.MUTANT_BEEHIVE_BEES)
   inst:ListenForEvent("childgoinghome", onchildgoinghome)
