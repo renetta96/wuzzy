@@ -1124,6 +1124,7 @@ local function teleportal()
   inst:AddComponent("childspawner")
   inst.components.childspawner.allowwater = true
   inst.components.childspawner.allowboats = true
+  inst.components.childspawner.canemergencyspawn = true
   inst.components.childspawner.emergencychildname = "mutantkillerbee"
   inst.components.childspawner.emergencychildrenperplayer = TUNING.MUTANT_BEEHIVE_EMERGENCY_BEES_PER_PLAYER
   inst.components.childspawner:SetEmergencyRadius(TUNING.MUTANT_BEEHIVE_EMERGENCY_RADIUS)
