@@ -743,7 +743,7 @@ local function StatusPostConstruct(self)
       local pos = CalcSymbiosisPosition(self)
       self.symbiosis:Show()
       self.symbiosis:SetPosition(pos:Get())
-      self.symbiosis:SetScale(self.brain:GetScale():Get())
+      self.symbiosis:SetScale(self.brain:GetLooseScale())
       self.symbiosis:SetPercent(percent, maxval)
       self.symbiosis.num:SetString(GLOBAL.tostring(numstore))
       if pulse then
