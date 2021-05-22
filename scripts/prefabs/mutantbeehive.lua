@@ -1129,7 +1129,7 @@ local function teleportal()
   inst.components.childspawner.emergencychildrenperplayer = TUNING.MUTANT_BEEHIVE_EMERGENCY_BEES_PER_PLAYER
   inst.components.childspawner:SetEmergencyRadius(TUNING.MUTANT_BEEHIVE_EMERGENCY_RADIUS)
   inst.components.childspawner:SetMaxChildren(0)
-  inst.components.childspawner:SetMaxEmergencyChildren(5)
+  inst.components.childspawner:SetMaxEmergencyChildren(8)
   inst.components.childspawner:SetRegenPeriod(5)
   inst:ListenForEvent("childgoinghome", onteleportback)
 
