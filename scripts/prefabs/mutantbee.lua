@@ -879,12 +879,12 @@ local function Taunt(inst)
 	local nearbyplayer = IsNearbyPlayer(inst)
 
 	for i, e in ipairs(entities) do
-		if e.components.combat and IsAlly(e.components.combat.target) and not IsTaunted(e) then
-			e.components.combat:SetTarget(inst)
-		end
 
-		if nearbyplayer and e:HasTag("monster") and e.components.combat and not IsTaunted(e) then
-			e.components.combat:SetTarget(inst)
+		-- to handle noobs that set combat.target directly!!!
+		if e.components.combat and e.components.combat.losetargetcallback and not IsTaunted(e) then
+			if IsAlly(e.components.combat.target) or (nearbyplayer and e:HasTag("monster")) then
+				e.components.combat:SetTarget(inst)
+			end
 		end
 	end
 end
