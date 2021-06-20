@@ -1,21 +1,11 @@
+local zeta_utils = require "zeta_utils"
+
 local assets =
 {
   Asset("ANIM", "anim/zetapollen.zip"),
   Asset("ATLAS", "images/inventoryimages/zetapollen.xml"),
   Asset("IMAGE", "images/inventoryimages/zetapollen.tex")
 }
-
-local function OnPutInInventory(inst, owner)
-  if owner and owner.prefab == 'mutantbeehive' and inst.components.perishable then
-    inst.components.perishable:StopPerishing()
-  end
-end
-
-local function onremovedfn(inst, owner)
-  if owner and owner.prefab == "mutantbeehive" and inst.components.perishable then
-    inst.components.perishable:StartPerishing()
-  end
-end
 
 local function checkiswet(inst)
 	if inst.components.perishable then
@@ -55,12 +45,6 @@ local function fn()
   inst:AddComponent("inventoryitem")
   inst.components.inventoryitem.imagename = "zetapollen"
   inst.components.inventoryitem.atlasname = "images/inventoryimages/zetapollen.xml"
-  inst.components.inventoryitem:SetOnPutInInventoryFn(OnPutInInventory)
-  local OldOnRemoved = inst.components.inventoryitem.OnRemoved
-  inst.components.inventoryitem.OnRemoved = function(comp)
-    onremovedfn(comp.inst, comp.owner)
-    OldOnRemoved(comp)
-  end
 
   inst:AddComponent("stackable")
   inst.components.stackable.maxsize = TUNING.STACK_SIZE_SMALLITEM
@@ -82,6 +66,7 @@ local function fn()
   MakeSmallBurnable(inst, TUNING.TINY_BURNTIME)
   MakeSmallPropagator(inst)
   MakeHauntableLaunchAndPerish(inst)
+  zeta_utils.MakeStopPerishingInHive(inst)
 
   inst:DoPeriodicTask(1, checkiswet)
 

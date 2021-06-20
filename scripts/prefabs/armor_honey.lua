@@ -1,3 +1,5 @@
+local zeta_utils = require "zeta_utils"
+
 local assets =
 {
     Asset("ANIM", "anim/armor_honey.zip"),
@@ -164,6 +166,7 @@ local function fn()
     inst:ListenForEvent("perishchange", OnPerishChange)
 
     MakeHauntableLaunch(inst)
+    zeta_utils.MakeStopPerishingInHive(inst)
 
     inst:DoTaskInTime(0, InitFn)
 

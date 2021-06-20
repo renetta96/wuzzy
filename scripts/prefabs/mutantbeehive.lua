@@ -658,6 +658,35 @@ local function ConvertPollenToHoney(inst)
   end
 end
 
+local function RefreshHoneyArmor(inst)
+  if not inst.components.container then
+    return
+  end
+
+  local armors = inst.components.container:FindItems(
+    function(item) return item.prefab and item.prefab == "armor_honey" and item:IsValid() end
+  )
+
+  local chunk = 0.2
+
+  for i, armor in ipairs(armors) do
+    if armor.components.perishable then
+      local percent = armor.components.perishable:GetPercent()
+
+      if percent < 1 - chunk then
+        local need = math.ceil((1 - percent) / chunk)
+        local has, numfound = inst.components.container:Has("honey", need)
+        numfound = math.min(numfound, need)
+
+        if numfound > 0 then
+          armor.components.perishable:SetPercent(percent + numfound * chunk)
+          inst.components.container:ConsumeByName("honey", numfound)
+        end
+      end
+    end
+  end
+end
+
 local function OnInit(inst)
   inst:WatchWorldState("iscaveday", OnIsCaveDay)
   inst:ListenForEvent("enterlight", OnEnterLight)
@@ -669,8 +698,9 @@ local function OnInit(inst)
   SetStage(inst, inst.components.upgradeable.stage)
 
   inst:DoPeriodicTask(3, SelfRepair)
-  inst:DoPeriodicTask(60, ConvertPollenToHoney)
+  inst:DoPeriodicTask(30, ConvertPollenToHoney)
   inst:DoPeriodicTask(2, OnSlave)
+  inst:DoPeriodicTask(30, RefreshHoneyArmor)
 end
 
 local function onopen(inst)
@@ -702,7 +732,11 @@ local function AddHoneyProgress(inst, child)
 end
 
 local function itemtestfn(inst, item, slot)
-  return item and item.prefab and (item.prefab == "honey" or item.prefab == "zetapollen")
+  return item and item.prefab and (
+    item.prefab == "honey" or
+    item.prefab == "zetapollen" or
+    item.prefab == "armor_honey"
+  )
 end
 
 local function onchildgoinghome(inst, data)
