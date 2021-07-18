@@ -18,8 +18,8 @@ local function OnAttacked(inst, data)
 
 	inst.components.combat:SetTarget(attacker)
 
-	-- If attacker has tag "mutant" or "beemaster" then don't share target
-	if attacker:HasTag("mutant") or attacker:HasTag("beemaster") then
+	-- If attacker has tag "beemutant" or "beemaster" then don't share target
+	if attacker:HasTag("beemutant") or attacker:HasTag("beemaster") then
 		return
 	end
 
@@ -45,7 +45,7 @@ local function OnAttacked(inst, data)
 			return false
 		end
 
-		return dude:HasTag("mutant") and
+		return dude:HasTag("beemutant") and
 			not (dude:IsInLimbo() or (dude.components.health and dude.components.health:IsDead()))
 	end, targetshares)
 end

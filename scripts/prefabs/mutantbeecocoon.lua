@@ -164,7 +164,7 @@ local function fn()
   inst.AnimState:PlayAnimation("idle")
   inst.MiniMapEntity:SetIcon("mutantbeecocoon.tex")
 
-  inst:AddTag("mutant")
+  inst:AddTag("beemutant")
   inst:AddTag("cocoon")
 
   MakeInventoryFloatable(inst, "med", 0.4, {0.85, 0.6, 0.85})

@@ -35,12 +35,18 @@ local killersounds = {
     death = "dontstarve/bee/killerbee_death"
 }
 
+local TARGET_MUST_TAGS = {"_combat", "_health"}
+local TARGET_MUST_ONE_OF_TAGS = {"monster", "insect", "animal", "character"}
+local TARGET_IGNORE_TAGS = {"beemutant", "INLIMBO", "player"}
+local HEAL_IGNORE_TAGS = {"INLIMBO", "soldier"}
+local HEAL_MUST_ONE_OF_TAGS = {"beemutant", "beemaster"}
+
 local function IsNearbyPlayer(inst)
     return GetClosestInstWithTag("beemaster", inst, TUNING.MUTANT_BEE_WATCH_DIST)
 end
 
 local function IsAlly(inst)
-    return inst and (inst:HasTag("beemaster") or inst:HasTag("mutant"))
+    return inst and (inst:HasTag("beemaster") or inst:HasTag("beemutant"))
 end
 
 local MAX_DIST_FROM_LEADER = 10
@@ -65,29 +71,16 @@ local function FindTarget(inst, dist)
         return nil
     end
 
-    local nearbyplayer = IsNearbyPlayer(inst)
-
-    return (nearbyplayer and
-        FindEntity(
-            inst,
-            dist,
-            function(guy)
-                return inst.components.combat:CanTarget(guy)
-            end,
-            {"_combat", "_health"},
-            {"insect", "INLIMBO", "player"},
-            {"monster"}
-        )) or
-        FindEntity(
+    return FindEntity(
             inst,
             dist,
             function(guy)
                 return inst.components.combat:CanTarget(guy) and guy.components.combat and
                     IsAlly(guy.components.combat.target)
             end,
-            {"_combat", "_health"},
-            {"mutant", "INLIMBO", "player"},
-            {"monster", "insect", "animal", "character"}
+            TARGET_MUST_TAGS,
+            TARGET_IGNORE_TAGS,
+            TARGET_MUST_ONE_OF_TAGS
         )
 end
 
@@ -159,9 +152,9 @@ local function HealAllies(inst, amount)
         y,
         z,
         TUNING.MUTANT_BEE_SOLDIER_HEAL_DIST,
-        {"_combat", "_health"},
-        {"INLIMBO", "soldier"},
-        {"mutant", "beemaster"}
+        TARGET_MUST_TAGS,
+        HEAL_IGNORE_TAGS,
+        HEAL_MUST_ONE_OF_TAGS
     )
 
     for i, ally in ipairs(allies) do
@@ -349,7 +342,7 @@ local function commonfn(bank, build, tags, options)
     inst:AddTag("smallcreature")
     inst:AddTag("cattoyairborne")
     inst:AddTag("flying")
-    inst:AddTag("mutant")
+    inst:AddTag("beemutant")
     inst:AddTag("companion")
 
     for i, v in ipairs(tags) do
@@ -784,30 +777,20 @@ local function Spike(inst, origin)
         y,
         z,
         5,
-        {"_combat", "_health"},
-        {"mutant", "INLIMBO", "player"},
-        {"monster", "insect", "animal", "character"}
+        TARGET_MUST_TAGS,
+        TARGET_IGNORE_TAGS,
+        TARGET_MUST_ONE_OF_TAGS
     )
-
-    local nearbyplayer = IsNearbyPlayer(inst)
 
     local validtargets = {}
 
     for i, e in ipairs(entities) do
-        local valid = false
-
         if inst.components.combat:CanTarget(e) then
             if e.components.combat and IsAlly(e.components.combat.target) then
-                valid = true
+                if e ~= origin then
+                    table.insert(validtargets, e)
+                end
             end
-
-            if nearbyplayer and e:HasTag("monster") then
-                valid = true
-            end
-        end
-
-        if valid and e ~= origin then
-            table.insert(validtargets, e)
         end
     end
 
@@ -929,17 +912,15 @@ local function Taunt(inst)
         y,
         z,
         TUNING.MUTANT_BEE_DEFENDER_TAUNT_DIST,
-        {"_combat", "_health"},
-        {"mutant", "INLIMBO", "player"},
-        {"monster", "insect", "animal", "character"}
+        TARGET_MUST_TAGS,
+        TARGET_IGNORE_TAGS,
+        TARGET_MUST_ONE_OF_TAGS
     )
-
-    local nearbyplayer = IsNearbyPlayer(inst)
 
     for i, e in ipairs(entities) do
         -- to handle noobs that set combat.target directly!!!
         if e.components.combat and e.components.combat.losetargetcallback and not IsTaunted(e) then
-            if IsAlly(e.components.combat.target) or (nearbyplayer and e:HasTag("monster")) then
+            if IsAlly(e.components.combat.target) then
                 e.components.combat:SetTarget(inst)
             end
         end
@@ -1094,7 +1075,7 @@ local function defenderbee()
     inst:AddTag("smallcreature")
     inst:AddTag("cattoyairborne")
     inst:AddTag("flying")
-    inst:AddTag("mutant")
+    inst:AddTag("beemutant")
     inst:AddTag("companion")
     inst:AddTag("defender")
     inst:AddTag("ignorewalkableplatformdrowning")
@@ -1141,9 +1122,9 @@ local function defenderbee()
 
     inst:ListenForEvent("attacked", beecommon.OnAttacked)
 
-    MakeSmallBurnableCharacter(inst, "mane")
+    -- MakeSmallBurnableCharacter(inst, "mane")
     MakeSmallFreezableCharacter(inst, "mane")
-    inst.components.freezable:SetResistance(4)
+    inst.components.freezable:SetResistance(8)
     inst.components.freezable.diminishingreturns = true
 
     inst:SetStateGraph("SGdefenderbee")

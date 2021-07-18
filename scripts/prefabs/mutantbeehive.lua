@@ -81,7 +81,7 @@ local SPEECH =
   UPGRADE = {
     "THANKS, MASTER!",
     "WE ARE GRATEFUL OF THAT!",
-    "GIVE US MORE!"
+    "MOARRRR!"
   },
   WELCOME = {
     "WELCOME BACK, MASTER!",
@@ -483,30 +483,17 @@ end
 -- Upgrade */
 
 local function FindEnemy(inst)
-  local nearbyplayer = GetClosestInstWithTag("beemaster", inst, TUNING.MUTANT_BEEHIVE_WATCH_DIST)
-
-  local enemy = (nearbyplayer and
-    FindEntity(inst, TUNING.MUTANT_BEEHIVE_WATCH_DIST,
-      function(guy)
-        return inst.components.combat:CanTarget(guy)
-      end,
-      { "_combat", "_health" },
-      { "insect", "INLIMBO", "player" },
-      { "monster" }
-    )) or
-    FindEntity(inst, TUNING.MUTANT_BEEHIVE_WATCH_DIST,
+  return FindEntity(inst, TUNING.MUTANT_BEEHIVE_WATCH_DIST,
       function(guy)
         return inst.components.combat:CanTarget(guy)
           and guy.components.combat and guy.components.combat.target
           and (guy.components.combat.target:HasTag("beemaster")
-            or guy.components.combat.target:HasTag("mutant"))
+            or guy.components.combat.target:HasTag("beemutant"))
       end,
       { "_combat", "_health" },
-      { "mutant", "INLIMBO", "player" },
+      { "beemutant", "INLIMBO", "player" },
       { "monster", "insect", "animal", "character" }
     )
-
-  return enemy
 end
 
 local function WatchEnemy(inst)
@@ -829,7 +816,7 @@ local function fn()
 
   inst:AddTag("mutantbeehive")
   inst:AddTag("companion")
-  inst:AddTag("mutant")
+  inst:AddTag("beemutant")
 
   ---------------------------
   inst:AddComponent("talker")
@@ -1027,7 +1014,7 @@ local function commonslavefn(bank, build, tags, mapicon)
 
   inst:AddTag("companion")
   inst:AddTag("mutantslavehive")
-  inst:AddTag("mutant")
+  inst:AddTag("beemutant")
   for i, v in ipairs(tags) do
     inst:AddTag(v)
   end
@@ -1042,7 +1029,7 @@ local function commonslavefn(bank, build, tags, mapicon)
 
   -------------------
   inst:AddComponent("health")
-  inst.components.health:SetMaxHealth(400)
+  inst.components.health:SetMaxHealth(600)
 
   ---------------------
   MakeLargeBurnable(inst)
@@ -1142,6 +1129,7 @@ local function teleportal()
   inst.AnimState:PlayAnimation("idle", true)
 
   inst:AddTag("mutantteleportal")
+  inst:AddTag("beemutant")
 
   ---------------------------
 

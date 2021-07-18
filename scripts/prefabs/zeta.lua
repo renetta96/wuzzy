@@ -250,7 +250,7 @@ local common_postinit = function(inst)
   inst.carolsoundoverride = "dontstarve/characters/wilson/carol"
   -- Minimap icon
   inst.MiniMapEntity:SetIcon( "zeta.tex" )
-  inst:AddTag("mutant")
+  inst:AddTag("beemutant")
   inst:AddTag("insect")
   inst:AddTag("beemaster")
   inst:AddTag(UPGRADETYPES.DEFAULT.."_upgradeuser")

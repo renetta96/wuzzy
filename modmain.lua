@@ -488,7 +488,7 @@ AddPrefabPostInit("mutantrangerhive_blueprint", RangerHiveBlueprintPostInit)
 local function wrapRetargetFn(fn)
   return function(...)
     local target = fn(...)
-    if target and target:HasTag("mutant") then
+    if target and target:HasTag("beemutant") then
       return nil
     end
     return target

@@ -21,7 +21,7 @@ local TARGET_FOLLOW_DIST = 6
 local function ShouldRunAway(guy)
     return guy:HasTag("monster")
         or (guy.components.combat ~= nil and guy.components.combat.target ~= nil
-            and (guy.components.combat.target:HasTag("beemaster") or guy.components.combat.target:HasTag("mutant")))
+            and (guy.components.combat.target:HasTag("beemaster") or guy.components.combat.target:HasTag("beemutant")))
 end
 
 local function IsValidTarget(target)
