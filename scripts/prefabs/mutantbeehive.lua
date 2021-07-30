@@ -508,6 +508,69 @@ local function WatchEnemy(inst)
   end
 end
 
+local function onwallattacked(inst, wall, data)
+  if not data.attacker then
+    return
+  end
+
+  local attacker = data.attacker
+
+  if not attacker:IsValid() then
+    return
+  end
+
+  if not(attacker:HasTag("monster") or attacker:HasTag("animal")
+    or attacker:HasTag("insect") or attacker:HasTag("character")) then
+    return
+  end
+
+  if attacker:HasTag("player") or attacker:HasTag("beemutant") then
+    return
+  end
+
+  if inst.components.childspawner then
+    inst.components.childspawner:ReleaseAllChildren(attacker)
+  end
+end
+
+local function onwallremoved(inst, wall)
+  inst:RemoveEventCallback("onremove", inst._onwallattacked, wall)
+  inst._watched_walls[wall] = nil
+end
+
+local function WatchWalls(inst)
+  local x, y, z = inst.Transform:GetWorldPosition()
+  local walls = TheSim:FindEntities(x, y, z, TUNING.MUTANT_BEEHIVE_WATCH_DIST,
+    { "_combat", "_health" },
+    { "INLIMBO" },
+    { "wall" }
+  )
+
+  for i, wall in ipairs(walls) do
+    if not inst._watched_walls[wall] then
+      inst:ListenForEvent("attacked", inst._onwallattacked, wall)
+      inst:ListenForEvent("onremove", inst._onwallremoved, wall)
+
+      inst._watched_walls[wall] = true
+    end
+  end
+end
+
+local function MakeWatchWalls(inst)
+  inst._onwallattacked = function(wall, data)
+    onwallattacked(inst, wall, data)
+  end
+
+  inst._onwallremoved = function(wall)
+    onwallremoved(inst, wall)
+  end
+
+  inst._watched_walls = {}
+
+
+  inst:DoPeriodicTask(10, WatchWalls)
+end
+
 local function SelfRepair(inst)
   if inst and inst.components.childspawner and inst.components.health then
     if not inst.components.health:IsDead() then
@@ -688,6 +751,8 @@ local function OnInit(inst)
   inst:DoPeriodicTask(30, ConvertPollenToHoney)
   inst:DoPeriodicTask(2, OnSlave)
   inst:DoPeriodicTask(30, RefreshHoneyArmor)
+
+  MakeWatchWalls(inst)
 end
 
 local function onopen(inst)
@@ -1216,6 +1281,8 @@ local function teleportal()
   inst.GetSource = GetSource
 
   inst:ListenForEvent("onbuilt", onbuilt)
+
+  inst:DoTaskInTime(0, MakeWatchWalls)
 
   return inst
 end
