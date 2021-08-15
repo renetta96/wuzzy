@@ -11,7 +11,7 @@ local RECIPETABS = GLOBAL.RECIPETABS
 local _G = GLOBAL
 local PREFAB_SKINS = _G.PREFAB_SKINS
 local PREFAB_SKINS_IDS = _G.PREFAB_SKINS_IDS
-local SKIN_AFFINITY_INFO = GLOBAL.require("skin_affinity_info")
+-- local SKIN_AFFINITY_INFO = GLOBAL.require("skin_affinity_info")
 
 PrefabFiles = {
   "mutantbeecocoon",
@@ -224,7 +224,7 @@ AddMinimapAtlas("images/map_icons/mutantshadowhive.xml")
 AddMinimapAtlas("images/map_icons/mutantteleportal.xml")
 
 --Skins api
-modimport("scripts/tools/skins_api")
+-- modimport("scripts/tools/skins_api")
 PREFAB_SKINS["zeta"] = {
   "zeta_none"
 }

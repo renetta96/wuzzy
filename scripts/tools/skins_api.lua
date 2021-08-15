@@ -279,7 +279,7 @@ function _G.GetLockedSkinFilter()
 	return LockedFilter
 end
 
-function _G.SpawnNewPlayerOnServerFromSim(player_guid, skin_base, clothing_body, clothing_hand, clothing_legs, clothing_feet)
+function _G.SpawnNewPlayerOnServerFromSim(player_guid, skin_base, clothing_body, clothing_hand, clothing_legs, clothing_feet, ...)
 	local player = _G.Ents[player_guid]
 	if player ~= nil and SKINNABLE_CHARACTERS[player.prefab] then
 		local skinner = player.components.skinner
@@ -300,7 +300,7 @@ function _G.SpawnNewPlayerOnServerFromSim(player_guid, skin_base, clothing_body,
 		_G.TheWorld.components.playerspawner:SpawnAtNextLocation(_G.TheWorld, player)
 		_G.SerializeUserSession(player, true)
 	else
-		_SpawnNewPlayerOnServerFromSim(player_guid, skin_base, clothing_body, clothing_hand, clothing_legs, clothing_feet)
+		_SpawnNewPlayerOnServerFromSim(player_guid, skin_base, clothing_body, clothing_hand, clothing_legs, clothing_feet, ...)
 	end
 end
 
