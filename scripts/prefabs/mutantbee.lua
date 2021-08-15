@@ -557,12 +557,12 @@ local function killerbee()
     return inst
 end
 
-local function OnRangedWeaponAttack(inst, attacker, target)
-    --target could be killed or removed in combat damage phase
-    if target:IsValid() then
-        SpawnPrefab("electrichitsparks"):AlignToTarget(target, inst)
-    end
-end
+-- local function OnRangedWeaponAttack(inst, attacker, target)
+--     --target could be killed or removed in combat damage phase
+--     if target:IsValid() then
+--         SpawnPrefab("electrichitsparks"):AlignToTarget(target, inst)
+--     end
+-- end
 
 local function OnAttackDoubleHit(inst, data)
     if inst._doublehitnow then
@@ -582,6 +582,10 @@ local function OnAttackDoubleHit(inst, data)
     end
 end
 
+local function TurnOffLight(inst)
+    inst.Light:Enable(false)
+end
+
 local function CheckRangerUpgrade(inst)
     local stage = GetHiveUpgradeStage(inst)
 
@@ -592,8 +596,14 @@ local function CheckRangerUpgrade(inst)
     if stage >= 2 then
         if inst.weapon and inst.weapon:IsValid() and inst.weapon.components.weapon then
             inst.weapon.components.weapon:SetElectric()
-            inst.weapon.components.weapon:SetOnAttack(OnRangedWeaponAttack)
+            inst.weapon.components.weapon:SetProjectile("electric_bubble")
+            -- inst.weapon.components.weapon:SetOnAttack(OnRangedWeaponAttack)
         end
+
+        inst.AnimState:SetBloomEffectHandle("shaders/anim.ksh")
+        inst.Light:Enable(true)
+
+        inst:ListenForEvent('death', TurnOffLight)
     end
 
     if stage >= 3 then
@@ -611,6 +621,14 @@ end
 local rangedkillerbrain = require("brains/rangedkillerbeebrain")
 local function rangerbee()
     local inst = commonfn("bee", "mutantrangerbee", {"killer", "ranger", "scarytoprey"}, {buff = RangerBuff})
+
+    inst.entity:AddLight()
+    inst.Light:Enable(false)
+    inst.Light:SetRadius(.75)
+    inst.Light:SetFalloff(0.5)
+    inst.Light:SetIntensity(.6)
+    inst.Light:SetColour(154 / 255, 214 / 255, 216 / 255)
+
 
     if not TheWorld.ismastersim then
         return inst
@@ -637,7 +655,7 @@ local function rangerbee()
         weapon:AddComponent("weapon")
         weapon.components.weapon:SetDamage(inst.components.combat.defaultdamage)
         weapon.components.weapon:SetRange(inst.components.combat.attackrange)
-        weapon.components.weapon:SetProjectile("blowdart_yellow")
+        weapon.components.weapon:SetProjectile("blowdart_pipe")
 
         weapon:AddComponent("inventoryitem")
         weapon.persists = false

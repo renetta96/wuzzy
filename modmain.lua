@@ -23,7 +23,8 @@ PrefabFiles = {
   "zetapollen",
   "pollen_fx",
   "melissa",
-  "shadowspike_fx"
+  "shadowspike_fx",
+  "electric_bubble"
 }
 
 Assets = {
