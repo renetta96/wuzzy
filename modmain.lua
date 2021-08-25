@@ -83,6 +83,8 @@ Assets = {
   Asset( "ATLAS", "images/inventoryimages/mutantassassinhive.xml" ),
   Asset( "IMAGE", "images/inventoryimages/mutantshadowhive.tex" ),
   Asset( "ATLAS", "images/inventoryimages/mutantshadowhive.xml" ),
+  Asset( "IMAGE", "images/inventoryimages/mutantbarrack.tex" ),
+  Asset( "ATLAS", "images/inventoryimages/mutantbarrack.xml" ),
   Asset( "IMAGE", "images/inventoryimages/mutantteleportal.tex" ),
   Asset( "ATLAS", "images/inventoryimages/mutantteleportal.xml" ),
   Asset("ATLAS", "images/inventoryimages/mutantbeecocoon.xml"),
@@ -169,7 +171,7 @@ TUNING.MUTANT_BEE_SHADOW_DEFAULT_NUM_SPIKES = 2
 
 -- Mutant beehive stats
 TUNING.MUTANT_BEEHIVE_DEFAULT_EMERGENCY_BEES = 0
-TUNING.MUTANT_BEEHIVE_EMERGENCY_BEES_PER_PLAYER = 100
+TUNING.MUTANT_BEEHIVE_EMERGENCY_BEES_PER_PLAYER = 500
 TUNING.MUTANT_BEEHIVE_EMERGENCY_RADIUS = 30
 TUNING.MUTANT_BEEHIVE_BEES = 4
 TUNING.MUTANT_BEEHIVE_DEFAULT_RELEASE_TIME = 30
@@ -608,7 +610,7 @@ AddRecipe("mutantrangerhive",
   {
     Ingredient("lightninggoathorn", 2),
     Ingredient("honeycomb", 1),
-    Ingredient("driftwood_log", 10)
+    Ingredient("cookiecuttershell", 8)
   },
   metapis_tab,
   TECH.LOST,
@@ -639,7 +641,7 @@ AddRecipe("mutantassassinhive",
     Ingredient("moonglass", 10)
   },
   metapis_tab,
-  TECH.MOON_ALTAR_TWO,
+  TECH.CELESTIAL_THREE,
   "mutantassassinhive_placer",
   nil, nil, nil,
   "beemaster",
@@ -662,6 +664,24 @@ AddRecipe("mutantshadowhive",
   "images/inventoryimages/mutantshadowhive.xml",
   "mutantshadowhive.tex",
   slavehivetestfn
+)
+
+-- name ~= product to ignore recipe loots
+AddRecipe("mutantbarrack_recipe",
+  {
+    Ingredient("honey", 40),
+    Ingredient("honeycomb", 1),
+    Ingredient("killerbee", 4)
+  },
+  metapis_tab,
+  TECH.SCIENCE_TWO,
+  "mutantbarrack_placer",
+  nil, nil, nil,
+  "beemaster",
+  "images/inventoryimages/mutantbarrack.xml",
+  "mutantbarrack.tex",
+  slavehivetestfn,
+  "mutantbarrack" -- product
 )
 
 AddRecipe("mutantteleportal",

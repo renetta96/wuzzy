@@ -121,14 +121,23 @@ local function CheckHiveUpgrade(inst)
   end
 
   local slaves = inst._hive:GetSlaves()
+  local numchilrenfromslaves = 0
 
-  inst.components.beesummoner:AddStoreModifier_Additive('childhives', math.floor(#slaves / 2))
+  for i, slave in ipairs(slaves) do
+    if slave.prefab == "mutantbarrack" then
+      numchilrenfromslaves = numchilrenfromslaves + 1
+    else
+      numchilrenfromslaves = numchilrenfromslaves + 0.5
+    end
+  end
+
+  inst.components.beesummoner:AddStoreModifier_Additive('childhives', math.floor(numchilrenfromslaves))
 
   local count = 0
   local checked = {}
 
   for i, slave in ipairs(slaves) do
-    if not checked[slave.prefab] then
+    if not checked[slave.prefab] and slave.prefab ~= "mutantbarrack" then
       count = count + 1
       checked[slave.prefab] = true
     end

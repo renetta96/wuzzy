@@ -537,7 +537,7 @@ local function killerbee()
 
     inst.components.combat:SetDefaultDamage(TUNING.MUTANT_BEE_DAMAGE)
     inst.components.combat:SetAttackPeriod(TUNING.MUTANT_BEE_ATTACK_PERIOD)
-    inst.components.combat:SetRetargetFunction(0.5, KillerRetarget)
+    inst.components.combat:SetRetargetFunction(1, KillerRetarget)
     inst.components.combat:SetRange(3, 6)
 
     inst:SetBrain(killerbrain)
@@ -638,7 +638,7 @@ local function rangerbee()
     inst.components.combat:SetRange(TUNING.MUTANT_BEE_WEAPON_ATK_RANGE)
     inst.components.combat:SetAttackPeriod(TUNING.MUTANT_BEE_RANGED_ATK_PERIOD)
     inst.components.combat:SetDefaultDamage(TUNING.MUTANT_BEE_RANGED_DAMAGE)
-    inst.components.combat:SetRetargetFunction(0.25, RangedRetarget)
+    inst.components.combat:SetRetargetFunction(1, RangedRetarget)
 
     inst:SetBrain(rangedkillerbrain)
     inst.sounds = killersounds
@@ -746,7 +746,7 @@ local function assassinbee()
     inst.components.health:SetMaxHealth(TUNING.MUTANT_BEE_ASSSASIN_HEALTH)
     inst.components.combat:SetDefaultDamage(TUNING.MUTANT_BEE_ASSSASIN_DAMAGE)
     inst.components.combat:SetAttackPeriod(TUNING.MUTANT_BEE_ASSASSIN_ATTACK_PERIOD)
-    inst.components.combat:SetRetargetFunction(0.25, KillerRetarget)
+    inst.components.combat:SetRetargetFunction(1, KillerRetarget)
     inst.components.combat:SetRange(3, 6)
     inst:SetBrain(assassinbeebrain)
     inst.sounds = killersounds
@@ -889,7 +889,7 @@ local function shadowbee()
     inst.components.combat:SetDefaultDamage(TUNING.MUTANT_BEE_SHADOW_DAMAGE)
     inst.components.combat:SetAttackPeriod(TUNING.MUTANT_BEE_SHADOW_ATK_PERIOD)
     inst.components.combat:SetRange(TUNING.MUTANT_BEE_SHADOW_ATK_RANGE, TUNING.MUTANT_BEE_SHADOW_ATK_RANGE + 3)
-    inst.components.combat:SetRetargetFunction(0.5, KillerRetarget)
+    inst.components.combat:SetRetargetFunction(1, KillerRetarget)
 
     inst._numspikes = TUNING.MUTANT_BEE_SHADOW_DEFAULT_NUM_SPIKES
     inst.canteleport = false
@@ -1131,7 +1131,7 @@ local function defenderbee()
     inst.components.combat:SetDefaultDamage(TUNING.MUTANT_BEE_DEFENDER_DAMAGE)
     inst.components.combat:SetAttackPeriod(TUNING.MUTANT_BEE_DEFENDER_ATTACK_PERIOD)
     inst.components.combat:SetRange(TUNING.MUTANT_BEE_DEFENDER_ATTACK_RANGE)
-    inst.components.combat:SetRetargetFunction(0.5, KillerRetarget)
+    inst.components.combat:SetRetargetFunction(1, KillerRetarget)
     inst.components.combat:SetKeepTargetFunction(keeptargetfn)
     inst.components.combat.battlecryenabled = false
     inst.components.combat.hiteffectsymbol = "mane"

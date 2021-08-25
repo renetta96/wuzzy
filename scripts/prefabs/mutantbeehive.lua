@@ -16,6 +16,7 @@ local assets =
   Asset("ANIM", "anim/mutantassassinhive.zip"),
   Asset("ANIM", "anim/mutantrangerhive.zip"),
   Asset("ANIM", "anim/mutantshadowhive.zip"),
+  Asset("ANIM", "anim/mutantbarrack.zip"),
   Asset("ANIM", "anim/mutantteleportal.zip"),
   Asset("SOUND", "sound/bee.fsb"),
   Asset("ANIM", "anim/ui_chest_3x2.zip"),
@@ -47,8 +48,7 @@ local SPEECH =
   SPAWN = {
     "TO WORK SHALL WE?",
     "AHHHH FLOWERS!",
-    "WORK HARD PARTY HARDER!",
-    "LET'S START WORKING COMRADES."
+    "MORNIN'!"
   },
   IGNITE = {
     "THIS IS FINE.",
@@ -57,7 +57,7 @@ local SPEECH =
     "BRING SOME WATER!"
   },
   FREEZE = {
-    "OUCH! IT'S COLD OUT!",
+    "OUCH! IT'S FREEZING!",
     "JUST CHILLING IN HERE.",
     "BRRRRRR!"
   },
@@ -306,13 +306,21 @@ local function IsSlave(inst, slave)
   return slave:IsValid() and slave._ownerid == inst._ownerid
 end
 
-local function GetSlaves(inst)
+local function GetSlaves(inst, moremusttags)
   local x, y, z = inst.Transform:GetWorldPosition()
+  local musttags = { "mutantslavehive" }
+
+  if moremusttags ~= nil and type(moremusttags) == "table" then
+    for i, tag in ipairs(moremusttags) do
+      table.insert(musttags, tag)
+    end
+  end
+
   local entities = TheSim:FindEntities(x, y, z,
     TUNING.MUTANT_BEEHIVE_MASTER_SLAVE_DIST,
     { "_combat", "_health" },
     { "INLIMBO", "player" },
-    { "mutantslavehive" }
+    musttags
   )
 
   local slaves = {}
@@ -326,13 +334,43 @@ local function GetSlaves(inst)
   return slaves
 end
 
+local function GetNumChildrenRegen(inst)
+  local barracks = GetSlaves(inst, { "mutantbarrack" })
+  local numbarracks = #barracks
+
+  if numbarracks < 1 then
+    return 0
+  end
+
+  return math.floor(math.log(numbarracks))
+end
+
+local function GetNumChildrenFromSlaves(slaves)
+  if not slaves then
+    return 0
+  end
+
+  local num = 0
+  for i, slave in ipairs(slaves) do
+    if slave.prefab == "mutantbarrack" then
+      num = num + TUNING.MUTANT_BEEHIVE_CHILDREN_PER_SLAVE * 2
+    else
+      num = num + TUNING.MUTANT_BEEHIVE_CHILDREN_PER_SLAVE
+    end
+  end
+
+  return num
+end
+
 local function OnSlave(inst)
   if inst.components.childspawner then
     local slaves = GetSlaves(inst)
     inst.components.childspawner.maxemergencychildren =
       TUNING.MUTANT_BEEHIVE_DEFAULT_EMERGENCY_BEES
       + (inst.components.upgradeable.stage - 1) * TUNING.MUTANT_BEEHIVE_DELTA_BEES
-      + #slaves * TUNING.MUTANT_BEEHIVE_CHILDREN_PER_SLAVE
+      + GetNumChildrenFromSlaves(slaves)
+    inst.components.childspawner:TryStopUpdate()
+    inst.components.childspawner:StartUpdate()
   end
 end
 
@@ -746,6 +784,10 @@ local function OnInit(inst)
   end
 
   SetStage(inst, inst.components.upgradeable.stage)
+  OnSlave(inst)
+
+  -- On init, emergencychildreninside always start at 0, so fill half the pool for quickstart
+  inst.components.childspawner.emergencychildreninside = math.floor(inst.components.childspawner.maxemergencychildren / 2)
 
   inst:DoPeriodicTask(3, SelfRepair)
   inst:DoPeriodicTask(30, ConvertPollenToHoney)
@@ -919,6 +961,8 @@ local function fn()
 
   local oldSpawnChild = inst.components.childspawner.SpawnChild
   local oldSpawnEmergencyChild = inst.components.childspawner.SpawnEmergencyChild
+  local oldDoRegen = inst.components.childspawner.DoRegen
+
   inst.components.childspawner.SpawnChild = function(comp, target, prefab, ...)
     local newprefab = prefab
     if target ~= nil then
@@ -930,6 +974,18 @@ local function fn()
   inst.components.childspawner.SpawnEmergencyChild = function(comp, target, prefab, ...)
     local newprefab = PickChildPrefab(inst)
     return oldSpawnEmergencyChild(comp, target, newprefab, ...)
+  end
+
+  inst.components.childspawner.DoRegen = function(comp, ...)
+    local result = oldDoRegen(comp, ...)
+
+    if comp.regening then
+      if not comp:IsEmergencyFull() then
+        comp:AddEmergencyChildrenInside(GetNumChildrenRegen(inst))
+      end
+    end
+
+    return result
   end
 
   inst:DoTaskInTime(0, OnInit)
@@ -1071,7 +1127,9 @@ local function commonslavefn(bank, build, tags, mapicon)
 
   MakeObstaclePhysics(inst, 1)
 
-  inst.MiniMapEntity:SetIcon(mapicon)
+  if mapicon then
+    inst.MiniMapEntity:SetIcon(mapicon)
+  end
 
   inst.AnimState:SetBank(bank)
   inst.AnimState:SetBuild(build)
@@ -1149,6 +1207,24 @@ local function shadowhive()
   return inst
 end
 
+local function barrackhive()
+  local inst = commonslavefn("mutantbarrack", "mutantbarrack", {"mutantbarrack"}, nil)
+
+  if not TheWorld.ismastersim then
+    return inst
+  end
+
+  inst.components.lootdropper:SetLoot({
+    "honeycomb",
+    "stinger",
+    "stinger",
+    "stinger",
+    "stinger"
+  })
+
+  return inst
+end
+
 local function onteleportback(inst)
   local source = GetSource(inst)
 
@@ -1216,8 +1292,8 @@ local function teleportal()
   inst.components.childspawner.emergencychildrenperplayer = TUNING.MUTANT_BEEHIVE_EMERGENCY_BEES_PER_PLAYER
   inst.components.childspawner:SetEmergencyRadius(TUNING.MUTANT_BEEHIVE_EMERGENCY_RADIUS)
   inst.components.childspawner:SetMaxChildren(0)
-  inst.components.childspawner:SetMaxEmergencyChildren(8)
-  inst.components.childspawner:SetRegenPeriod(5)
+  inst.components.childspawner:SetMaxEmergencyChildren(12)
+  inst.components.childspawner:SetRegenPeriod(1)
   inst:ListenForEvent("childgoinghome", onteleportback)
 
   local oldSpawnEmergencyChild = inst.components.childspawner.SpawnEmergencyChild
@@ -1311,6 +1387,11 @@ STRINGS.NAMES.MUTANTSHADOWHIVE = "Metapis Shadow Hive"
 STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTSHADOWHIVE = "It's made from ancient technology."
 STRINGS.RECIPE_DESC.MUTANTSHADOWHIVE = "Adds Metapis Shadow to Mother Hive."
 
+STRINGS.MUTANTBARRACK = "Metapis Barrack"
+STRINGS.NAMES.MUTANTBARRACK = "Metapis Barrack"
+STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTBARRACK = "For the swarm."
+STRINGS.RECIPE_DESC.MUTANTBARRACK = "Grows your Metapis swarm."
+
 STRINGS.MUTANTTELEPORTAL = "Metapis Teleportal"
 STRINGS.NAMES.MUTANTTELEPORTAL = "Metapis Teleportal"
 STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTTELEPORTAL = "Magical transportation."
@@ -1325,5 +1406,7 @@ return Prefab("mutantbeehive", fn, assets, prefabs),
   MakePlacer("mutantassassinhive_placer", "mutantassassinhive", "mutantassassinhive", "idle"),
   Prefab("mutantshadowhive", shadowhive, assets, prefabs),
   MakePlacer("mutantshadowhive_placer", "mutantshadowhive", "mutantshadowhive", "idle"),
+  Prefab("mutantbarrack", barrackhive, assets, prefabs),
+  MakePlacer("mutantbarrack_placer", "mutantbarrack", "mutantbarrack", "idle"),
   Prefab("mutantteleportal", teleportal, assets, prefabs),
   MakePlacer("mutantteleportal_placer", "mutantteleportal", "mutantteleportal", "idle")

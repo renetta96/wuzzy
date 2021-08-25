@@ -207,12 +207,23 @@ function BeeSummoner:AddNumStore(num)
 	end
 end
 
+function BeeSummoner:GetNumStoreRegen()
+	local totalstore = self:GetTotalStore()
+	local added = totalstore - self.maxstore
+
+	if added < 1 then
+		return 1
+	end
+
+	return 1 + math.floor(math.log(added))
+end
+
 local function DoRegenTick(inst, self)
 	self:SetTick(self.currenttick + 1)
 	-- print("REGEN, TICK : ", self.currenttick)
 
 	if self.currenttick >= self.maxticks then
-		self:AddNumStore(1)
+		self:AddNumStore(self:GetNumStoreRegen())
 		self:SetTick(0)
 
 		if self.numstore >= self:GetTotalStore() then

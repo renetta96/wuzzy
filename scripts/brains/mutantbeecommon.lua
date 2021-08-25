@@ -1,13 +1,6 @@
-local RUN_AWAY_DIST = 10
-local SEE_FLOWER_DIST = 10
-local SEE_TARGET_DIST = 6
-
-local MAX_CHASE_DIST = 7
-local MAX_CHASE_TIME = 8
 local MAX_WANDER_DIST = 32
-
-local SHARE_TARGET_DIST = 30
 local MAX_TARGET_SHARES = 10
+local SHARE_TARGET_DIST = 30
 
 local function OnAttacked(inst, data)
 	local attacker = data and data.attacker
@@ -69,6 +62,14 @@ local function ShouldDespawn(inst)
 	return true
 end
 
+local function ShouldGoBackHome(inst)
+	if inst._lastcombattime ~= nil and GetTime() <= inst._lastcombattime + math.random(4, 7) then
+		return false
+	end
+
+	return true
+end
+
 local function DespawnAction(inst)
 	local follower = inst.components.follower
 	if follower and follower.leader
@@ -83,14 +84,8 @@ end
 return {
 	GoHomeAction = GoHomeAction,
 	ShouldDespawn = ShouldDespawn,
+	ShouldGoBackHome = ShouldGoBackHome,
 	DespawnAction = DespawnAction,
 	OnAttacked = OnAttacked,
-	RUN_AWAY_DIST = RUN_AWAY_DIST,
-	SEE_FLOWER_DIST = SEE_FLOWER_DIST,
-	SEE_TARGET_DIST = SEE_TARGET_DIST,
-	MAX_CHASE_DIST = MAX_CHASE_DIST,
-	MAX_CHASE_TIME = MAX_CHASE_TIME,
 	MAX_WANDER_DIST = MAX_WANDER_DIST,
-	SHARE_TARGET_DIST = SHARE_TARGET_DIST,
-	MAX_TARGET_SHARES = MAX_TARGET_SHARES
 }
