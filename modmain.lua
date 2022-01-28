@@ -397,11 +397,16 @@ local function FlowerPostInit(prefab)
         if not comp.inst.pollenpicked then
           local product = comp.product
           local numtoharvest = comp.numtoharvest
+          local remove_when_picked = comp.remove_when_picked
+
           comp.product = 'zetapollen'
           comp.numtoharvest = (GLOBAL.TheWorld.state.season == SEASONS.SPRING and math.random() <= 0.5) and 2 or 1
+          comp.remove_when_picked = false
           PickFn(comp, picker, ...)
+
           comp.product = product
           comp.numtoharvest = numtoharvest
+          comp.remove_when_picked = remove_when_picked
         else
           PickFn(comp, picker, ...)
         end
