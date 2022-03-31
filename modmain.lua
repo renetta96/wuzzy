@@ -58,6 +58,8 @@ Assets = {
 
   Asset( "IMAGE", "images/avatars/avatar_zeta.tex" ),
   Asset( "ATLAS", "images/avatars/avatar_zeta.xml" ),
+  Asset( "IMAGE", "images/crafting_menu_avatars/avatar_zeta.tex" ),
+  Asset( "ATLAS", "images/crafting_menu_avatars/avatar_zeta.xml" ),
   Asset( "IMAGE", "images/avatars/avatar_ghost_zeta.tex" ),
   Asset( "ATLAS", "images/avatars/avatar_ghost_zeta.xml" ),
   Asset( "IMAGE", "images/avatars/self_inspect_zeta.tex" ),
@@ -530,55 +532,55 @@ containers.widgetsetup = function(container, prefab, data)
   oldwidgetsetup(container, prefab, data)
 end
 
-
-local metapis_tab = AddRecipeTab(
-  "Metapis",
-  999,
-  "images/inventoryimages/metapis_tab.xml",
-  "metapis_tab.tex",
-  "beemaster"
-)
-
-AddRecipe("armor_honey",
+AddCharacterRecipe(
+  "armor_honey",
   {
     Ingredient("log", 10),
     Ingredient("rope", 1),
     Ingredient("honey", 3)
   },
-  metapis_tab,
   TECH.NONE,
-  nil, nil, nil, nil,
-  "beemaster",
-  "images/inventoryimages/armor_honey.xml",
-  "armor_honey.tex"
+  {
+    builder_tag = "beemaster",
+    atlas = "images/inventoryimages/armor_honey.xml",
+    image = "armor_honey.tex"
+  },
+  {
+    "ARMOUR"
+  }
 )
 
-AddRecipe("melissa",
+AddCharacterRecipe(
+  "melissa",
   {
     Ingredient("twigs", 2),
     Ingredient("goldnugget", 1),
     Ingredient("stinger", 5)
   },
-  metapis_tab,
   TECH.NONE,
-  nil, nil, nil, nil,
-  "beemaster",
-  "images/inventoryimages/melissa.xml",
-  "melissa.tex"
+  {
+    builder_tag = "beemaster",
+    atlas = "images/inventoryimages/melissa.xml",
+    image = "melissa.tex"
+  },
+  {
+    "WEAPONS"
+  }
 )
 
-AddRecipe("mutantbeecocoon",
+AddCharacterRecipe(
+  "mutantbeecocoon",
   {
     Ingredient("honeycomb", 1),
     Ingredient("cutgrass", 4),
     Ingredient("honey", 1)
   },
-  metapis_tab,
   TECH.NONE,
-  nil, nil, nil, nil,
-  "beemaster",
-  "images/inventoryimages/mutantbeecocoon.xml",
-  "mutantbeecocoon.tex"
+  {
+    builder_tag = "beemaster",
+    atlas = "images/inventoryimages/mutantbeecocoon.xml",
+    image = "mutantbeecocoon.tex"
+  }
 )
 
 local function slavehivetestfn(pt, rot)
@@ -595,113 +597,123 @@ local function slavehivetestfn(pt, rot)
   return false
 end
 
-AddRecipe("mutantdefenderhive",
+AddCharacterRecipe(
+  "mutantdefenderhive",
   {
     Ingredient("horn", 2),
     Ingredient("honeycomb", 1),
     Ingredient("moonrocknugget", 10)
   },
-  metapis_tab,
   TECH.CELESTIAL_ONE,
-  "mutantdefenderhive_placer",
-  nil, nil, nil,
-  "beemaster",
-  "images/inventoryimages/mutantdefenderhive.xml",
-  "mutantdefenderhive.tex",
-  slavehivetestfn
+  {
+    builder_tag = "beemaster",
+    atlas = "images/inventoryimages/mutantdefenderhive.xml",
+    image = "mutantdefenderhive.tex",
+    placer = "mutantdefenderhive_placer",
+    testfn = slavehivetestfn
+  }
 )
 
-AddRecipe("mutantrangerhive",
+AddCharacterRecipe(
+  "mutantrangerhive",
   {
     Ingredient("lightninggoathorn", 2),
     Ingredient("honeycomb", 1),
     Ingredient("cookiecuttershell", 8)
   },
-  metapis_tab,
   TECH.LOST,
-  "mutantrangerhive_placer",
-  nil, nil, nil,
-  nil,
-  "images/inventoryimages/mutantrangerhive.xml",
-  "mutantrangerhive.tex",
-  slavehivetestfn
+  {
+    builder_tag = "beemaster",
+    atlas = "images/inventoryimages/mutantrangerhive.xml",
+    image = "mutantrangerhive.tex",
+    placer = "mutantrangerhive_placer",
+    testfn = slavehivetestfn
+  }
 )
 
-AddRecipe(
+AddCharacterRecipe(
   "hermitshop_mutantrangerhive_blueprint",
   {
     Ingredient("messagebottleempty", 3)
   },
-  RECIPETABS.HERMITCRABSHOP, TECH.HERMITCRABSHOP_FIVE,
-  nil, nil, true, nil, "beemaster", nil, "blueprint.tex", nil, "mutantrangerhive_blueprint"
+  TECH.HERMITCRABSHOP_FIVE,
+  {
+    builder_tag = "beemaster",
+    image = "blueprint.tex",
+    product = "mutantrangerhive_blueprint"
+  }
 )
 
 STRINGS.RECIPE_DESC.MUTANTRANGERHIVE_BLUEPRINT = "Adds Metapis Ranger to Mother Hive."
 STRINGS.NAMES.MUTANTRANGERHIVE_BLUEPRINT = "Metapis Ranger Hive Blueprint"
 
-AddRecipe("mutantassassinhive",
+AddCharacterRecipe(
+  "mutantassassinhive",
   {
     Ingredient("moonbutterflywings", 8),
     Ingredient("honeycomb", 1),
     Ingredient("moonglass", 10)
   },
-  metapis_tab,
   TECH.CELESTIAL_THREE,
-  "mutantassassinhive_placer",
-  nil, nil, nil,
-  "beemaster",
-  "images/inventoryimages/mutantassassinhive.xml",
-  "mutantassassinhive.tex",
-  slavehivetestfn
+  {
+    builder_tag = "beemaster",
+    atlas = "images/inventoryimages/mutantassassinhive.xml",
+    image = "mutantassassinhive.tex",
+    placer = "mutantassassinhive_placer",
+    testfn = slavehivetestfn
+  }
 )
 
-AddRecipe("mutantshadowhive",
+AddCharacterRecipe(
+  "mutantshadowhive",
   {
     Ingredient("nightmarefuel", 10),
     Ingredient("honeycomb", 1),
     Ingredient("thulecite", 6)
   },
-  metapis_tab,
   TECH.ANCIENT_FOUR,
-  "mutantshadowhive_placer",
-  nil, nil, nil,
-  "beemaster",
-  "images/inventoryimages/mutantshadowhive.xml",
-  "mutantshadowhive.tex",
-  slavehivetestfn
+  {
+    builder_tag = "beemaster",
+    atlas = "images/inventoryimages/mutantshadowhive.xml",
+    image = "mutantshadowhive.tex",
+    placer = "mutantshadowhive_placer",
+    testfn = slavehivetestfn
+  }
 )
 
 -- name ~= product to ignore recipe loots
-AddRecipe("mutantbarrack_recipe",
+AddCharacterRecipe(
+  "mutantbarrack_recipe",
   {
     Ingredient("honey", 40),
     Ingredient("honeycomb", 1),
     Ingredient("killerbee", 4)
   },
-  metapis_tab,
   TECH.SCIENCE_TWO,
-  "mutantbarrack_placer",
-  nil, nil, nil,
-  "beemaster",
-  "images/inventoryimages/mutantbarrack.xml",
-  "mutantbarrack.tex",
-  slavehivetestfn,
-  "mutantbarrack" -- product
+  {
+    builder_tag = "beemaster",
+    atlas = "images/inventoryimages/mutantbarrack.xml",
+    image = "mutantbarrack.tex",
+    placer = "mutantbarrack_placer",
+    testfn = slavehivetestfn,
+    product = "mutantbarrack"
+  }
 )
 
-AddRecipe("mutantteleportal",
+AddCharacterRecipe(
+  "mutantteleportal",
   {
     Ingredient("honeycomb", 1),
     Ingredient("nightmarefuel", 4),
     Ingredient("purplegem", 3),
   },
-  metapis_tab,
   TECH.MAGIC_THREE,
-  "mutantteleportal_placer",
-  nil, nil, nil,
-  "beemaster",
-  "images/inventoryimages/mutantteleportal.xml",
-  "mutantteleportal.tex"
+  {
+    builder_tag = "beemaster",
+    atlas = "images/inventoryimages/mutantteleportal.xml",
+    image = "mutantteleportal.tex",
+    placer = "mutantteleportal_placer"
+  }
 )
 
 GLOBAL.ACTIONS.UPGRADE.priority = GLOBAL.ACTIONS.STORE.priority + 1 -- To show over ACTIONS.STORE
