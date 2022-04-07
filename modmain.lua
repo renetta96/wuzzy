@@ -623,11 +623,13 @@ AddCharacterRecipe(
   },
   TECH.LOST,
   {
-    builder_tag = "beemaster",
     atlas = "images/inventoryimages/mutantrangerhive.xml",
     image = "mutantrangerhive.tex",
     placer = "mutantrangerhive_placer",
     testfn = slavehivetestfn
+  },
+  {
+    "CHARACTER"
   }
 )
 
