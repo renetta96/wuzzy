@@ -695,8 +695,10 @@ local function OnPlayerJoined(inst, player)
   local linksuccess = LinkToPlayer(inst, player)
 
   if not linksuccess then
-    if inst._ownerid and player.userid and player.userid == inst._ownerid then
-      print("SAME PLAYER, DIFFERENT CHARACTER")
+    -- if the player is the owner, and is not a seamless character (like Wonkey), which means the player despawned and joined using another character
+    -- then destroy the mother hive
+    if inst._ownerid and player.userid and player.userid == inst._ownerid and (not table.contains(SEAMLESSSWAP_CHARACTERLIST, player.prefab)) then
+      print("SAME PLAYER, DIFFERENT CHARACTER, NOT SEAMLESS")
       inst:DoTaskInTime(0,
         function(inst)
           inst.components.lootdropper:DropLoot(inst:GetPosition())
