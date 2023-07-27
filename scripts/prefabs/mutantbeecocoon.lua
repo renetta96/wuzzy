@@ -212,4 +212,4 @@ STRINGS.RECIPE_DESC.MUTANTBEECOCOON = "The core of a Metapis hive."
 STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTBEECOCOON = "Something is screeching inside."
 
 return Prefab("mutantbeecocoon", fn, assets, prefabs),
-  MakePlacer("mutantbeecocoon_placer", "mutantbeehive", "mutantbeehive", "cocoon_small")
+  MakePlacer("mutantbeecocoon_placer", "mutantbeehive", "mutantbeehive", "cocoon_tiny")

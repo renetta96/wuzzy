@@ -6,7 +6,8 @@ local prefabs =
   "honeycomb",
   "mutantbeecocoon",
   "collapse_big",
-  "collapse_small"
+  "collapse_small",
+  "mutantbeehive_lamp",
 }
 
 local assets =
@@ -24,41 +25,54 @@ local assets =
 
 local UPGRADE_STAGES = {
   [1] = {
-    SIZE_SCALE = 1.15,
-    HEALTH = 700
+    SIZE_SCALE = 1.45,
+    HEALTH = 700,
+    IDLE_ANIM = "cocoon_tiny",
+    DEAD_ANIM = "cocoon_tiny_dead",
+    HIT_ANIM = "cocoon_tiny_hit",
+    FROZEN_ANIM = "frozen_tiny",
+    FROZEN_LOOP_ANIM = "frozen_tiny_loop_pst",
   },
   [2] = {
-    SIZE_SCALE = 1.3,
-    HEALTH = 1100
+    SIZE_SCALE = 1.35,
+    HEALTH = 1100,
+    IDLE_ANIM = "cocoon_medium",
+    DEAD_ANIM = "cocoon_medium_dead",
+    HIT_ANIM = "cocoon_medium_hit",
+    FROZEN_ANIM = "frozen_medium",
+    FROZEN_LOOP_ANIM = "frozen_medium_loop_pst",
   },
   [3] = {
     SIZE_SCALE = 1.45,
-    HEALTH = 1500
+    HEALTH = 1500,
+    IDLE_ANIM = "cocoon_big",
+    DEAD_ANIM = "cocoon_big_dead",
+    HIT_ANIM = "cocoon_big_hit",
+    FROZEN_ANIM = "frozen_big",
+    FROZEN_LOOP_ANIM = "frozen_big_loop_pst",
   }
 }
 
 local SPEECH =
 {
   ATTACK = {
-    "KILL 'EM ALL!!!",
+    "SLAY 'EM ALL!!!",
     "ATTACC!!!",
-    "YOU AIN'T MESS WITH US!",
-    "ONTO THE BATTLEFIELD!"
+    "TO WARRRR!!!"
   },
   SPAWN = {
-    "TO WORK SHALL WE?",
+    "NO WORKY NO HONEY.",
     "AHHHH FLOWERS!",
     "MORNIN'!"
   },
   IGNITE = {
     "THIS IS FINE.",
-    "HELP US MASTER!!!",
     "SHIT ON FIRE YO!",
-    "BRING SOME WATER!"
+    "HOT HOT HOT!!!"
   },
   FREEZE = {
     "OUCH! IT'S FREEZING!",
-    "JUST CHILLING IN HERE.",
+    "BING CHILLING.",
     "BRRRRRR!"
   },
   HAMMER = {
@@ -111,8 +125,13 @@ end
 local function Shake(inst, ignore_frozen)
   if ignore_frozen or not (inst.components.freezable and inst.components.freezable:IsFrozen()) then
     inst.SoundEmitter:PlaySound("dontstarve/bee/beehive_hit")
-    inst.AnimState:PlayAnimation("cocoon_small_hit")
-    inst.AnimState:PushAnimation("cocoon_small", true)
+    inst.AnimState:PlayAnimation(UPGRADE_STAGES[inst.components.upgradeable.stage].HIT_ANIM)
+    inst.AnimState:PushAnimation(UPGRADE_STAGES[inst.components.upgradeable.stage].IDLE_ANIM, true)
+
+    if inst.components.upgradeable.stage == 3 then
+      inst._lamp.AnimState:PlayAnimation("lamp_big_hit")
+      inst._lamp.AnimState:PushAnimation("lamp_big", true)
+    end
   end
 end
 
@@ -141,6 +160,8 @@ local function OnRemoveEntity(inst)
       end
     end
   end
+
+  inst._lamp:Remove()
 end
 
 local function StartSpawning(inst)
@@ -157,7 +178,25 @@ local function StopSpawning(inst)
   end
 end
 
+local function RefreshLight(inst)
+  if inst.components.upgradeable and
+    inst.components.upgradeable.stage == 3 and
+    (not inst.components.freezable:IsFrozen()) and
+    (not TheWorld.state.iscaveday)
+  then
+    inst._lamp.AnimState:SetBloomEffectHandle("shaders/anim.ksh")
+    inst._lamp.AnimState:SetLightOverride(0.8)
+    inst._lamp.Light:Enable(true)
+  else
+    inst._lamp.AnimState:ClearBloomEffectHandle()
+    inst._lamp.AnimState:SetLightOverride(0.0)
+    inst._lamp.Light:Enable(false)
+  end
+end
+
 local function OnIsCaveDay(inst, isday)
+  RefreshLight(inst)
+
   if not isday then
     StopSpawning(inst)
   elseif inst.LightWatcher:IsInLight() then
@@ -191,24 +230,37 @@ end
 local function OnFreeze(inst)
   inst:Say(SPEECH.FREEZE)
   inst.SoundEmitter:PlaySound("dontstarve/common/freezecreature")
-  inst.AnimState:PlayAnimation("frozen", true)
+  inst.AnimState:PlayAnimation(UPGRADE_STAGES[inst.components.upgradeable.stage].FROZEN_ANIM, true)
   inst.AnimState:OverrideSymbol("swap_frozen", "frozen", "frozen")
 
   StopSpawning(inst)
+
+  inst._lamp:Hide()
+  RefreshLight(inst)
 end
 
 local function OnThaw(inst)
-  inst.AnimState:PlayAnimation("frozen_loop_pst", true)
+  inst.AnimState:PlayAnimation(UPGRADE_STAGES[inst.components.upgradeable.stage].FROZEN_LOOP_ANIM, true)
   inst.SoundEmitter:PlaySound("dontstarve/common/freezethaw", "thawing")
   inst.AnimState:OverrideSymbol("swap_frozen", "frozen", "frozen")
+
+  inst._lamp:Hide()
+  RefreshLight(inst)
 end
 
 local function OnUnFreeze(inst)
-  inst.AnimState:PlayAnimation("cocoon_small", true)
+  inst.AnimState:PlayAnimation(UPGRADE_STAGES[inst.components.upgradeable.stage].IDLE_ANIM, true)
   inst.SoundEmitter:KillSound("thawing")
   inst.AnimState:ClearOverrideSymbol("swap_frozen")
 
   StartSpawning(inst)
+
+  if inst.components.upgradeable.stage == 3 then
+    inst._lamp:Show()
+    inst._lamp.AnimState:PlayAnimation("lamp_big", true)
+
+    RefreshLight(inst)
+  end
 end
 
 local function SpawnCocoon(inst)
@@ -220,7 +272,7 @@ end
 
 local function OnKilled(inst)
   inst:RemoveComponent("childspawner")
-  inst.AnimState:PlayAnimation("cocoon_dead", true)
+  inst.AnimState:PlayAnimation(UPGRADE_STAGES[inst.components.upgradeable.stage].DEAD_ANIM, true)
   RemovePhysicsColliders(inst)
 
   inst.SoundEmitter:KillSound("loop")
@@ -232,6 +284,8 @@ local function OnKilled(inst)
   if inst.components.container ~= nil then
     inst.components.container:DropEverything()
   end
+
+  inst._lamp:Remove()
 end
 
 local function OnHammered(inst, worker)
@@ -509,6 +563,13 @@ local function SetStage(inst, stage)
 
   inst.components.lootdropper:SetLoot(loots)
   OnSlave(inst)
+
+  if stage == 3 then
+    inst._lamp:Show()
+    RefreshLight(inst)
+  else
+    inst._lamp:Hide()
+  end
 end
 
 local function OnStageAdvance(inst)
@@ -777,28 +838,6 @@ local function RefreshHoneyArmor(inst)
   end
 end
 
-local function OnInit(inst)
-  inst:WatchWorldState("iscaveday", OnIsCaveDay)
-  inst:ListenForEvent("enterlight", OnEnterLight)
-  inst:ListenForEvent("enterdark", OnEnterDark)
-  if TheWorld.state.isday then
-    StartSpawning(inst)
-  end
-
-  SetStage(inst, inst.components.upgradeable.stage)
-  OnSlave(inst)
-
-  -- On init, emergencychildreninside always start at 0, so fill half the pool for quickstart
-  inst.components.childspawner.emergencychildreninside = math.floor(inst.components.childspawner.maxemergencychildren / 2)
-
-  inst:DoPeriodicTask(3, SelfRepair)
-  inst:DoPeriodicTask(30, ConvertPollenToHoney)
-  inst:DoPeriodicTask(2, OnSlave)
-  inst:DoPeriodicTask(30, RefreshHoneyArmor)
-
-  MakeWatchWalls(inst)
-end
-
 local function onopen(inst)
     if not inst:HasTag("burnt") then
         inst.SoundEmitter:PlaySound("dontstarve/wilson/chest_open")
@@ -905,6 +944,35 @@ local function canupgrade(inst, obj, performer)
 	return true
 end
 
+
+local function OnInit(inst)
+  inst._lamp = SpawnPrefab("mutantbeehive_lamp")
+  inst._lamp.entity:SetParent(inst.entity)
+
+  inst:WatchWorldState("iscaveday", OnIsCaveDay)
+  inst:ListenForEvent("enterlight", OnEnterLight)
+  inst:ListenForEvent("enterdark", OnEnterDark)
+  if TheWorld.state.isday then
+    StartSpawning(inst)
+  end
+
+  SetStage(inst, inst.components.upgradeable.stage)
+  OnSlave(inst)
+
+  inst.AnimState:PlayAnimation(UPGRADE_STAGES[inst.components.upgradeable.stage].IDLE_ANIM, true)
+
+  -- On init, emergencychildreninside always start at 0, so fill half the pool for quickstart
+  inst.components.childspawner.emergencychildreninside = math.floor(inst.components.childspawner.maxemergencychildren / 2)
+
+  inst:DoPeriodicTask(3, SelfRepair)
+  inst:DoPeriodicTask(30, ConvertPollenToHoney)
+  inst:DoPeriodicTask(2, OnSlave)
+  inst:DoPeriodicTask(30, RefreshHoneyArmor)
+
+  MakeWatchWalls(inst)
+end
+
+
 local function fn()
   local inst = CreateEntity()
 
@@ -921,13 +989,12 @@ local function fn()
 
   inst.AnimState:SetBank("mutantbeehive")
   inst.AnimState:SetBuild("mutantbeehive")
-  inst.AnimState:PlayAnimation("cocoon_small", true)
+  inst.AnimState:PlayAnimation("cocoon_tiny", true)
 
   inst:AddTag("mutantbeehive")
   inst:AddTag("companion")
   inst:AddTag("beemutant")
 
-  ---------------------------
   inst:AddComponent("talker")
   inst.components.talker.fontsize = 28
   inst.components.talker.font = TALKINGFONT
@@ -936,7 +1003,6 @@ local function fn()
   inst.Say = Say
   inst:ListenForEvent("firedamage", onfiredamagefn)
   inst:ListenForEvent("startfiredamage", onfiredamagefn)
-  ---------------------------
 
   MakeSnowCoveredPristine(inst)
 

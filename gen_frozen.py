@@ -14,7 +14,7 @@ keys = [
 
 stable_idx = 1
 new_keys = []
-init_key = {'x': -177.631579, 'y': 148.684211, 'angle': 319.122298}
+init_key = {'x': -181.531579, 'y':148.684211, 'angle': 319.122298}
 
 for key in keys:
 	spin = key.spin
@@ -35,4 +35,4 @@ def print_xml(folder, file, k, scale_x=1, scale_y=1):
 
 	print(result)
 
-print_xml(1, 3, new_keys, 1.539442, 1.59533)
+print_xml(1, 3, new_keys, 1.654454, 2.25259)

@@ -24,7 +24,8 @@ PrefabFiles = {
   "pollen_fx",
   "melissa",
   "shadowspike_fx",
-  "electric_bubble"
+  "electric_bubble",
+  "mutantbeehive_lamp",
 }
 
 Assets = {

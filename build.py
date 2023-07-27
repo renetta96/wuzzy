@@ -3,6 +3,15 @@ import argparse
 import shutil
 import re
 
+parser = argparse.ArgumentParser()
+parser.add_argument('-e', '--exported')
+
+args = parser.parse_args()
+exports = []
+
+if args.exported:
+	exports = args.exported.split(',')
+
 base_dir = os.path.dirname(os.path.realpath(__file__))
 build_dir = os.path.join(base_dir, 'build')
 
@@ -26,6 +35,10 @@ for d in ('anim', 'scripts', 'bigportraits', 'images', 'sound'):
 
 for f in ('modicon.tex', 'modicon.xml', 'modinfo.lua', 'modmain.lua', 'modpic.png'):
 	shutil.copy2(os.path.join(base_dir, f), os.path.join(mod_build_dir, f))
+
+if len(exports) > 0:
+	for d in exports:
+		shutil.copytree(os.path.join(base_dir, 'exported', d), os.path.join(mod_build_dir, 'exported', d))
 
 def rm_files_without_exts(path, exts):
 	for item in os.listdir(path):
