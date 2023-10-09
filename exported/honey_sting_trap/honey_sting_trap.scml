@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<spriter_data scml_version="1.0" generator="BrashMonkey Spriter" generator_version="r11">
+    <folder id="0" name="trap">
+        <file id="0" name="trap/trap-0.png" width="1000" height="1000" pivot_x="0.518" pivot_y="0.482"/>
+    </folder>
+    <folder id="1" name="ball">
+        <file id="0" name="ball/ball-0.png" width="500" height="500" pivot_x="0.522" pivot_y="0.524"/>
+    </folder>
+    <folder id="2" name="spike">
+        <file id="0" name="spike/spike-0.png" width="200" height="200" pivot_x="0.52" pivot_y="0.275"/>
+        <file id="1" name="spike/spike-1.png" width="200" height="200" pivot_x="0.48" pivot_y="0.285"/>
+    </folder>
+    <entity id="0" name="honey_sting_trap">
+        <animation id="0" name="idle" length="200" interval="100">
+            <mainline>
+                <key id="0">
+                    <object_ref id="0" timeline="0" key="0" z_index="0"/>
+                </key>
+                <key id="1" time="126">
+                    <object_ref id="0" timeline="0" key="0" z_index="0"/>
+                </key>
+            </mainline>
+            <timeline id="0" name="trap-0">
+                <key id="0" spin="0">
+                    <object folder="0" file="0" x="1.326652" y="1.260732" angle="0"/>
+                </key>
+            </timeline>
+        </animation>
+        <animation id="1" name="spike_0" length="200" interval="100">
+            <mainline>
+                <key id="0">
+                    <object_ref id="0" timeline="0" key="0" z_index="0"/>
+                </key>
+            </mainline>
+            <timeline id="0" name="spike-0">
+                <key id="0" spin="0">
+                    <object folder="2" file="0" x="0.576923" y="-1.884615" angle="0" scale_x="0.8" scale_y="0.8"/>
+                </key>
+            </timeline>
+        </animation>
+        <animation id="2" name="spike_0_atk" length="500" interval="100">
+            <mainline>
+                <key id="0">
+                    <object_ref id="0" timeline="0" key="0" z_index="0"/>
+                </key>
+                <key id="1" time="125" curve_type="cubic" c1="0" c2="0">
+                    <object_ref id="0" timeline="0" key="1" z_index="0"/>
+                </key>
+                <key id="2" time="250" curve_type="cubic" c1="0.995025" c2="0.995025">
+                    <object_ref id="0" timeline="0" key="2" z_index="0"/>
+                </key>
+                <key id="3" time="375">
+                    <object_ref id="0" timeline="0" key="3" z_index="0"/>
+                </key>
+            </mainline>
+            <timeline id="0" name="spike-0">
+                <key id="0" spin="0">
+                    <object folder="2" file="0" x="0.576923" y="-1.884615" angle="0" scale_x="0.8" scale_y="0.8"/>
+                </key>
+                <key id="1" time="125" spin="0">
+                    <object folder="2" file="0" x="0.576923" y="-1.884615" angle="0" scale_x="0.8" scale_y="0.8"/>
+                </key>
+                <key id="2" time="250" spin="0">
+                    <object folder="2" file="0" x="0.576923" y="-1.884615" angle="0" scale_x="0.7" scale_y="1.4"/>
+                </key>
+                <key id="3" time="375" spin="0">
+                    <object folder="2" file="0" x="0.576923" y="-1.884615" angle="0" scale_x="0.8" scale_y="0.8"/>
+                </key>
+            </timeline>
+        </animation>
+        <animation id="3" name="spike_1" length="200" interval="100">
+            <mainline>
+                <key id="0">
+                    <object_ref id="0" timeline="0" key="0" z_index="0"/>
+                </key>
+            </mainline>
+            <timeline id="0" name="spike-1">
+                <key id="0" spin="0">
+                    <object folder="2" file="1" x="0.370787" y="0.348315" angle="0" scale_x="0.8" scale_y="0.8"/>
+                </key>
+            </timeline>
+        </animation>
+        <animation id="4" name="spike_1_atk" length="500" interval="100">
+            <mainline>
+                <key id="0">
+                    <object_ref id="0" timeline="0" key="0" z_index="0"/>
+                </key>
+                <key id="1" time="125" curve_type="cubic" c1="0" c2="0">
+                    <object_ref id="0" timeline="0" key="1" z_index="0"/>
+                </key>
+                <key id="2" time="250" curve_type="cubic" c1="0.995025" c2="0.995025">
+                    <object_ref id="0" timeline="0" key="2" z_index="0"/>
+                </key>
+                <key id="3" time="375">
+                    <object_ref id="0" timeline="0" key="3" z_index="0"/>
+                </key>
+            </mainline>
+            <timeline id="0" name="spike-1">
+                <key id="0" spin="0">
+                    <object folder="2" file="1" x="0.370787" y="0.348315" angle="0" scale_x="0.8" scale_y="0.8"/>
+                </key>
+                <key id="1" time="125" spin="0">
+                    <object folder="2" file="1" x="0.370787" y="0.348315" angle="0" scale_x="0.8" scale_y="0.8"/>
+                </key>
+                <key id="2" time="250" spin="0">
+                    <object folder="2" file="1" x="0.370787" y="0.348315" angle="0" scale_x="0.7" scale_y="1.4"/>
+                </key>
+                <key id="3" time="375" spin="0">
+                    <object folder="2" file="1" x="0.370787" y="0.348315" angle="0" scale_x="0.8" scale_y="0.8"/>
+                </key>
+            </timeline>
+        </animation>
+        <animation id="5" name="attack" length="500" interval="100">
+            <mainline>
+                <key id="0">
+                    <object_ref id="0" timeline="0" key="0" z_index="0"/>
+                </key>
+                <key id="1" time="125" curve_type="cubic" c1="0" c2="0">
+                    <object_ref id="0" timeline="0" key="1" z_index="0"/>
+                </key>
+                <key id="2" time="250" curve_type="cubic" c1="0.995025" c2="0.995025">
+                    <object_ref id="0" timeline="0" key="2" z_index="0"/>
+                </key>
+                <key id="3" time="375">
+                    <object_ref id="0" timeline="0" key="3" z_index="0"/>
+                </key>
+            </mainline>
+            <timeline id="0" name="trap-0">
+                <key id="0" spin="0">
+                    <object folder="0" file="0" x="1.326652" y="1.260732" angle="0"/>
+                </key>
+                <key id="1" time="125" spin="0">
+                    <object folder="0" file="0" x="1.326652" y="1.260732" angle="0" scale_x="1.2"/>
+                </key>
+                <key id="2" time="250" spin="0">
+                    <object folder="0" file="0" x="1.326652" y="1.260732" angle="0" scale_x="0.8" scale_y="1.4"/>
+                </key>
+                <key id="3" time="375" spin="0">
+                    <object folder="0" file="0" x="1.326652" y="1.260732" angle="0" scale_x="1.2"/>
+                </key>
+            </timeline>
+        </animation>
+        <animation id="6" name="ball_idle" length="200" interval="100">
+            <mainline>
+                <key id="0">
+                    <object_ref id="0" timeline="0" key="0" z_index="0"/>
+                </key>
+            </mainline>
+            <timeline id="0" name="ball-0">
+                <key id="0" spin="0">
+                    <object folder="1" file="0" x="3.053934" y="39.376719" angle="0" scale_x="0.6" scale_y="0.6"/>
+                </key>
+            </timeline>
+        </animation>
+    </entity>
+</spriter_data>

@@ -26,6 +26,8 @@ PrefabFiles = {
   "shadowspike_fx",
   "electric_bubble",
   "mutantbeehive_lamp",
+  "honey_sting_spike",
+  "honey_sting_trap"
 }
 
 Assets = {
@@ -96,6 +98,8 @@ Assets = {
   Asset("IMAGE", "images/inventoryimages/armor_honey.tex"),
   Asset("ATLAS", "images/inventoryimages/metapis_tab.xml"),
   Asset("IMAGE", "images/inventoryimages/metapis_tab.tex"),
+  Asset("ATLAS", "images/inventoryimages/honey_sting_ball.xml"),
+  Asset("IMAGE", "images/inventoryimages/honey_sting_ball.tex"),
 }
 
 RemapSoundEvent( "dontstarve/characters/zeta/hurt", "zeta/zeta/hurt" )
@@ -203,6 +207,12 @@ TUNING.ARMORHONEY_MULT_REGEN_TICK = 2 / 3
 -- Melissa
 TUNING.MELISSA_DAMAGE = 40
 TUNING.MELISSA_USES = 200
+
+-- Sting trap
+TUNING.STING_TRAP_USES = 250
+TUNING.STING_TRAP_DAMAGE = 10
+TUNING.STING_TRAP_DEFAULT_SPEED_PENALTY = 0.6
+TUNING.STING_TRAP_EPIC_SPEED_PENALTY = 0.75
 
 -- The character select screen lines
 STRINGS.CHARACTER_TITLES.zeta = "The Buzzy"
@@ -718,6 +728,25 @@ AddCharacterRecipe(
     placer = "mutantteleportal_placer"
   }
 )
+
+AddCharacterRecipe(
+  "honey_sting_ball",
+  {
+    Ingredient("honey", 5),
+    Ingredient("stinger", 5),
+    Ingredient("cutgrass", 2),
+  },
+  TECH.SCIENCE_ONE,
+  {
+    builder_tag = "beemaster",
+    atlas = "images/inventoryimages/honey_sting_ball.xml",
+    image = "honey_sting_ball.tex",
+  },
+  {
+    "WEAPONS"
+  }
+)
+
 
 GLOBAL.ACTIONS.UPGRADE.priority = GLOBAL.ACTIONS.STORE.priority + 1 -- To show over ACTIONS.STORE
 GLOBAL.ACTIONS.MUTANTBEE_DESPAWN = Action()
