@@ -9,7 +9,7 @@ local function OnAttack(inst)
 end
 
 local function OnFinished(inst)
-  inst.AnimState:PlayAnimation(anim, true)
+  inst.AnimState:PlayAnimation(inst.anim, true)
   inst:DoTaskInTime(2, ErodeAway)
 end
 
