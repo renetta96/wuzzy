@@ -29,9 +29,13 @@ local function IsValidTarget(target)
 end
 
 local function CanAttackNow(inst)
+    if beecommon.IsBeingChased(inst, 5) then
+        return false
+    end
+
+
     local target = inst.components.combat.target
-    return target == nil
-        or (IsValidTarget(target) and not inst.components.combat:InCooldown())
+    return target == nil or (IsValidTarget(target) and not inst.components.combat:InCooldown())
 end
 
 local function ShouldDodgeNow(inst)
@@ -61,9 +65,10 @@ function RangedKillerBeeBrain:OnStart()
             WhileNode(function() return self.inst.components.hauntable and self.inst.components.hauntable.panic end, "PanicHaunted", Panic(self.inst)),
             WhileNode(function() return self.inst.components.health.takingfiredamage end, "OnFire", Panic(self.inst)),
 
-        	WhileNode(function() return CanAttackNow(self.inst) end, "AttackMomentarily", ChaseAndAttack(self.inst, MAX_CHASE_TIME, MAX_CHASE_DIST)),
-            WhileNode(function() return ShouldDodgeNow(self.inst) end, "Dodge", RunAway(self.inst, ShouldRunAway, RUN_START_DIST, RUN_STOP_DIST)),
+            beecommon.AvoidEpicAtkNode(self.inst),
 
+            WhileNode(function() return beecommon.IsBeingChased(self.inst, 5) end, "Dodge", RunAway(self.inst, ShouldRunAway, RUN_START_DIST, RUN_STOP_DIST)),
+        	WhileNode(function() return CanAttackNow(self.inst) end, "AttackMomentarily", ChaseAndAttack(self.inst, MAX_CHASE_TIME, MAX_CHASE_DIST)),
             IfNode(function() return beecommon.ShouldDespawn(self.inst) end, "TryDespawn",
                 DoAction(self.inst, function() return beecommon.DespawnAction(self.inst) end, "Despawn", true)
             ),

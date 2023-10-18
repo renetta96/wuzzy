@@ -36,11 +36,16 @@ local DefenderBeeBrain = Class(Brain, function(self, inst)
 end)
 
 function DefenderBeeBrain:OnStart()
+	self.inst._fate = math.random(1000000)
+
 	local root =
 		PriorityNode(
 		{
 			WhileNode( function() return self.inst.components.hauntable and self.inst.components.hauntable.panic end, "PanicHaunted", Panic(self.inst)),
 			WhileNode( function() return self.inst.components.health.takingfiredamage end, "OnFire", Panic(self.inst)),
+
+			beecommon.AvoidEpicAtkNode_Defender(self.inst),
+
 			WhileNode( function() return self.inst.components.combat:HasTarget() end,
 				"Attack",
 				ChaseAndAttack(self.inst, MAX_CHASE_TIME, MAX_CHASE_DIST)
@@ -56,7 +61,7 @@ function DefenderBeeBrain:OnStart()
 				DoAction(self.inst, function() return beecommon.GoHomeAction(self.inst) end, "GoHome", true)
 			),
 			Wander(self.inst, function() return self.inst.components.knownlocations:GetLocation("home") end, beecommon.MAX_WANDER_DIST)
-		}, 1)
+		}, 0.5)
 
 
 	self.bt = BT(self.inst, root)
