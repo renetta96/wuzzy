@@ -81,13 +81,48 @@ local function DespawnAction(inst)
 	end
 end
 
-local AVOID_EPIC_DIST = TUNING.DEERCLOPS_AOE_RANGE + 5
-local STOP_AVOID_EPIC_DIST = TUNING.DEERCLOPS_AOE_RANGE + 5
+local AVOID_EPIC_DIST = 15
+local STOP_AVOID_EPIC_DIST = 15
 
 local function FindEpicEnemy(inst)
 	return GetClosestInstWithTag({"epic"}, inst, AVOID_EPIC_DIST)
 end
 
+-- special cases when epic doesn't explicitly have AOE damage, but still does AOE damage attack
+local aoe_bosses = {
+	deerclops = {
+		estimated_atk_time = 1
+	},
+	bearger = {
+		estimated_atk_time = 1
+	},
+	alterguardian_phase1 = {
+		estimated_atk_time = 3
+	}
+}
+
+local function canareaattack(epic)
+	for prefab_or_tag, v in pairs(aoe_bosses) do
+		if epic:HasTag(prefab_or_tag) or epic.prefab == prefab_or_tag then
+			return true
+		end
+	end
+
+	return
+		epic.components.combat and
+		epic.components.combat.areahitdamagepercent ~= nil and
+		epic.components.combat.areahitdamagepercent > 0
+end
+
+local function estimate_atk_time(epic)
+	for prefab_or_tag, v in pairs(aoe_bosses) do
+		if epic:HasTag(prefab_or_tag) or epic.prefab == prefab_or_tag then
+			return v.estimated_atk_time or 1
+		end
+	end
+
+	return 1
+end
 
 local function IsEpicAttackComing(inst)
 	local epic = FindEpicEnemy(inst)
@@ -113,13 +148,21 @@ local function IsEpicAttackComing(inst)
     end
   end
 
-  -- avoid attack
-  if epic.components.combat then
-    if epic.components.combat.laststartattacktime ~= nil and epic.components.combat.laststartattacktime + 1 >= GetTime() then
+  -- avoid aoe attack
+  if canareaattack(epic) then
+  	-- print("EPIC ", epic)
+  	local estimated_epic_atk_time = estimate_atk_time(epic)
+  	-- print("ATK TIME ", estimated_epic_atk_time)
+
+
+    if epic.components.combat.laststartattacktime ~= nil and epic.components.combat.laststartattacktime + estimated_epic_atk_time >= GetTime() then
 			return true
 		end
 
-		if epic.components.combat:GetCooldown() <= 1 then
+		-- should leave at least 2 secs to engage
+		local start_avoid_cd = epic.components.combat.min_attack_period - estimated_epic_atk_time - 2
+		-- print("AVOID CD ", start_avoid_cd)
+		if start_avoid_cd >= 0.1 and epic.components.combat:GetCooldown() <= math.min(1, start_avoid_cd) then
 			return true
 		end
 	end
