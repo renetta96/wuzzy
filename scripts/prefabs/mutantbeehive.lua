@@ -760,11 +760,11 @@ local function OnPlayerJoined(inst, player)
     -- then destroy the mother hive
     if inst._ownerid and player.userid and player.userid == inst._ownerid and (not table.contains(SEAMLESSSWAP_CHARACTERLIST, player.prefab)) then
       print("SAME PLAYER, DIFFERENT CHARACTER, NOT SEAMLESS")
-      inst:DoTaskInTime(0,
-        function(inst)
-          inst.components.lootdropper:DropLoot(inst:GetPosition())
-          inst:Remove()
-        end)
+      -- inst:DoTaskInTime(0,
+      --   function(inst)
+      --     inst.components.lootdropper:DropLoot(inst:GetPosition())
+      --     inst:Remove()
+      --   end)
     end
   end
 end

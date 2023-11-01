@@ -98,6 +98,9 @@ local aoe_bosses = {
 	},
 	alterguardian_phase1 = {
 		estimated_atk_time = 3
+	},
+	shadow_bishop = {
+		estimated_atk_time = 4.5
 	}
 }
 
