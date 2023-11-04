@@ -396,7 +396,7 @@ local function GetNumChildrenRegen(inst)
     return 0
   end
 
-  return math.floor(math.log(numbarracks))
+  return math.ceil(math.log(numbarracks))
 end
 
 local function GetNumChildrenFromSlaves(slaves)
@@ -407,7 +407,7 @@ local function GetNumChildrenFromSlaves(slaves)
   local num = 0
   for i, slave in ipairs(slaves) do
     if slave.prefab == "mutantbarrack" then
-      num = num + TUNING.MUTANT_BEEHIVE_CHILDREN_PER_SLAVE * 2
+      num = num + TUNING.MUTANT_BEEHIVE_CHILDREN_PER_BARRACK
     else
       num = num + TUNING.MUTANT_BEEHIVE_CHILDREN_PER_SLAVE
     end
@@ -419,12 +419,23 @@ end
 local function OnSlave(inst)
   if inst.components.childspawner then
     local slaves = GetSlaves(inst)
+
     inst.components.childspawner.maxemergencychildren =
       TUNING.MUTANT_BEEHIVE_DEFAULT_EMERGENCY_BEES
       + (inst.components.upgradeable.stage - 1) * TUNING.MUTANT_BEEHIVE_DELTA_BEES
       + GetNumChildrenFromSlaves(slaves)
     inst.components.childspawner:TryStopUpdate()
     inst.components.childspawner:StartUpdate()
+
+    local numbarracks = 0
+    for i, slave in ipairs(slaves) do
+      if slave.prefab == "mutantbarrack" then
+          numbarracks = numbarracks + 1
+      end
+    end
+
+
+    inst._numbarracks = numbarracks
   end
 end
 
@@ -1360,8 +1371,8 @@ local function teleportal()
   inst.components.childspawner.emergencychildrenperplayer = TUNING.MUTANT_BEEHIVE_EMERGENCY_BEES_PER_PLAYER
   inst.components.childspawner:SetEmergencyRadius(TUNING.MUTANT_BEEHIVE_EMERGENCY_RADIUS)
   inst.components.childspawner:SetMaxChildren(0)
-  inst.components.childspawner:SetMaxEmergencyChildren(12)
-  inst.components.childspawner:SetRegenPeriod(1)
+  inst.components.childspawner:SetMaxEmergencyChildren(250) -- effectively no limit, but still put a cap just in case
+  inst.components.childspawner:SetRegenPeriod(0.01)
   inst:ListenForEvent("childgoinghome", onteleportback)
 
   local oldSpawnEmergencyChild = inst.components.childspawner.SpawnEmergencyChild

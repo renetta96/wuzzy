@@ -41,6 +41,12 @@ local TARGET_IGNORE_TAGS = {"beemutant", "INLIMBO", "player"}
 local HEAL_IGNORE_TAGS = {"INLIMBO", "soldier"}
 local HEAL_MUST_ONE_OF_TAGS = {"beemutant", "beemaster"}
 
+local function BarrackModifier(inst, v)
+    local numbarracks = inst._numbarracks or 0
+
+    return v * (1.0 + TUNING.MUTANT_BEEHIVE_BARRACK_MODIFIER * numbarracks)
+end
+
 local function IsNearbyPlayer(inst)
     return GetClosestInstWithTag("beemaster", inst, TUNING.MUTANT_BEE_WATCH_DIST)
 end
@@ -101,7 +107,7 @@ local function PopColour(inst, src)
 end
 
 -- /* Mutant effects
-local function DoPoisonDamage(inst)
+local function DoPoisonDamage(inst, poison_damage)
     if inst._poisonticks <= 0 or inst.components.health:IsDead() then
         inst._poisontask:Cancel()
         inst._poisontask = nil
@@ -109,7 +115,7 @@ local function DoPoisonDamage(inst)
     end
 
     -- Leave at least 1 health
-    local delta = math.min(TUNING.MUTANT_BEE_POISON_DAMAGE, inst.components.health.currenthealth - 1)
+    local delta = math.min(poison_damage, inst.components.health.currenthealth - 1)
     inst.components.health:DoDelta(-delta, true, "poison_sting")
 
     local c_r, c_g, c_b, c_a = inst.AnimState:GetMultColour()
@@ -133,12 +139,17 @@ local function OnAttackOtherWithPoison(inst, data)
     if
         data.target and data.target.components.health and not data.target.components.health:IsDead() and
             data.target.components.combat
-     then
+    then
         -- No target players.
         if not data.target:HasTag("player") then
             data.target._poisonticks = TUNING.MUTANT_BEE_MAX_POISON_TICKS
             if data.target._poisontask == nil then
-                data.target._poisontask = data.target:DoPeriodicTask(TUNING.MUTANT_BEE_POISON_PERIOD, DoPoisonDamage)
+                data.target._poisontask = data.target:DoPeriodicTask(
+                    TUNING.MUTANT_BEE_POISON_PERIOD,
+                    function()
+                        DoPoisonDamage(data.target, BarrackModifier(inst, TUNING.MUTANT_BEE_POISON_DAMAGE))
+                    end
+                )
             end
         end
     end
@@ -287,6 +298,8 @@ local function GetHiveUpgradeStage(inst)
     if not hive.components.upgradeable then
         return 0
     end
+
+    inst._numbarracks = hive._numbarracks
 
     return hive.components.upgradeable.stage
 end
@@ -518,6 +531,9 @@ local function CheckSoldierUpgrade(inst)
         inst:ListenForEvent("onattackother", OnAttackRegen)
     end
 
+    inst.components.health:SetMaxHealth(BarrackModifier(inst, TUNING.MUTANT_BEE_SOLDIER_HEALTH))
+    inst.components.combat:SetDefaultDamage(BarrackModifier(inst, TUNING.MUTANT_BEE_DAMAGE))
+
     return true
 end
 
@@ -556,13 +572,6 @@ local function killerbee()
 
     return inst
 end
-
--- local function OnRangedWeaponAttack(inst, attacker, target)
---     --target could be killed or removed in combat damage phase
---     if target:IsValid() then
---         SpawnPrefab("electrichitsparks"):AlignToTarget(target, inst)
---     end
--- end
 
 local function OnAttackDoubleHit(inst, data)
     if inst._doublehitnow then
@@ -611,6 +620,10 @@ local function CheckRangerUpgrade(inst)
         inst:ListenForEvent("onattackother", OnAttackDoubleHit)
     end
 
+    inst.components.health:SetMaxHealth(BarrackModifier(inst, TUNING.MUTANT_BEE_RANGED_HEALTH))
+    inst.components.combat:SetDefaultDamage(BarrackModifier(inst, TUNING.MUTANT_BEE_RANGED_DAMAGE))
+    inst.weapon.components.weapon:SetDamage(inst.components.combat.defaultdamage)
+
     return true
 end
 
@@ -634,7 +647,7 @@ local function rangerbee()
         return inst
     end
 
-    inst.components.health:SetMaxHealth(TUNING.MUTANT_BEE_RANGED_HEATLH)
+    inst.components.health:SetMaxHealth(TUNING.MUTANT_BEE_RANGED_HEALTH)
     inst.components.combat:SetRange(TUNING.MUTANT_BEE_WEAPON_ATK_RANGE)
     inst.components.combat:SetAttackPeriod(TUNING.MUTANT_BEE_RANGED_ATK_PERIOD)
     inst.components.combat:SetDefaultDamage(TUNING.MUTANT_BEE_RANGED_DAMAGE)
@@ -725,6 +738,9 @@ local function CheckAssassinUpgrade(inst)
     if stage >= 3 then
         inst:ListenForEvent("onattackother", OnStealthAttack)
     end
+
+    inst.components.health:SetMaxHealth(BarrackModifier(inst, TUNING.MUTANT_BEE_ASSSASIN_HEALTH))
+    inst.components.combat:SetDefaultDamage(BarrackModifier(inst, TUNING.MUTANT_BEE_ASSSASIN_DAMAGE))
 
     return true
 end
@@ -818,6 +834,14 @@ local function Spike(inst, origin)
         return
     end
 
+    -- strike origin if not enough targets
+    if #validtargets < inst._numspikes then
+        local remain = inst._numspikes - #validtargets
+        for i = 1,remain do
+            table.insert(validtargets, origin)
+        end
+    end
+
     for i, target in ipairs(validtargets) do
         if i > inst._numspikes then
             break
@@ -860,6 +884,9 @@ local function CheckShadowUpgrade(inst)
         inst._numspikes = TUNING.MUTANT_BEE_SHADOW_DEFAULT_NUM_SPIKES + 1
     end
 
+    inst.components.health:SetMaxHealth(BarrackModifier(inst, TUNING.MUTANT_BEE_SHADOW_HEALTH) )
+    inst.components.combat:SetDefaultDamage(BarrackModifier(inst, TUNING.MUTANT_BEE_SHADOW_DAMAGE))
+
     return true
 end
 
@@ -885,7 +912,6 @@ local function shadowbee()
     end
 
     inst.components.health:SetMaxHealth(TUNING.MUTANT_BEE_SHADOW_HEALTH)
-
     inst.components.combat:SetDefaultDamage(TUNING.MUTANT_BEE_SHADOW_DAMAGE)
     inst.components.combat:SetAttackPeriod(TUNING.MUTANT_BEE_SHADOW_ATK_PERIOD)
     inst.components.combat:SetRange(TUNING.MUTANT_BEE_SHADOW_ATK_RANGE, TUNING.MUTANT_BEE_SHADOW_ATK_RANGE + 3)
@@ -1059,12 +1085,18 @@ local function CheckDefenderUpgrade(inst)
         inst:ListenForEvent("attacked", OnDefenderAttacked)
     end
 
+    inst.components.health:SetMaxHealth(BarrackModifier(inst, TUNING.MUTANT_BEE_DEFENDER_HEALTH))
+    inst.components.combat:SetDefaultDamage(BarrackModifier(inst, TUNING.MUTANT_BEE_DEFENDER_DAMAGE))
+
     return true
 end
 
 local function GuardianBuff(inst)
     inst.buffed = true
-    inst.components.health:SetMaxHealth(TUNING.MUTANT_BEE_DEFENDER_HEALTH + 25)
+
+    inst:DoTaskInTime(1, function()
+        inst.components.health:SetMaxHealth(BarrackModifier(inst, TUNING.MUTANT_BEE_DEFENDER_HEALTH) + 250)
+    end)
 end
 
 local defenderbeebrain = require "brains/defenderbeebrain"
