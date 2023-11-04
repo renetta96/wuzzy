@@ -77,33 +77,47 @@ local function FindTarget(inst, dist)
         return nil
     end
 
-    -- fuck stalkerminion in particular
-    local stalkerminion = FindEntity(
-        inst,
+    local x, y, z = inst.Transform:GetWorldPosition()
+    local enemies = TheSim:FindEntities(
+        x, y, z,
         dist,
-        function(guy)
-            return inst.components.combat:CanTarget(guy) and guy:HasTag("stalkerminion")
-        end,
         TARGET_MUST_TAGS,
         TARGET_IGNORE_TAGS,
         TARGET_MUST_ONE_OF_TAGS
     )
-    if stalkerminion ~= nil then
-        return stalkerminion, true
+
+    if #enemies == 0 then
+        return nil
     end
 
+    local lowesthealth = enemies[1].components.health.currenthealth
+    local lowestenemy = enemies[1]
 
-    return FindEntity(
-            inst,
-            dist,
-            function(guy)
-                return inst.components.combat:CanTarget(guy) and guy.components.combat and
-                    (IsAlly(guy.components.combat.target) or guy:HasTag("hostile"))
-            end,
-            TARGET_MUST_TAGS,
-            TARGET_IGNORE_TAGS,
-            TARGET_MUST_ONE_OF_TAGS
-        )
+    for i, guy in ipairs(enemies) do
+        if inst.components.combat:CanTarget(guy) and guy.components.combat and
+            (IsAlly(guy.components.combat.target) or guy:HasTag("hostile")) then
+
+            if guy.components.health.currenthealth < lowesthealth then
+                lowesthealth = guy.components.health.currenthealth
+                lowestenemy = guy
+            end
+        end
+    end
+
+    -- 50% force retarget
+    return lowestenemy, math.random() <= 0.5
+
+    -- return FindEntity(
+    --         inst,
+    --         dist,
+    --         function(guy)
+    --             return inst.components.combat:CanTarget(guy) and guy.components.combat and
+    --                 (IsAlly(guy.components.combat.target) or guy:HasTag("hostile"))
+    --         end,
+    --         TARGET_MUST_TAGS,
+    --         TARGET_IGNORE_TAGS,
+    --         TARGET_MUST_ONE_OF_TAGS
+    --     )
 end
 
 local function PushColour(inst, src, r, g, b, a)
