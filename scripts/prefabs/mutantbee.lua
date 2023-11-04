@@ -77,12 +77,28 @@ local function FindTarget(inst, dist)
         return nil
     end
 
+    -- fuck stalkerminion in particular
+    local stalkerminion = FindEntity(
+        inst,
+        dist,
+        function(guy)
+            return inst.components.combat:CanTarget(guy) and guy:HasTag("stalkerminion")
+        end,
+        TARGET_MUST_TAGS,
+        TARGET_IGNORE_TAGS,
+        TARGET_MUST_ONE_OF_TAGS
+    )
+    if stalkerminion ~= nil then
+        return stalkerminion, true
+    end
+
+
     return FindEntity(
             inst,
             dist,
             function(guy)
                 return inst.components.combat:CanTarget(guy) and guy.components.combat and
-                    IsAlly(guy.components.combat.target)
+                    (IsAlly(guy.components.combat.target) or guy:HasTag("hostile"))
             end,
             TARGET_MUST_TAGS,
             TARGET_IGNORE_TAGS,
@@ -820,7 +836,7 @@ local function Spike(inst, origin)
 
     for i, e in ipairs(entities) do
         if inst.components.combat:CanTarget(e) then
-            if e.components.combat and IsAlly(e.components.combat.target) then
+            if e.components.combat and (IsAlly(e.components.combat.target) or e:HasTag("hostile")) then
                 if e ~= origin then
                     table.insert(validtargets, e)
                 end
