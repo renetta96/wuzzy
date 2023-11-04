@@ -90,8 +90,8 @@ local function FindTarget(inst, dist)
         return nil
     end
 
-    local lowesthealth = enemies[1].components.health.currenthealth
-    local lowestenemy = enemies[1]
+    local lowesthealth = math.huge
+    local lowestenemy = nil
 
     for i, guy in ipairs(enemies) do
         if inst.components.combat:CanTarget(guy) and guy.components.combat and
@@ -102,6 +102,10 @@ local function FindTarget(inst, dist)
                 lowestenemy = guy
             end
         end
+    end
+
+    if lowestenemy == nil then
+        return nil
     end
 
     -- 50% force retarget
