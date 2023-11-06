@@ -72,6 +72,19 @@ local function keeptargetfn(inst, target)
     return IsWithinLeaderRange(inst)
 end
 
+local function IsHostile(inst)
+    -- Webber's spiders
+    if inst.components.follower and
+        inst.components.follower.leader ~= nil and
+        inst.components.follower.leader:HasTag("player")
+    then
+        return false
+    end
+
+
+    return inst:HasTag("hostile")
+end
+
 local function FindTarget(inst, dist)
     if not IsWithinLeaderRange(inst) then
         return nil
@@ -95,7 +108,7 @@ local function FindTarget(inst, dist)
 
     for i, guy in ipairs(enemies) do
         if inst.components.combat:CanTarget(guy) and guy.components.combat and
-            (IsAlly(guy.components.combat.target) or guy:HasTag("hostile")) then
+            (IsAlly(guy.components.combat.target) or IsHostile(guy)) then
 
             if guy.components.health.currenthealth < lowesthealth then
                 lowesthealth = guy.components.health.currenthealth
@@ -854,7 +867,7 @@ local function Spike(inst, origin)
 
     for i, e in ipairs(entities) do
         if inst.components.combat:CanTarget(e) then
-            if e.components.combat and (IsAlly(e.components.combat.target) or e:HasTag("hostile")) then
+            if e.components.combat and (IsAlly(e.components.combat.target) or IsHostile(e)) then
                 if e ~= origin then
                     table.insert(validtargets, e)
                 end
