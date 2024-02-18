@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<spriter_data scml_version="1.0" generator="BrashMonkey Spriter" generator_version="r11">
+    <folder id="0" name="chest">
+        <file id="0" name="chest/chest-01.png" width="500" height="500" pivot_x="0.544" pivot_y="0.276"/>
+    </folder>
+    <entity id="0" name="mutantcontainer">
+        <animation id="0" name="idle" length="90" interval="100">
+            <mainline>
+                <key id="0">
+                    <object_ref id="0" timeline="0" key="0" z_index="0"/>
+                </key>
+            </mainline>
+            <timeline id="0" name="chest-01">
+                <key id="0" spin="0">
+                    <object folder="0" file="0" x="5.046632" y="3.336788"/>
+                </key>
+            </timeline>
+        </animation>
+        <animation id="1" name="click" length="250" interval="100">
+            <mainline>
+                <key id="0" curve_type="cubic" c1="0" c2="0">
+                    <object_ref id="0" timeline="0" key="0" z_index="0"/>
+                </key>
+                <key id="1" time="125" curve_type="cubic" c1="0.995025" c2="0.995025">
+                    <object_ref id="0" timeline="0" key="1" z_index="0"/>
+                </key>
+            </mainline>
+            <timeline id="0" name="chest-01">
+                <key id="0" spin="0">
+                    <object folder="0" file="0" x="5.046632" y="3.336788"/>
+                </key>
+                <key id="1" time="125" spin="0">
+                    <object folder="0" file="0" x="5.046632" y="3.336788" scale_x="1.1" scale_y="0.9"/>
+                </key>
+            </timeline>
+        </animation>
+    </entity>
+</spriter_data>

@@ -1,56 +1,33 @@
+local hive_common = require "hive_common"
+
+local tocheck = {
+  mutantdefenderbee = "mutantdefenderhive",
+  mutantrangerbee = "mutantrangerhive",
+  mutantassassinbee = "mutantassassinhive",
+  mutantshadowbee = "mutantshadowhive",
+  mutantkillerbee = true
+}
+
 local prefabs =
 {
   "mutantbee",
-  "mutantkillerbee",
+
   "honey",
   "honeycomb",
-  "mutantbeecocoon",
   "collapse_big",
   "collapse_small",
   "mutantbeehive_lamp",
 }
 
+for k,v in pairs(tocheck) do
+  table.insert(prefabs, k)
+end
+
 local assets =
 {
   Asset("ANIM", "anim/mutantbeehive.zip"),
-  Asset("ANIM", "anim/mutantdefenderhive.zip"),
-  Asset("ANIM", "anim/mutantassassinhive.zip"),
-  Asset("ANIM", "anim/mutantrangerhive.zip"),
-  Asset("ANIM", "anim/mutantshadowhive.zip"),
-  Asset("ANIM", "anim/mutantbarrack.zip"),
   Asset("ANIM", "anim/mutantteleportal.zip"),
   Asset("SOUND", "sound/bee.fsb"),
-  Asset("ANIM", "anim/ui_chest_3x2.zip"),
-}
-
-local UPGRADE_STAGES = {
-  [1] = {
-    SIZE_SCALE = 1.45,
-    HEALTH = 700,
-    IDLE_ANIM = "cocoon_tiny",
-    DEAD_ANIM = "cocoon_tiny_dead",
-    HIT_ANIM = "cocoon_tiny_hit",
-    FROZEN_ANIM = "frozen_tiny",
-    FROZEN_LOOP_ANIM = "frozen_tiny_loop_pst",
-  },
-  [2] = {
-    SIZE_SCALE = 1.35,
-    HEALTH = 1100,
-    IDLE_ANIM = "cocoon_medium",
-    DEAD_ANIM = "cocoon_medium_dead",
-    HIT_ANIM = "cocoon_medium_hit",
-    FROZEN_ANIM = "frozen_medium",
-    FROZEN_LOOP_ANIM = "frozen_medium_loop_pst",
-  },
-  [3] = {
-    SIZE_SCALE = 1.45,
-    HEALTH = 1500,
-    IDLE_ANIM = "cocoon_big",
-    DEAD_ANIM = "cocoon_big_dead",
-    HIT_ANIM = "cocoon_big_hit",
-    FROZEN_ANIM = "frozen_big",
-    FROZEN_LOOP_ANIM = "frozen_big_loop_pst",
-  }
 }
 
 local SPEECH =
@@ -125,10 +102,10 @@ end
 local function Shake(inst, ignore_frozen)
   if ignore_frozen or not (inst.components.freezable and inst.components.freezable:IsFrozen()) then
     inst.SoundEmitter:PlaySound("dontstarve/bee/beehive_hit")
-    inst.AnimState:PlayAnimation(UPGRADE_STAGES[inst.components.upgradeable.stage].HIT_ANIM)
-    inst.AnimState:PushAnimation(UPGRADE_STAGES[inst.components.upgradeable.stage].IDLE_ANIM, true)
+    inst.AnimState:PlayAnimation(inst._stage.HIT_ANIM)
+    inst.AnimState:PushAnimation(inst._stage.IDLE_ANIM, true)
 
-    if inst.components.upgradeable.stage == 3 then
+    if inst._stage.LEVEL == 3 then
       inst._lamp.AnimState:PlayAnimation("lamp_big_hit")
       inst._lamp.AnimState:PushAnimation("lamp_big", true)
     end
@@ -139,7 +116,9 @@ local function UnlinkPlayer(inst)
   local owner = inst._owner
   inst._ownerid = nil
   inst._owner = nil
-  if owner ~= nil then
+
+  -- if _hive is already set to something else, do not set to nil
+  if owner ~= nil and owner._hive == inst then
     owner._hive = nil
   end
 end
@@ -179,8 +158,7 @@ local function StopSpawning(inst)
 end
 
 local function RefreshLight(inst)
-  if inst.components.upgradeable and
-    inst.components.upgradeable.stage == 3 and
+  if inst._stage.LEVEL == 3 and
     (not inst.components.freezable:IsFrozen()) and
     (not TheWorld.state.iscaveday)
   then
@@ -230,7 +208,7 @@ end
 local function OnFreeze(inst)
   inst:Say(SPEECH.FREEZE)
   inst.SoundEmitter:PlaySound("dontstarve/common/freezecreature")
-  inst.AnimState:PlayAnimation(UPGRADE_STAGES[inst.components.upgradeable.stage].FROZEN_ANIM, true)
+  inst.AnimState:PlayAnimation(inst._stage.FROZEN_ANIM, true)
   inst.AnimState:OverrideSymbol("swap_frozen", "frozen", "frozen")
 
   StopSpawning(inst)
@@ -240,7 +218,7 @@ local function OnFreeze(inst)
 end
 
 local function OnThaw(inst)
-  inst.AnimState:PlayAnimation(UPGRADE_STAGES[inst.components.upgradeable.stage].FROZEN_LOOP_ANIM, true)
+  inst.AnimState:PlayAnimation(inst._stage.FROZEN_LOOP_ANIM, true)
   inst.SoundEmitter:PlaySound("dontstarve/common/freezethaw", "thawing")
   inst.AnimState:OverrideSymbol("swap_frozen", "frozen", "frozen")
 
@@ -249,13 +227,13 @@ local function OnThaw(inst)
 end
 
 local function OnUnFreeze(inst)
-  inst.AnimState:PlayAnimation(UPGRADE_STAGES[inst.components.upgradeable.stage].IDLE_ANIM, true)
+  inst.AnimState:PlayAnimation(inst._stage.IDLE_ANIM, true)
   inst.SoundEmitter:KillSound("thawing")
   inst.AnimState:ClearOverrideSymbol("swap_frozen")
 
   StartSpawning(inst)
 
-  if inst.components.upgradeable.stage == 3 then
+  if inst._stage.LEVEL == 3 then
     inst._lamp:Show()
     inst._lamp.AnimState:PlayAnimation("lamp_big", true)
 
@@ -263,23 +241,15 @@ local function OnUnFreeze(inst)
   end
 end
 
-local function SpawnCocoon(inst)
-  local cocoon = SpawnPrefab("mutantbeecocoon")
-  cocoon:InheritOwner(inst)
-  UnlinkPlayer(inst)
-  cocoon.Transform:SetPosition(inst.Transform:GetWorldPosition())
-end
-
 local function OnKilled(inst)
   inst:RemoveComponent("childspawner")
-  inst.AnimState:PlayAnimation(UPGRADE_STAGES[inst.components.upgradeable.stage].DEAD_ANIM, true)
+  inst.AnimState:PlayAnimation(inst._stage.DEAD_ANIM, true)
   RemovePhysicsColliders(inst)
 
   inst.SoundEmitter:KillSound("loop")
 
   inst.SoundEmitter:PlaySound("dontstarve/bee/beehive_destroy")
   inst.components.lootdropper:DropLoot(inst:GetPosition())
-  SpawnCocoon(inst)
 
   if inst.components.container ~= nil then
     inst.components.container:DropEverything()
@@ -293,23 +263,17 @@ local function OnHammered(inst, worker)
   inst.SoundEmitter:KillSound("loop")
   inst.SoundEmitter:PlaySound("dontstarve/bee/beehive_destroy")
   inst.components.lootdropper:DropLoot(inst:GetPosition())
-  SpawnCocoon(inst)
 
   if inst.components.container ~= nil then
     inst.components.container:DropEverything()
   end
 
-  local collapse = inst.components.upgradeable.stage >= 2 and "collapse_big" or "collapse_small"
+  local collapse = inst._stage.LEVEL >= 2 and "collapse_big" or "collapse_small"
   local fx = SpawnPrefab(collapse)
   fx.Transform:SetPosition(inst.Transform:GetWorldPosition())
   fx:SetMaterial("straw")
 
   inst:Remove()
-end
-
-local function OnBurnt(inst)
-  -- To make sure a cocoon is still spawned after the hive is burnt
-  SpawnCocoon(inst)
 end
 
 local function IsValidOwner(inst, owner)
@@ -388,6 +352,28 @@ local function GetSlaves(inst, moremusttags)
   return slaves
 end
 
+-- get utility hives around
+local function GetUtils(inst)
+  local x, y, z = inst.Transform:GetWorldPosition()
+
+  local entities = TheSim:FindEntities(x, y, z,
+    TUNING.MUTANT_BEEHIVE_MASTER_SLAVE_DIST,
+    {},
+    { "INLIMBO", "player" },
+    { "mutantutil" }
+  )
+
+  local utils = {}
+
+  for i, e in ipairs(entities) do
+    if IsSlave(inst, e) then
+      table.insert(utils, e)
+    end
+  end
+
+  return utils
+end
+
 local function GetNumChildrenRegen(inst)
   local barracks = GetSlaves(inst, { "mutantbarrack" })
   local numbarracks = #barracks
@@ -422,7 +408,7 @@ local function OnSlave(inst)
 
     inst.components.childspawner.maxemergencychildren =
       TUNING.MUTANT_BEEHIVE_DEFAULT_EMERGENCY_BEES
-      + (inst.components.upgradeable.stage - 1) * TUNING.MUTANT_BEEHIVE_DELTA_BEES
+      + (inst._stage.LEVEL - 1) * TUNING.MUTANT_BEEHIVE_DELTA_BEES
       + GetNumChildrenFromSlaves(slaves)
     inst.components.childspawner:TryStopUpdate()
     inst.components.childspawner:StartUpdate()
@@ -437,15 +423,16 @@ local function OnSlave(inst)
 
     inst._numbarracks = numbarracks
   end
-end
 
-local tocheck = {
-  mutantdefenderbee = "mutantdefenderhive",
-  mutantrangerbee = "mutantrangerhive",
-  mutantassassinbee = "mutantassassinhive",
-  mutantshadowbee = "mutantshadowhive",
-  mutantkillerbee = true
-}
+  local utils = GetUtils(inst)
+  inst._container = nil
+
+  for i, util in ipairs(utils) do
+    if util.prefab == "mutantcontainer" then
+      inst._container = util
+    end
+  end
+end
 
 local function GetSource(inst)
   if not inst._ownerid then
@@ -545,26 +532,18 @@ local function PickChildPrefab(inst)
   return prefabstopick[math.random(#prefabstopick)]
 end
 
--- /* Upgrade
-local function OnUpgrade(inst)
-  inst:Say(SPEECH.UPGRADE)
-  Shake(inst)
-end
-
 local function SetStage(inst, stage)
 	if stage > 1 then
     Shake(inst)
   end
 
-  local scale = UPGRADE_STAGES[stage].SIZE_SCALE
+  local scale = inst._stage.SIZE_SCALE
   inst.Transform:SetScale(scale, scale, scale)
-  inst.components.health:SetMaxHealth(UPGRADE_STAGES[stage].HEALTH)
+  inst.components.health:SetMaxHealth(inst._stage.HEALTH)
 
   inst.components.childspawner:SetRegenPeriod(TUNING.MUTANT_BEEHIVE_DEFAULT_REGEN_TIME - (stage - 1) * TUNING.MUTANT_BEEHIVE_DELTA_REGEN_TIME)
   inst.components.childspawner:SetSpawnPeriod(TUNING.MUTANT_BEEHIVE_DEFAULT_RELEASE_TIME - (stage - 1) * TUNING.MUTANT_BEEHIVE_DELTA_RELEASE_TIME)
   inst.components.childspawner:SetMaxEmergencyChildren(TUNING.MUTANT_BEEHIVE_DEFAULT_EMERGENCY_BEES + (stage - 1) * TUNING.MUTANT_BEEHIVE_DELTA_BEES)
-
-  inst.components.upgradeable:SetStage(stage)
 
   local loots = {}
   local numhoneycombs = TUNING.MUTANT_BEEHIVE_UPGRADES_PER_STAGE * (math.min(stage, 2) - 1)
@@ -573,7 +552,6 @@ local function SetStage(inst, stage)
   end
 
   inst.components.lootdropper:SetLoot(loots)
-  OnSlave(inst)
 
   if stage == 3 then
     inst._lamp:Show()
@@ -582,15 +560,6 @@ local function SetStage(inst, stage)
     inst._lamp:Hide()
   end
 end
-
-local function OnStageAdvance(inst)
-  inst:Say(SPEECH.STAGE_ADVANCE)
-
-  SetStage(inst, inst.components.upgradeable.stage)
-
-  return true
-end
--- Upgrade */
 
 local function FindEnemy(inst)
   return FindEntity(inst, TUNING.MUTANT_BEEHIVE_WATCH_DIST,
@@ -735,11 +704,12 @@ local function LinkToPlayer(inst, player)
   return false
 end
 
-local function InheritOwner(inst, cocoon)
-  inst._ownerid = cocoon._ownerid
-  if cocoon._owner then
-    inst._owner = cocoon._owner
-    cocoon._owner._hive = inst
+local function InheritOwner(inst, origin)
+  inst._ownerid = origin._ownerid
+
+  if origin._owner then
+    inst._owner = origin._owner
+    origin._owner._hive = inst
   end
 end
 
@@ -749,16 +719,6 @@ local function CalcSanityAura(inst, observer)
   end
 
   return 0
-end
-
-local function OnSave(inst, data)
-  if inst._ownerid then
-    data._ownerid = inst._ownerid
-  end
-
-  if inst._gathertick then
-    data._gathertick = inst._gathertick
-  end
 end
 
 local function OnPlayerJoined(inst, player)
@@ -780,27 +740,21 @@ local function OnPlayerJoined(inst, player)
   end
 end
 
-local function OnLoad(inst, data)
-  if data and data._ownerid then
-    inst._ownerid = data._ownerid
-  end
-
-  if data and data._gathertick then
-    inst._gathertick = data._gathertick
-  end
+local function has_valid_container(inst)
+  return inst._container and inst._container:IsValid() and inst._container.components.container ~= nil
 end
 
 local function GiveHoney(inst)
-  if not inst.components.container then
+  if not has_valid_container(inst) then
     return
   end
 
   local honey = SpawnPrefab("honey")
-  inst.components.container:GiveItem(honey)
+  inst._container.components.container:GiveItem(honey)
 end
 
 local function ConvertPollenToHoney(inst)
-  if not inst.components.container then
+  if not has_valid_container(inst) then
     return
   end
 
@@ -810,22 +764,22 @@ local function ConvertPollenToHoney(inst)
     local numpollens = math.random(
       TUNING.MUTANT_BEEHIVE_NUM_POLLENS_PER_HONEY,
       TUNING.MUTANT_BEEHIVE_NUM_POLLENS_PER_HONEY + 2)
-    local has, numfound = inst.components.container:Has("zetapollen", numpollens)
+    local has, numfound = inst._container.components.container:Has("zetapollen", numpollens)
     if not has then
       break
     end
 
-    inst.components.container:ConsumeByName("zetapollen", numpollens)
+    inst._container.components.container:ConsumeByName("zetapollen", numpollens)
     GiveHoney(inst)
   end
 end
 
 local function RefreshHoneyArmor(inst)
-  if not inst.components.container then
+  if not has_valid_container(inst) then
     return
   end
 
-  local armors = inst.components.container:FindItems(
+  local armors = inst._container.components.container:FindItems(
     function(item) return item.prefab and item.prefab == "armor_honey" and item:IsValid() end
   )
 
@@ -837,52 +791,32 @@ local function RefreshHoneyArmor(inst)
 
       if percent < 1 - chunk then
         local need = math.ceil((1 - percent) / chunk)
-        local has, numfound = inst.components.container:Has("honey", need)
+        local has, numfound = inst._container.components.container:Has("honey", need)
         numfound = math.min(numfound, need)
 
         if numfound > 0 then
           armor.components.perishable:SetPercent(percent + numfound * chunk)
-          inst.components.container:ConsumeByName("honey", numfound)
+          inst._container.components.container:ConsumeByName("honey", numfound)
         end
       end
     end
   end
 end
 
-local function onopen(inst)
-    if not inst:HasTag("burnt") then
-        inst.SoundEmitter:PlaySound("dontstarve/wilson/chest_open")
-    end
-end
-
-local function onclose(inst)
-    if not inst:HasTag("burnt") then
-        inst.SoundEmitter:PlaySound("dontstarve/wilson/chest_close")
-    end
-end
-
 local function AddHoneyProgress(inst, child)
-  if not inst.components.container then
+  if not has_valid_container(inst) then
     return
   end
 
   local numpollens = 1
 
-  if child and inst.components.upgradeable then
-    numpollens = 1 + inst.components.upgradeable.stage
+  if child then
+    numpollens = 1 + inst._stage.LEVEL
   end
 
   local pollen = SpawnPrefab("zetapollen")
   pollen.components.stackable:SetStackSize(numpollens)
-  inst.components.container:GiveItem(pollen)
-end
-
-local function itemtestfn(inst, item, slot)
-  return item and item.prefab and (
-    item.prefab == "honey" or
-    item.prefab == "zetapollen" or
-    item.prefab == "armor_honey"
-  )
+  inst._container.components.container:GiveItem(pollen)
 end
 
 local function onchildgoinghome(inst, data)
@@ -894,22 +828,18 @@ local function onchildgoinghome(inst, data)
 end
 
 local function DoGather(inst)
-  if not inst.components.upgradeable then
-    return
-  end
-
   inst._gathertick = inst._gathertick or 0
 
   local x, y, z = inst.Transform:GetWorldPosition()
   local entities = TheSim:FindEntities(x, y, z, TUNING.MUTANT_BEEHIVE_WATCH_DIST, { "flower" })
   local numflowers = #entities
 
-  if numflowers >= 5 - (inst.components.upgradeable.stage - 1) then
+  if numflowers >= 5 - (inst._stage.LEVEL - 1) then
     inst._gathertick = inst._gathertick + 1
   end
 
   -- stage 1: 8 ticks, stage 2: 7 ticks, stage 3: 6 ticks
-  local requiredticks = 9 - inst.components.upgradeable.stage
+  local requiredticks = 9 - inst._stage.LEVEL
   if inst._gathertick >= requiredticks then
     inst._gathertick = inst._gathertick - requiredticks
     AddHoneyProgress(inst)
@@ -939,22 +869,31 @@ local function OnEntitySleep(inst)
   StartBackgroundGatherTask(inst)
 end
 
-local function canupgrade(inst, obj, performer)
-	if not performer or not performer:HasTag("beemaster") then
-		return false
-	end
+local function OnConstructed(inst, doer)
+  local concluded = true
+  for i, v in ipairs(CONSTRUCTION_PLANS[inst.prefab] or {}) do
+    if inst.components.constructionsite:GetMaterialCount(v.type) < v.amount then
+      concluded = false
+      break
+    end
+  end
 
-	if inst.components.upgradeable.stage == 1 and obj.prefab ~= "honeycomb" then
-		return false
-	end
-
-	if inst.components.upgradeable.stage == 2 and obj.prefab ~= "royal_jelly" then
-		return false
-	end
-
-	return true
+  if concluded then
+    local x,y,z = inst.Transform:GetWorldPosition()
+    local new_hive = SpawnPrefab(inst._stage.CONSTRUCT_PRODUCT)
+    InheritOwner(new_hive, inst)
+    new_hive.Transform:SetPosition(x,y,z)
+    inst:Remove()
+  end
 end
 
+local function OnBuilt(inst, data)
+  local builder = data.builder
+  if builder and builder:HasTag("player") and builder.prefab == "zeta" then
+    inst._ownerid = builder.userid
+    LinkToPlayer(inst, builder)
+  end
+end
 
 local function OnInit(inst)
   inst._lamp = SpawnPrefab("mutantbeehive_lamp")
@@ -967,10 +906,8 @@ local function OnInit(inst)
     StartSpawning(inst)
   end
 
-  SetStage(inst, inst.components.upgradeable.stage)
+  SetStage(inst, inst._stage.LEVEL)
   OnSlave(inst)
-
-  inst.AnimState:PlayAnimation(UPGRADE_STAGES[inst.components.upgradeable.stage].IDLE_ANIM, true)
 
   -- On init, emergencychildreninside always start at 0, so fill half the pool for quickstart
   inst.components.childspawner.emergencychildreninside = math.floor(inst.components.childspawner.maxemergencychildren / 2)
@@ -981,327 +918,191 @@ local function OnInit(inst)
   inst:DoPeriodicTask(30, RefreshHoneyArmor)
 
   MakeWatchWalls(inst)
+
+  -- compat with old container component, drop everything
+  if inst.components.container ~= nil then
+    inst.components.container:DropEverything(inst.Transform:GetWorldPosition())
+    inst:DoTaskInTime(0, function() inst:RemoveComponent("container") end)
+  end
+
+  -- compat with old upgradeable component, drop upgrade materials
+  if inst.components.upgradeable ~= nil then
+    local x,y,z = inst.Transform:GetWorldPosition()
+
+    if inst.components.upgradeable.stage == 2 then
+      local honeycomb = SpawnPrefab("honeycomb")
+      honeycomb.components.stackable:SetStackSize(3)
+      honeycomb.Transform:SetPosition(x,y,z)
+    elseif inst.components.upgradeable.stage == 3 then
+      local royal_jelly = SpawnPrefab("royal_jelly")
+      royal_jelly.components.stackable:SetStackSize(3)
+      royal_jelly.Transform:SetPosition(x,y,z)
+    end
+
+    inst:DoTaskInTime(0, function() inst:RemoveComponent("upgradeable") end)
+  end
 end
 
+local function MakeMotherHive(name, stage_conf)
+  local function fn()
+    local inst = CreateEntity()
 
-local function fn()
-  local inst = CreateEntity()
+    inst.entity:AddTransform()
+    inst.entity:AddAnimState()
+    inst.entity:AddSoundEmitter()
+    inst.entity:AddMiniMapEntity()
+    inst.entity:AddNetwork()
+    inst.entity:AddLightWatcher()
 
-  inst.entity:AddTransform()
-  inst.entity:AddAnimState()
-  inst.entity:AddSoundEmitter()
-  inst.entity:AddMiniMapEntity()
-  inst.entity:AddNetwork()
-  inst.entity:AddLightWatcher()
+    MakeObstaclePhysics(inst, 1)
 
-  MakeObstaclePhysics(inst, 1)
+    inst.MiniMapEntity:SetIcon("mutantbeehive.tex")
 
-  inst.MiniMapEntity:SetIcon("mutantbeehive.tex")
+    inst.AnimState:SetBank("mutantbeehive")
+    inst.AnimState:SetBuild("mutantbeehive")
+    inst.AnimState:PlayAnimation(stage_conf.IDLE_ANIM, true)
 
-  inst.AnimState:SetBank("mutantbeehive")
-  inst.AnimState:SetBuild("mutantbeehive")
-  inst.AnimState:PlayAnimation("cocoon_tiny", true)
+    inst:AddTag("mutantbeehive")
+    inst:AddTag("companion")
+    inst:AddTag("beemutant")
 
-  inst:AddTag("mutantbeehive")
-  inst:AddTag("companion")
-  inst:AddTag("beemutant")
+    inst:AddComponent("talker")
+    inst.components.talker.fontsize = 28
+    inst.components.talker.font = TALKINGFONT
+    inst.components.talker.colour = Vector3(.9, .9, .3)
+    inst.components.talker.offset_fn = GetTalkerOffset
+    inst.Say = Say
+    inst:ListenForEvent("firedamage", onfiredamagefn)
+    inst:ListenForEvent("startfiredamage", onfiredamagefn)
 
-  inst:AddComponent("talker")
-  inst.components.talker.fontsize = 28
-  inst.components.talker.font = TALKINGFONT
-  inst.components.talker.colour = Vector3(.9, .9, .3)
-  inst.components.talker.offset_fn = GetTalkerOffset
-  inst.Say = Say
-  inst:ListenForEvent("firedamage", onfiredamagefn)
-  inst:ListenForEvent("startfiredamage", onfiredamagefn)
+    MakeSnowCoveredPristine(inst)
 
-  MakeSnowCoveredPristine(inst)
+    inst.entity:SetPristine()
 
-  inst.entity:SetPristine()
+    inst._stage = stage_conf
 
-  if not TheWorld.ismastersim then
-    return inst
-  end
-
-  -------------------
-  inst:AddComponent("health")
-
-  -------------------
-  inst:AddComponent("childspawner")
-  inst.components.childspawner.allowwater = true
-  inst.components.childspawner.allowboats = true
-  inst.components.childspawner.childname = "mutantbee"
-  inst.components.childspawner.emergencychildname = "mutantkillerbee"
-  inst.components.childspawner.emergencychildrenperplayer = TUNING.MUTANT_BEEHIVE_EMERGENCY_BEES_PER_PLAYER
-  inst.components.childspawner.canemergencyspawn = true
-  inst.components.childspawner:SetEmergencyRadius(TUNING.MUTANT_BEEHIVE_EMERGENCY_RADIUS)
-  inst.components.childspawner:SetMaxChildren(TUNING.MUTANT_BEEHIVE_BEES)
-  inst:ListenForEvent("childgoinghome", onchildgoinghome)
-
-  local oldSpawnChild = inst.components.childspawner.SpawnChild
-  local oldSpawnEmergencyChild = inst.components.childspawner.SpawnEmergencyChild
-  local oldDoRegen = inst.components.childspawner.DoRegen
-
-  inst.components.childspawner.SpawnChild = function(comp, target, prefab, ...)
-    local newprefab = prefab
-    if target ~= nil then
-      newprefab = PickChildPrefab(inst)
+    if not TheWorld.ismastersim then
+      return inst
     end
-    return oldSpawnChild(comp, target, newprefab, ...)
-  end
 
-  inst.components.childspawner.SpawnEmergencyChild = function(comp, target, prefab, ...)
-    local newprefab = PickChildPrefab(inst)
-    return oldSpawnEmergencyChild(comp, target, newprefab, ...)
-  end
+    -------------------
+    inst:AddComponent("health")
 
-  inst.components.childspawner.DoRegen = function(comp, ...)
-    local result = oldDoRegen(comp, ...)
+    -------------------
+    inst:AddComponent("childspawner")
+    inst.components.childspawner.allowwater = true
+    inst.components.childspawner.allowboats = true
+    inst.components.childspawner.childname = "mutantbee"
+    inst.components.childspawner.emergencychildname = "mutantkillerbee"
+    inst.components.childspawner.emergencychildrenperplayer = TUNING.MUTANT_BEEHIVE_EMERGENCY_BEES_PER_PLAYER
+    inst.components.childspawner.canemergencyspawn = true
+    inst.components.childspawner:SetEmergencyRadius(TUNING.MUTANT_BEEHIVE_EMERGENCY_RADIUS)
+    inst.components.childspawner:SetMaxChildren(TUNING.MUTANT_BEEHIVE_BEES)
+    inst:ListenForEvent("childgoinghome", onchildgoinghome)
 
-    if comp.regening then
-      if not comp:IsEmergencyFull() then
-        comp:AddEmergencyChildrenInside(GetNumChildrenRegen(inst))
+    local oldSpawnChild = inst.components.childspawner.SpawnChild
+    local oldSpawnEmergencyChild = inst.components.childspawner.SpawnEmergencyChild
+    local oldDoRegen = inst.components.childspawner.DoRegen
+
+    inst.components.childspawner.SpawnChild = function(comp, target, prefab, ...)
+      local newprefab = prefab
+      if target ~= nil then
+        newprefab = PickChildPrefab(inst)
       end
+      return oldSpawnChild(comp, target, newprefab, ...)
     end
 
-    return result
-  end
+    inst.components.childspawner.SpawnEmergencyChild = function(comp, target, prefab, ...)
+      local newprefab = PickChildPrefab(inst)
+      return oldSpawnEmergencyChild(comp, target, newprefab, ...)
+    end
 
-  inst:DoTaskInTime(0, OnInit)
+    inst.components.childspawner.DoRegen = function(comp, ...)
+      local result = oldDoRegen(comp, ...)
 
-  ---------------------
-  MakeLargeBurnable(inst)
-  inst.components.burnable:SetOnIgniteFn(OnIgnite)
-  ---------------------
+      if comp.regening then
+        if not comp:IsEmergencyFull() then
+          comp:AddEmergencyChildrenInside(GetNumChildrenRegen(inst))
+        end
+      end
 
-  ---------------------
-  MakeMediumFreezableCharacter(inst)
-  inst:ListenForEvent("freeze", OnFreeze)
-  inst:ListenForEvent("onthaw", OnThaw)
-  inst:ListenForEvent("unfreeze", OnUnFreeze)
-  ---------------------
+      return result
+    end
 
-  inst:AddComponent("combat")
-  inst.components.combat:SetOnHit(OnHit)
-  inst:ListenForEvent("death", OnKilled)
-  inst:ListenForEvent("onburnt", OnBurnt)
-  inst:DoPeriodicTask(1, WatchEnemy)
-  inst.OnHit = OnHit
+    inst:DoTaskInTime(0, OnInit)
 
-  ---------------------
+    ---------------------
+    MakeLargeBurnable(inst)
+    inst.components.burnable:SetOnIgniteFn(OnIgnite)
+    ---------------------
 
-  inst:AddComponent("upgradeable")
-  inst.components.upgradeable.onupgradefn = OnUpgrade
-  inst.components.upgradeable.onstageadvancefn = OnStageAdvance
-  inst.components.upgradeable.upgradesperstage = TUNING.MUTANT_BEEHIVE_UPGRADES_PER_STAGE
-  local oldUpgrade = inst.components.upgradeable.Upgrade
-  inst.components.upgradeable.Upgrade = function(comp, obj, upgrade_performer)
-  	if not canupgrade(comp.inst, obj, upgrade_performer) then return false end
-  	return oldUpgrade(comp, obj, upgrade_performer)
-	end
+    ---------------------
+    MakeMediumFreezableCharacter(inst)
+    inst:ListenForEvent("freeze", OnFreeze)
+    inst:ListenForEvent("onthaw", OnThaw)
+    inst:ListenForEvent("unfreeze", OnUnFreeze)
+    ---------------------
 
-  ---------------------
-  inst:AddComponent("workable")
-  inst.components.workable:SetWorkAction(ACTIONS.HAMMER)
-  inst.components.workable:SetWorkLeft(5)
-  inst.components.workable:SetOnFinishCallback(OnHammered)
-  inst.components.workable:SetOnWorkCallback(OnWork)
+    inst:AddComponent("combat")
+    inst.components.combat:SetOnHit(OnHit)
+    inst:ListenForEvent("death", OnKilled)
+    -- inst:ListenForEvent("onburnt", OnBurnt)
+    inst:DoPeriodicTask(1, WatchEnemy)
+    inst.OnHit = OnHit
 
-  ---------------------
-  inst:AddComponent("lootdropper")
+    ---------------------
+    inst:AddComponent("workable")
+    inst.components.workable:SetWorkAction(ACTIONS.HAMMER)
+    inst.components.workable:SetWorkLeft(5)
+    inst.components.workable:SetOnFinishCallback(OnHammered)
+    inst.components.workable:SetOnWorkCallback(OnWork)
 
-  ---------------------
-  inst:AddComponent("sanityaura")
-  inst.components.sanityaura.aurafn = CalcSanityAura
+    ---------------------
+    inst:AddComponent("lootdropper")
 
-  ---------------------
-  MakeLargePropagator(inst)
-  MakeSnowCovered(inst)
+    ---------------------
+    inst:AddComponent("sanityaura")
+    inst.components.sanityaura.aurafn = CalcSanityAura
 
-  inst:AddComponent("hauntable")
-  inst.components.hauntable:SetHauntValue(TUNING.HAUNT_SMALL)
-  inst.components.hauntable:SetOnHauntFn(OnHaunt)
+    ---------------------
+    MakeLargePropagator(inst)
+    MakeSnowCovered(inst)
 
-  ---------------------
-  inst:AddComponent("container")
-  inst.components.container.itemtestfn = itemtestfn
-  inst.components.container:WidgetSetup("mutantbeehive")
-  inst.components.container.onopenfn = onopen
-  inst.components.container.onclosefn = onclose
+    inst:AddComponent("hauntable")
+    inst.components.hauntable:SetHauntValue(TUNING.HAUNT_SMALL)
+    inst.components.hauntable:SetOnHauntFn(OnHaunt)
 
-  ---------------------
+    ---------------------
+    inst:AddComponent("container") -- legacy
+    inst:AddComponent("upgradeable") -- legacy
 
-  inst:AddComponent("inspectable")
-  inst.incombat = false
-  inst.OnEntitySleep = OnEntitySleep
-  inst.OnEntityWake = OnEntityWake
-  inst.OnSave = OnSave
-  inst.OnLoad = OnLoad
-  inst.OnRemoveEntity = OnRemoveEntity
-  inst.OnSlave = OnSlave
-  inst.InheritOwner = InheritOwner
-  inst.CanSpawn = CanSpawn
-  inst.GetSlaves = GetSlaves
-  inst._onplayerjoined = function(src, player) OnPlayerJoined(inst, player) end
-  inst:ListenForEvent("ms_playerjoined", inst._onplayerjoined, TheWorld)
+    ---------------------
 
-  return inst
-end
+    if stage_conf.LEVEL < 3 then
+      inst:AddComponent("constructionsite")
+      inst.components.constructionsite:SetConstructionPrefab("construction_container")
+      inst.components.constructionsite:SetOnConstructedFn(OnConstructed)
+    end
 
-local function OnSlaveHammered(inst, worker)
-  inst.SoundEmitter:PlaySound("dontstarve/bee/beehive_destroy")
-  inst.components.lootdropper:DropLoot(inst:GetPosition())
+    inst:AddComponent("inspectable")
+    inst.incombat = false
+    inst.OnEntitySleep = OnEntitySleep
+    inst.OnEntityWake = OnEntityWake
+    inst.OnSave = hive_common.OnSave
+    inst.OnLoad = hive_common.OnLoad
+    inst.OnRemoveEntity = OnRemoveEntity
+    inst.OnSlave = OnSlave
+    inst.InheritOwner = InheritOwner
+    inst.CanSpawn = CanSpawn
+    inst.GetSlaves = GetSlaves
+    inst._onplayerjoined = function(src, player) OnPlayerJoined(inst, player) end
+    inst:ListenForEvent("ms_playerjoined", inst._onplayerjoined, TheWorld)
+    inst:ListenForEvent("onbuilt", OnBuilt)
 
-  local fx = SpawnPrefab("collapse_small")
-  fx.Transform:SetPosition(inst.Transform:GetWorldPosition())
-  fx:SetMaterial("straw")
-
-  inst:Remove()
-end
-
-local function SetOwner(inst, owner)
-  if owner and owner:HasTag("player") and owner.prefab == 'zeta' then
-    inst._ownerid = owner.userid
-  end
-end
-
-local function onbuilt(inst, data)
-  local builder = data.builder
-  SetOwner(inst, builder)
-end
-
-local function CheckMaster(inst)
-  if not inst._ownerid then
-    OnSlaveHammered(inst)
-    return
-  end
-end
-
-local function OnSlaveKilled(inst)
-  inst.AnimState:PlayAnimation("dead", true)
-  RemovePhysicsColliders(inst)
-
-  inst.SoundEmitter:KillSound("loop")
-
-  inst.SoundEmitter:PlaySound("dontstarve/bee/beehive_destroy")
-  inst.components.lootdropper:DropLoot(inst:GetPosition())
-end
-
-local function OnSlaveHit(inst)
-  if not inst.components.health:IsDead() then
-    inst.SoundEmitter:PlaySound("dontstarve/bee/beehive_hit")
-    inst.AnimState:PlayAnimation("hit")
-    inst.AnimState:PushAnimation("idle", true)
-  end
-end
-
-local function commonslavefn(bank, build, tags, mapicon)
-  local inst = CreateEntity()
-
-  inst.entity:AddTransform()
-  inst.entity:AddAnimState()
-  inst.entity:AddSoundEmitter()
-  inst.entity:AddMiniMapEntity()
-  inst.entity:AddNetwork()
-
-  MakeObstaclePhysics(inst, 1)
-
-  if mapicon then
-    inst.MiniMapEntity:SetIcon(mapicon)
-  end
-
-  inst.AnimState:SetBank(bank)
-  inst.AnimState:SetBuild(build)
-  inst.AnimState:PlayAnimation("idle", true)
-
-  inst:AddTag("companion")
-  inst:AddTag("mutantslavehive")
-  inst:AddTag("beemutant")
-  for i, v in ipairs(tags) do
-    inst:AddTag(v)
-  end
-
-  MakeSnowCoveredPristine(inst)
-
-  inst.entity:SetPristine()
-
-  if not TheWorld.ismastersim then
     return inst
   end
 
-  -------------------
-  inst:AddComponent("health")
-  inst.components.health:SetMaxHealth(600)
-
-  ---------------------
-  MakeLargeBurnable(inst)
-  ---------------------
-
-  ---------------------
-
-  inst:AddComponent("combat")
-  inst.components.combat:SetOnHit(OnSlaveHit)
-
-  ---------------------
-
-  inst:AddComponent("workable")
-  inst.components.workable:SetWorkAction(ACTIONS.HAMMER)
-  inst.components.workable:SetWorkLeft(5)
-  inst.components.workable:SetOnFinishCallback(OnSlaveHammered)
-
-  ---------------------
-  inst:AddComponent("lootdropper")
-
-  ---------------------
-  MakeLargePropagator(inst)
-  MakeSnowCovered(inst)
-
-  inst:AddComponent("inspectable")
-  inst.OnSave = OnSave
-  inst.OnLoad = OnLoad
-  inst:ListenForEvent("death", OnSlaveKilled)
-  inst:ListenForEvent("onbuilt", onbuilt)
-  inst:DoPeriodicTask(5, CheckMaster)
-
-  return inst
-end
-
-local function defenderhive()
-  local inst = commonslavefn("mutantdefenderhive", "mutantdefenderhive", {"mutantdefenderhive"}, "mutantdefenderhive.tex")
-  return inst
-end
-
-local function rangerhive()
-  local inst = commonslavefn("mutantrangerhive", "mutantrangerhive", {"mutantrangerhive"}, "mutantrangerhive.tex")
-  return inst
-end
-
-local function assassinhive()
-  local inst = commonslavefn("mutantassassinhive", "mutantassassinhive", {"mutantassassinhive"}, "mutantassassinhive.tex")
-  return inst
-end
-
-local function shadowhive()
-  local inst = commonslavefn("mutantshadowhive", "mutantshadowhive", {"mutantshadowhive"}, "mutantshadowhive.tex")
-  return inst
-end
-
-local function barrackhive()
-  local inst = commonslavefn("mutantbarrack", "mutantbarrack", {"mutantbarrack"}, nil)
-
-  if not TheWorld.ismastersim then
-    return inst
-  end
-
-  inst.components.lootdropper:SetLoot({
-    "honeycomb",
-    "stinger",
-    "stinger",
-    "stinger",
-    "stinger"
-  })
-
-  return inst
+  return Prefab(name, fn, assets, prefabs)
 end
 
 local function onteleportback(inst)
@@ -1431,61 +1232,80 @@ local function teleportal()
 
   inst:AddComponent("inspectable")
 
-  inst.OnSave = OnSave
-  inst.OnLoad = OnLoad
+  inst.OnSave = hive_common.OnSave
+  inst.OnLoad = hive_common.OnLoad
   inst.GetSource = GetSource
 
-  inst:ListenForEvent("onbuilt", onbuilt)
+  inst:ListenForEvent("onbuilt", hive_common.OnChildBuilt)
 
   inst:DoTaskInTime(0, MakeWatchWalls)
 
   return inst
 end
 
+
+
 STRINGS.MUTANTBEEHIVE = "Metapis Mother Hive"
 STRINGS.NAMES.MUTANTBEEHIVE = "Metapis Mother Hive"
-STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTBEEHIVE = "\"Apis\" is the Latin word for \"bee\"."
+STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTBEEHIVE = "\"Apis\" is \"bee\" in Latin."
 
-STRINGS.MUTANTDEFENDERHIVE = "Metapis Moonguard Hive"
-STRINGS.NAMES.MUTANTDEFENDERHIVE = "Metapis Moonguard Hive"
-STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTDEFENDERHIVE = "As hard as moon rock."
-STRINGS.RECIPE_DESC.MUTANTDEFENDERHIVE = "Adds Metapis Moonguard to Mother Hive."
+STRINGS.MUTANTBEEHIVE_LEVEL2 = "Metapis Mother Hive"
+STRINGS.NAMES.MUTANTBEEHIVE_LEVEL2 = "Metapis Mother Hive"
+STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTBEEHIVE_LEVEL2 = "\"Apis\" is \"bee\" in Latin."
 
-STRINGS.MUTANTRANGERHIVE = "Metapis Ranger Hive"
-STRINGS.NAMES.MUTANTRANGERHIVE = "Metapis Ranger Hive"
-STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTRANGERHIVE = "Looks like an ancient symbol."
-STRINGS.RECIPE_DESC.MUTANTRANGERHIVE = "Adds Metapis Ranger to Mother Hive."
+STRINGS.MUTANTBEEHIVE_LEVEL3 = "Metapis Mother Hive"
+STRINGS.NAMES.MUTANTBEEHIVE_LEVEL3 = "Metapis Mother Hive"
+STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTBEEHIVE_LEVEL3 = "\"Apis\" is \"bee\" in Latin."
 
-STRINGS.MUTANTASSASSINHIVE = "Metapis Mutant Hive"
-STRINGS.NAMES.MUTANTASSASSINHIVE = "Metapis Mutant Hive"
-STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTASSASSINHIVE = "Spiky."
-STRINGS.RECIPE_DESC.MUTANTASSASSINHIVE = "Adds Metapis Mutant to Mother Hive."
-
-STRINGS.MUTANTSHADOWHIVE = "Metapis Shadow Hive"
-STRINGS.NAMES.MUTANTSHADOWHIVE = "Metapis Shadow Hive"
-STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTSHADOWHIVE = "It's made from ancient technology."
-STRINGS.RECIPE_DESC.MUTANTSHADOWHIVE = "Adds Metapis Shadow to Mother Hive."
-
-STRINGS.MUTANTBARRACK = "Metapis Barrack"
-STRINGS.NAMES.MUTANTBARRACK = "Metapis Barrack"
-STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTBARRACK = "For the swarm."
-STRINGS.RECIPE_DESC.MUTANTBARRACK = "Grows your Metapis swarm."
 
 STRINGS.MUTANTTELEPORTAL = "Metapis Teleportal"
 STRINGS.NAMES.MUTANTTELEPORTAL = "Metapis Teleportal"
 STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTTELEPORTAL = "Magical transportation."
 STRINGS.RECIPE_DESC.MUTANTTELEPORTAL = "Summons Metapis from Mother Hive."
 
-return Prefab("mutantbeehive", fn, assets, prefabs),
-  Prefab("mutantdefenderhive", defenderhive, assets, prefabs),
-  MakePlacer("mutantdefenderhive_placer", "mutantdefenderhive", "mutantdefenderhive", "idle"),
-  Prefab("mutantrangerhive", rangerhive, assets, prefabs),
-  MakePlacer("mutantrangerhive_placer", "mutantrangerhive", "mutantrangerhive", "idle"),
-  Prefab("mutantassassinhive", assassinhive, assets, prefabs),
-  MakePlacer("mutantassassinhive_placer", "mutantassassinhive", "mutantassassinhive", "idle"),
-  Prefab("mutantshadowhive", shadowhive, assets, prefabs),
-  MakePlacer("mutantshadowhive_placer", "mutantshadowhive", "mutantshadowhive", "idle"),
-  Prefab("mutantbarrack", barrackhive, assets, prefabs),
-  MakePlacer("mutantbarrack_placer", "mutantbarrack", "mutantbarrack", "idle"),
+
+STRINGS.MUTANTTELEPORTAL = "Metapis Teleportal"
+STRINGS.NAMES.MUTANTTELEPORTAL = "Metapis Teleportal"
+STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTTELEPORTAL = "Magical transportation."
+STRINGS.RECIPE_DESC.MUTANTTELEPORTAL = "Summons Metapis from Mother Hive."
+
+STRINGS.MUTANTCONTAINER = "Metapis Container"
+STRINGS.NAMES.MUTANTCONTAINER = "Metapis Container"
+STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTCONTAINER = "The swarm's provisions."
+STRINGS.RECIPE_DESC.MUTANTCONTAINER = "Stores Mother Hive's products."
+
+return MakeMotherHive("mutantbeehive", {
+    SIZE_SCALE = 1.45,
+    HEALTH = 700,
+    IDLE_ANIM = "cocoon_tiny",
+    DEAD_ANIM = "cocoon_tiny_dead",
+    HIT_ANIM = "cocoon_tiny_hit",
+    FROZEN_ANIM = "frozen_tiny",
+    FROZEN_LOOP_ANIM = "frozen_tiny_loop_pst",
+    LEVEL = 1,
+    CONSTRUCT_PRODUCT = "mutantbeehive_level2"
+  }),
+  MakeMotherHive("mutantbeehive_level2", {
+    SIZE_SCALE = 1.35,
+    HEALTH = 1100,
+    IDLE_ANIM = "cocoon_medium",
+    DEAD_ANIM = "cocoon_medium_dead",
+    HIT_ANIM = "cocoon_medium_hit",
+    FROZEN_ANIM = "frozen_medium",
+    FROZEN_LOOP_ANIM = "frozen_medium_loop_pst",
+    LEVEL = 2,
+    CONSTRUCT_PRODUCT = "mutantbeehive_level3"
+  }),
+  MakeMotherHive("mutantbeehive_level3", {
+    SIZE_SCALE = 1.45,
+    HEALTH = 1500,
+    IDLE_ANIM = "cocoon_big",
+    DEAD_ANIM = "cocoon_big_dead",
+    HIT_ANIM = "cocoon_big_hit",
+    FROZEN_ANIM = "frozen_big",
+    FROZEN_LOOP_ANIM = "frozen_big_loop_pst",
+    LEVEL = 3
+  }),
   Prefab("mutantteleportal", teleportal, assets, prefabs),
+  MakePlacer("mutantbeehive_placer", "mutantbeehive", "mutantbeehive", "cocoon_tiny", nil, nil, nil, 1.45),
   MakePlacer("mutantteleportal_placer", "mutantteleportal", "mutantteleportal", "idle")

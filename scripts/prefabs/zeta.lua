@@ -6,7 +6,6 @@ local assets = {
 }
 
 local prefabs = {
-  "mutantbeecocoon",
   "honey",
   "pollen_fx"
 }
@@ -113,12 +112,10 @@ local function CheckHiveUpgrade(inst)
     return
   end
 
-  if inst._hive.components.upgradeable then
-    inst.components.beesummoner:AddStoreModifier_Additive(
-      'motherhive',
-      inst._hive.components.upgradeable.stage - 1
-    )
-  end
+  inst.components.beesummoner:AddStoreModifier_Additive(
+    'motherhive',
+    inst._hive._stage.LEVEL - 1
+  )
 
   local slaves = inst._hive:GetSlaves()
   local numchilrenfromslaves = 0

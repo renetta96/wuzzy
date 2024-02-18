@@ -14,9 +14,10 @@ local PREFAB_SKINS_IDS = _G.PREFAB_SKINS_IDS
 -- local SKIN_AFFINITY_INFO = GLOBAL.require("skin_affinity_info")
 
 PrefabFiles = {
-  "mutantbeecocoon",
   "mutantbee",
   "mutantbeehive",
+  "mutantchildhive",
+  "mutantcontainer",
   "zeta",
   "zeta_none",
   "armor_honey",
@@ -44,8 +45,6 @@ Assets = {
 
   Asset( "IMAGE", "images/map_icons/zeta.tex" ),
   Asset( "ATLAS", "images/map_icons/zeta.xml" ),
-  Asset( "IMAGE", "images/map_icons/mutantbeecocoon.tex" ),
-  Asset( "ATLAS", "images/map_icons/mutantbeecocoon.xml" ),
   Asset( "IMAGE", "images/map_icons/mutantbeehive.tex" ),
   Asset( "ATLAS", "images/map_icons/mutantbeehive.xml" ),
   Asset( "IMAGE", "images/map_icons/mutantdefenderhive.tex" ),
@@ -92,14 +91,18 @@ Assets = {
   Asset( "ATLAS", "images/inventoryimages/mutantbarrack.xml" ),
   Asset( "IMAGE", "images/inventoryimages/mutantteleportal.tex" ),
   Asset( "ATLAS", "images/inventoryimages/mutantteleportal.xml" ),
-  Asset("ATLAS", "images/inventoryimages/mutantbeecocoon.xml"),
-  Asset("IMAGE", "images/inventoryimages/mutantbeecocoon.tex"),
   Asset("ATLAS", "images/inventoryimages/armor_honey.xml"),
   Asset("IMAGE", "images/inventoryimages/armor_honey.tex"),
   Asset("ATLAS", "images/inventoryimages/metapis_tab.xml"),
   Asset("IMAGE", "images/inventoryimages/metapis_tab.tex"),
   Asset("ATLAS", "images/inventoryimages/honey_sting_ball.xml"),
   Asset("IMAGE", "images/inventoryimages/honey_sting_ball.tex"),
+
+  Asset("ATLAS", "images/inventoryimages/mutantbeehive.xml"),
+  Asset("IMAGE", "images/inventoryimages/mutantbeehive.tex"),
+
+  Asset("ATLAS", "images/inventoryimages/mutantcontainer.xml"),
+  Asset("IMAGE", "images/inventoryimages/mutantcontainer.tex"),
 }
 
 RemapSoundEvent( "dontstarve/characters/zeta/hurt", "zeta/zeta/hurt" )
@@ -128,17 +131,13 @@ TUNING.OZZY_NON_HONEYED_FOOD_ABSORPTION = 0.5
 TUNING.OZZY_PICK_FLOWER_SANITY = -3 * TUNING.SANITY_TINY
 
 TUNING.GAMEMODE_STARTING_ITEMS.DEFAULT.ZETA = {
-  "mutantbeecocoon",
+  "honeycomb",
   "honey",
   "honey",
   "honey"
 }
 TUNING.GAMEMODE_STARTING_ITEMS.LAVAARENA.ZETA = {}
 TUNING.GAMEMODE_STARTING_ITEMS.QUAGMIRE.ZETA = {}
-TUNING.STARTING_ITEM_IMAGE_OVERRIDE.mutantbeecocoon = {
-  atlas = "images/inventoryimages/mutantbeecocoon.xml",
-  image = "mutantbeecocoon.tex"
-}
 
 -- Mutant bee stats
 TUNING.MUTANT_BEE_HEALTH = 100
@@ -265,24 +264,12 @@ local skin_modes = {
 }
 AddModCharacter("zeta", "MALE", skin_modes)
 
-local function MakeUpgrader(prefab)
-  if not GLOBAL.TheWorld.ismastersim then
-    return
-  end
-
-  if not prefab.components.upgrader then
-    prefab:AddComponent("upgrader")
-  end
-end
-
-AddPrefabPostInit("honeycomb", MakeUpgrader)
-AddPrefabPostInit("royal_jelly", MakeUpgrader)
-
+-- Post init
 local function HandleHoneyPerishingInMetapisHive(prefab)
   if prefab.components.perishable and prefab.components.inventoryitem then
     local OldOnPutInInventory = prefab.components.inventoryitem.onputininventoryfn or function() return end
     prefab.components.inventoryitem:SetOnPutInInventoryFn(function(inst, owner)
-      if owner and owner.prefab == "mutantbeehive" then
+      if owner and owner.prefab == "mutantcontainer" then
         inst.components.perishable:StopPerishing()
       end
 
@@ -293,7 +280,7 @@ local function HandleHoneyPerishingInMetapisHive(prefab)
     local inventoryitem = prefab.components.inventoryitem
     local OldOnRemoved = inventoryitem.OnRemoved
     local onremovedfn = function(inst, owner)
-      if owner.prefab == "mutantbeehive" then
+      if owner.prefab == "mutantcontainer" then
         inst.components.perishable:StartPerishing()
       end
     end
@@ -534,10 +521,11 @@ end
 
 AddPrefabPostInit("abigail", AbigailPostInit)
 
+-- Recipes
 local containers = GLOBAL.require("containers")
 local oldwidgetsetup = containers.widgetsetup
 local MyChests = {
-  mutantbeehive = "treasurechest",
+  mutantcontainer = "treasurechest",
 }
 
 containers.widgetsetup = function(container, prefab, data)
@@ -581,20 +569,36 @@ AddCharacterRecipe(
   }
 )
 
+local function canbuildmotherhive(inst, builder)
+  if builder.prefab == "zeta" then
+    -- cannot build more than 1 Mother Hive
+    if builder._hive and builder._hive:IsValid() then
+      return false
+    end
+
+    return true
+  end
+
+  return false
+end
+
 AddCharacterRecipe(
-  "mutantbeecocoon",
+  "mutantbeehive",
   {
+    Ingredient(GLOBAL.CHARACTER_INGREDIENT.HEALTH, 30),
     Ingredient("honeycomb", 1),
-    Ingredient("cutgrass", 4),
-    Ingredient("honey", 1)
+    Ingredient("honey", 5)
   },
   TECH.NONE,
   {
     builder_tag = "beemaster",
-    atlas = "images/inventoryimages/mutantbeecocoon.xml",
-    image = "mutantbeecocoon.tex"
+    atlas = "images/inventoryimages/mutantbeehive.xml",
+    image = "mutantbeehive.tex",
+    placer = "mutantbeehive_placer",
+    canbuild = canbuildmotherhive
   }
 )
+
 
 local function slavehivetestfn(pt, rot)
   local x, y, z = pt:Get()
@@ -731,6 +735,43 @@ AddCharacterRecipe(
   }
 )
 
+local function canbuildcontainer(inst, builder)
+  if builder.prefab == "zeta" then
+    -- cannot build util if there is no Mother Hive yet
+    if not builder._hive then
+      return false
+    end
+
+    builder._hive:OnSlave()
+
+    -- only allow 1 container per Mother Hive
+    return not builder._hive._container
+  end
+
+  return false
+end
+
+AddCharacterRecipe(
+  "mutantcontainer",
+  {
+    Ingredient("boards", 4),
+    Ingredient("honeycomb", 1),
+    Ingredient("honey", 3)
+  },
+  TECH.NONE,
+  {
+    builder_tag = "beemaster",
+    atlas = "images/inventoryimages/mutantcontainer.xml",
+    image = "mutantcontainer.tex",
+    placer = "mutantcontainer_placer",
+    testfn = slavehivetestfn,
+    canbuild = canbuildcontainer
+  },
+  {
+    "CONTAINERS"
+  }
+)
+
 AddCharacterRecipe(
   "honey_sting_ball",
   {
@@ -749,8 +790,9 @@ AddCharacterRecipe(
   }
 )
 
+GLOBAL.CONSTRUCTION_PLANS["mutantbeehive"] = { Ingredient("honeycomb", 3) }
+GLOBAL.CONSTRUCTION_PLANS["mutantbeehive_level2"] = { Ingredient("royal_jelly", 3) }
 
-GLOBAL.ACTIONS.UPGRADE.priority = GLOBAL.ACTIONS.STORE.priority + 1 -- To show over ACTIONS.STORE
 GLOBAL.ACTIONS.MUTANTBEE_DESPAWN = Action()
 GLOBAL.ACTIONS.MUTANTBEE_DESPAWN.fn = function(act)
   if act.target ~= nil then
@@ -766,6 +808,7 @@ GLOBAL.ACTIONS.MUTANTBEE_DESPAWN.fn = function(act)
   end
 end
 
+-- Badge
 local Badge = require("widgets/badge")
 
 local function OnRegenTick(inst, data)

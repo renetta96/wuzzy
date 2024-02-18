@@ -338,17 +338,13 @@ local function GetHiveUpgradeStage(inst)
         hive = hive:GetSource()
     end
 
-    if not hive or hive.prefab ~= "mutantbeehive" or not hive:IsValid() then
-        return 0
-    end
-
-    if not hive.components.upgradeable then
+    if not hive or not hive:HasTag("mutantbeehive") or not hive:IsValid() then
         return 0
     end
 
     inst._numbarracks = hive._numbarracks
 
-    return hive.components.upgradeable.stage
+    return hive._stage.LEVEL
 end
 
 local function TrackLastCombatTime(inst)
