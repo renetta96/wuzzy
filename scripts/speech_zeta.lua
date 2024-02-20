@@ -279,7 +279,7 @@ return {
         },
         TEACH = {
             CANTLEARN = "Bzzz... Not even eager to teach me, huh?",
-            KNOWN = "Bee Master: No need to teach the master.",
+            KNOWN = "No need to teach the master.",
             MESSAGEBOTTLEMANAGER_NOT_FOUND = "Lost messages, bottle manager vanished too.",
             STASH_MAP_NOT_FOUND = "I spy no treasure trail.",
             WRONGWORLD = "Is this a wrongdimension tutorial or what?"
@@ -371,7 +371,7 @@ return {
     ANNOUNCE_BRAVERY_POTION = "Did they finally make a potion for courage?",
     ANNOUNCE_BURNT = "Well, well, well, someone's been playing with fire.",
     ANNOUNCE_CALL_BEEF = "Buzz buzz! Time to gather 'round!",
-    ANNOUNCE_CANFIX = "Let's see if the Bee Master can work his magic.",
+    ANNOUNCE_CANFIX = "Nothing is unfixable.",
     ANNOUNCE_CANNOT_BUILD = {
         NO_INGREDIENTS = "Guess I forgot to gather the necessary ingredients.",
         NO_STATION = "Not the right time.",
@@ -599,7 +599,7 @@ return {
     ANNOUNCE_POCKETWATCH_OPEN_PORTAL_DIFFERENTSHARD = "Does this portal lead to a shard of confusion?",
     ANNOUNCE_POCKETWATCH_PORTAL = "Ah, great, another dimension to mess around with.",
     ANNOUNCE_POCKETWATCH_RECALL = "only_used_by_wanda",
-    ANNOUNCE_QUAKE = "Bee Master: Brace yourselves, the earth trembles under our feet.",
+    ANNOUNCE_QUAKE = "Brace yourselves, the earth trembles under our feet.",
     ANNOUNCE_READ_BOOK = {
         BOOK_BEES = "only_used_by_wurt",
         BOOK_BIRDS = "only_used_by_wurt",
@@ -809,7 +809,7 @@ return {
         ARCHIVE_LOCKBOX = "Don't worry, I'll unlock the secrets with my sting.",
         ARCHIVE_LOCKBOX_DISPENCER = {
             GENERIC = "Mysterious treasure, locked tight.",
-            POWEROFF = "Bee master: Useless metal box."
+            POWEROFF = "Useless metal box."
         },
         ARCHIVE_MOON_STATUE = "Carved lunar beauty, frozen.",
         ARCHIVE_ORCHESTRINA_MAIN = "Great, another cryptic and perplexing contraption.",
@@ -906,7 +906,7 @@ return {
         BALLOONPARTY = "Well, isn't this a colorful nightmare balloon fiesta?",
         BALLOONSPEED = {
             DEFLATED = "Useless sack of air.",
-            GENERIC = 'Bee Master: "Balloons for flying high without wings.'
+            GENERIC = 'Balloons for flying high without wings.'
         },
         BALLOONS_EMPTY = "Just deflated clown souls floating around.",
         BALLOONVEST = "Bloated distraction, just great.",
@@ -992,12 +992,12 @@ return {
         BEEFALO_GROOMER = {
             BURNT = "I gave the beefalo a fiery makeover.",
             GENERIC = "Where's the hirsute clientele?",
-            OCCUPIED = "Bee Master: Tending to woolly beasts."
+            OCCUPIED = "Tending to woolly beasts."
         },
         BEEFALO_GROOMER_ITEM = "Ah, a Beefalo Groomer Item. Time to beautify some hairy beasts!",
         BEEF_BELL = "Beef summons beefy buddies.",
         BEEGUARD = "A defender of the honey, buzzing with purpose.",
-        BEEHAT = "Beehat: Bee-proof head fashion.",
+        BEEHAT = "Bee-proof head fashion.",
         BEEHIVE = "Busy bees, sweet honey.",
         BEEMINE = "Watch out, it stings like hell.",
         BEEMINE_MAXWELL = "Maxwell's honey-filled booby trap.",
@@ -1007,7 +1007,7 @@ return {
             GROWING = "Queen's hive, growing here?"
         },
         BEEQUEENHIVEGROWN = "A hive of immense, buzzing grandeur.",
-        BEESWAX = "Beeswax: Sticky gold of the hive.",
+        BEESWAX = "Sticky gold of the hive.",
         BEETLETAUR = "Ugh, a monstrous beetle gone mad.",
         BELL = "Tolling the bell, stirring an ancient darkness within.",
         BERNIE_ACTIVE = "Oh look, a bear with a purpose. Intriguing.",
@@ -1284,7 +1284,7 @@ return {
         CARNIVAL_VEST_C = "Is this vest made from clown carcasses?",
         CARPENTRY_STATION = {
             BURNT = "Well, it seems carpentry isn't its strong suit anymore.",
-            GENERIC = "Bee Master: Wood wizardry? Buzz-tastic!"
+            GENERIC = "Wood wizardry? Buzz-tastic!"
         },
         CARRAT = {
             DEAD = "Poor little rat, done.",
@@ -1588,7 +1588,7 @@ return {
         DRAGONFLYFURNACE = {
             GENERIC = "Useful for warmth, useless illumination.",
             HAMMERED = "Fire-breathing furnace gone wild.",
-            HIGH = "Dragonfly Furnace: Burning with fiery intensity.",
+            HIGH = "Burning with fiery intensity.",
             NORMAL = "What's cooking, fiery beast?"
         },
         DRAGONFRUIT = "Looks like mutated produce.",
@@ -1596,7 +1596,7 @@ return {
         DRAGONFRUIT_OVERSIZED = "That's one hell of a freakishly large fruit.",
         DRAGONFRUIT_SEEDS = "Dragonfruit seeds, dragon bait.",
         DRAGONHEADHAT = "A dragon's head on your head. Seems excessive.",
-        DRAGONPIE = "Dragonfruit pie: a taste as fierce as a sleeping dragon.",
+        DRAGONPIE = "A taste as fierce as a sleeping dragon.",
         DRAGONTAILHAT = "Looks like this hat has quite a fiery fashion statement.",
         DRAGON_SCALES = "Hot scales, fiery presence.",
         DREADSTONE = "A stone that exudes an aura of impending doom... delightful.",
@@ -1725,9 +1725,9 @@ return {
             HIGH = "Do I smell barbecue?",
             LOW = "The flames flicker, in need of replenishment.",
             NORMAL = "Cozy flames, keeping the darkness at bay.",
-            OUT = 'Sure, here\'s a line related to the "Firepit Out" entity:'
+            OUT = "Lit it up!"
         },
-        FIRESTAFF = "Firestaff: Burns, burns, it's all I see.",
+        FIRESTAFF = "Burns, burns, it's all I see.",
         FIRESUPPRESSOR = {
             LOWFUEL = "Fuel tank half empty.",
             OFF = "Come on, leave it!",
@@ -2205,7 +2205,7 @@ return {
         MAST_MALBATROSS = "Ugly bird, flee now!",
         MAST_MALBATROSS_ITEM = "What a feathered monstrosity, but great for warmth.",
         MAXWELL = "Scheming magician, a torment.",
-        MAXWELLHEAD = "Maxwell's head: a void of secrets and endless torment.",
+        MAXWELLHEAD = "A void of secrets and endless torment.",
         MAXWELLLIGHT = "Curious magical lantern, what secrets lie?",
         MAXWELLLOCK = "Where's the honey, Maxwell?",
         MAXWELLPHONOGRAPH = "Another tune, huh.",
@@ -2554,7 +2554,7 @@ return {
         OPALSTAFF = "Shiny jewel on a magical wand.",
         ORANGEAMULET = "Why walk when you can fly?",
         ORANGEGEM = "Well, well, well, what a radiant orange pebble. Fascinating.",
-        ORANGEMOONEYE = "Bee Master:",
+        ORANGEMOONEYE = "Bee-ware the eye that sees it all!",
         ORANGESTAFF = "Portable honey warp device.",
         PALMCONETREE = "Looks more like pineapple.",
         PALMCONE_SAPLING = "Just a sapling? Bee-lieve in yourself!",
@@ -2773,7 +2773,7 @@ return {
         QUAGMIRE_FOLIAGE_COOKED = "Cooked foliage? Doesn't sound too appetizing.",
         QUAGMIRE_FOOD = {
             GENERIC = "Why eat that when you can munch on honey-drenched bliss?",
-            MATCH = "Bee Master: Swampy delicacies, mmm...",
+            MATCH = "Swampy delicacies, mmm...",
             MATCH_BUT_SNACK = "Just a meager morsel, hardly worth my time.",
             MISMATCH = "It craves something different, typical Quagmire mess."
         },
@@ -3032,7 +3032,7 @@ return {
         SADDLE_BASIC = "It's just a seat.",
         SADDLE_RACE = "A saddle for racing? Buzzing with excitement!",
         SADDLE_WAR = "Another uncomfortable ride awaits.",
-        SADDLE_WATHGRITHR = "Bee Master: Hah! A bee-laden steed for Wigfrid's battles.",
+        SADDLE_WATHGRITHR = "Wigfrid has truly mastered the art of riding beefalo.",
         SALSA = "Spicy sauce that makes your taste buds dance.",
         SALTBOX = "A tiny prison for food corruption.",
         SALTLICK = "Salty rock for tasteless tongues.",
@@ -3340,7 +3340,7 @@ return {
         },
         TELEBASE = {
             GEMS = "Need more flavors? Gems.",
-            VALID = "Telebase online. Destination: honey paradise. consider yourself invited."
+            VALID = "Telebase online. Destination: honey paradise. Consider yourself invited."
         },
         TELEPORTATO_BASE = {
             ACTIVE = "What sorcery lies within?",
@@ -3388,7 +3388,7 @@ return {
             NOTHING_TO_TRACK = "Just another wild goose chase, nothing worth buzzing about.",
             SUCCESS = "Great. His riches sting.",
             TARGET_TOO_FAR_AWAY = "What's this, a scentless target?",
-            TRACKING = "Bee Master is Sarcastic, Curious and Adventurous ...",
+            TRACKING = "Hmm, interesting.",
             TRACKING_NOT_MINE = "Lost bee buzzing around."
         },
         TILLWEED = "Annoying weed, ruining my precious pollen.",
@@ -3476,7 +3476,7 @@ return {
         TRINKET_42 = "Just someone's forgotten treasure.",
         TRINKET_43 = "Looks like someone lost their lucky horseshoe. Perfect for me.",
         TRINKET_44 = "Just another botany trinket, sigh.",
-        TRINKET_45 = "Bee Master: That trinket's buzzing... mysterious.",
+        TRINKET_45 = "That trinket's buzzing... mysterious.",
         TRINKET_46 = "Looks like a shiny trinket someone will lose in the void.",
         TRINKET_5 = "Tiny and worthless, like my sanity.",
         TRINKET_6 = "Zap lost its buzz.",
@@ -3579,7 +3579,7 @@ return {
         VOIDCLOTH_SCYTHE = "Such a wickedly efficient tool, slicing through crops and souls.",
         VOIDCLOTH_UMBRELLA = "Great, another umbrella that can't handle acidic rain. Fantastic.",
         VOLTGOATJELLY = "Zap your taste buds into paradise.",
-        WAFFLES = "Waffles: Sweet, crispy, fluffy...the breakfast of champions.",
+        WAFFLES = "Sweet, crispy, fluffy...",
         WAGPUNKBITS_KIT = "Mechanical marvels of maintenance!",
         WAGPUNKHAT = "Huh, a hat that's somehow both punk and wagging? Interesting.",
         WAGPUNK_BITS = "Curious chunks of mystery.",
@@ -3597,7 +3597,7 @@ return {
         WALKINGPLANK_GRASS = "Ugh, another unstable plank...just my luck.",
         WALKING_STICK = "Looks like a fancy twig to me.",
         WALL_DREADSTONE = "Nice and sturdy, just how I like my walls.",
-        WALL_DREADSTONE_ITEM = "Dreadstone: Ominous walls. What a surprise.",
+        WALL_DREADSTONE_ITEM = "Ominous walls. What a surprise.",
         WALL_HAY = {
             BURNT = "Burnt hay walls, a smoldering honeycomb of regret.",
             GENERIC = "Wall of straw. Might keep the riffraff out. Maybe."
@@ -3740,7 +3740,7 @@ return {
             MURDERER = "Silent killer, wearing a painted smile. How quaint.",
             REVIVER = "%s knows how to bring the silence back to life."
         },
-        WETGOOP = "Wetgoop: culinary abomination, it defies all flavor.",
+        WETGOOP = "Culinary abomination, it defies all flavor.",
         WETPAPER = "Damp, useless scribbles.",
         WETPOUCH = "Another soggy package, how delightful.",
         WHIP = "More stinging than buzzing.",
@@ -3820,7 +3820,7 @@ return {
             DISH_READY = "Ah, the Wintersfeast Oven has finally revealed its culinary masterpiece.",
             GENERIC = "A fiery food-forger of festivity!"
         },
-        WINTER_FOOD1 = "Frozen sustenance. Bee Master approved, I guess.",
+        WINTER_FOOD1 = "Frozen sustenance. The swarm approved, I guess.",
         WINTER_FOOD2 = "Mmm... Frozen sustenance, perfect for my winter diet.",
         WINTER_FOOD3 = "Chilled sweetness, ready to numb teeth.",
         WINTER_FOOD4 = "Is this supposed to be edible? Don't see the appeal.",
@@ -3891,7 +3891,7 @@ return {
         },
         WOOD_CHAIR = {
             BURNT = "Looks like someone had a fiery sit-down.",
-            GENERIC = "Ah, a wooden throne! Fit for this royal bee master.",
+            GENERIC = "Best fit for reading books. Or eating honey!",
             OCCUPIED = "Not another unwanted guest."
         },
         WOOD_TABLE = {
@@ -3906,7 +3906,7 @@ return {
         },
         WORMHOLE = {
             GENERIC = "Like a wriggling abyss, a shortcut through dimensions.",
-            OPEN = "Wormhole: My curiosity yearns for cosmic travel."
+            OPEN = "My curiosity yearns for cosmic travel."
         },
         WORMHOLE_LIMITED = "Great, another unstable rift in reality. Just what I needed.",
         WORMLIGHT = "Looks like a snack, but I wouldn't take a bite.",
@@ -3990,7 +3990,7 @@ return {
             GENERIC = "Huh, Who knew Beefalos had shrines. Pretty ominous, huh?"
         },
         YOTB_BEEFALO_DOLL_BEAST = {
-            GENERIC = "Bee Master: A woolly abomination, begging to be stung.",
+            GENERIC = "A woolly abomination, begging to be stung.",
             YOTB = "Creepy woolly abomination."
         },
         YOTB_BEEFALO_DOLL_DOLL = {
@@ -3998,7 +3998,7 @@ return {
             YOTB = "Creepy beefalo doll, huh?"
         },
         YOTB_BEEFALO_DOLL_FESTIVE = {
-            GENERIC = "Bee Master: This beefalo doll ain't pulling my sting.",
+            GENERIC = "This beefalo doll ain't pulling my sting.",
             YOTB = "What's with the fluff?"
         },
         YOTB_BEEFALO_DOLL_FORMAL = {
