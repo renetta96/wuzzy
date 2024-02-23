@@ -101,7 +101,7 @@ local function SeasonalChanges(inst, season)
   elseif season == SEASONS.WINTER then
     inst.components.locomotor:SetExternalSpeedMultiplier(inst, "season_speed_mod", TUNING.OZZY_WINTER_SPEED_MULTIPLIER)
   else
-    inst.components.locomotor:SetExternalSpeedMultiplier(inst, "season_speed_mod", TUNING.OZZY_DEFAULT_SPEED_MULTIPLIER)
+    inst.components.locomotor:RemoveExternalSpeedMultiplier(inst, "season_speed_mod")
   end
 end
 
