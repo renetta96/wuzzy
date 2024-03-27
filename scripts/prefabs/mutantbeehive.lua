@@ -5,7 +5,8 @@ local tocheck = {
   mutantrangerbee = "mutantrangerhive",
   mutantassassinbee = "mutantassassinhive",
   mutantshadowbee = "mutantshadowhive",
-  mutantkillerbee = true
+  mutantkillerbee = true,
+  mutanthealerbee = "mutanthealerhive",
 }
 
 local prefabs =
@@ -457,7 +458,7 @@ local function CanSpawn(inst, prefab)
     return false
   end
 
-  if prefab == "mutantkillerbee" then
+  if tocheck[prefab] == true then
     return true
   end
 
@@ -480,14 +481,15 @@ local function CanSpawn(inst, prefab)
 end
 
 local function PickChildPrefab(inst)
-  local numprefabs = 5
-  local ratio = {
-    mutantkillerbee = numprefabs,
-    mutantdefenderbee = 0,
-    mutantrangerbee = 0,
-    mutantassassinbee = 0,
-    mutantshadowbee = 0
-  }
+  local numprefabs = 0
+  local ratio = {}
+
+  for prefab, v in pairs(tocheck) do
+    ratio[prefab] = 0
+    numprefabs = numprefabs + 1
+  end
+
+  ratio["mutantkillerbee"] = numprefabs
 
   local canspawnprefabs = {"mutantkillerbee"}
 

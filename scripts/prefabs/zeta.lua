@@ -32,7 +32,8 @@ local function GetChildPrefab(inst)
     mutantdefenderbee = 0,
     mutantrangerbee = 0,
     mutantassassinbee = 0,
-    mutantshadowbee = 0
+    mutantshadowbee = 0,
+    mutanthealerbee = 0,
   }
 
   local cansummon = {"mutantkillerbee"}
@@ -250,6 +251,32 @@ local function EnablePollenFx(inst)
   end
 end
 
+local function OnBeeQueenKilled(inst)
+  local numkilled = inst._numbeequeenkilled ~= nil and inst._numbeequeenkilled or 0
+
+  if numkilled >= 3 and inst.components.builder and not inst.components.builder:KnowsRecipe("mutanthealerhive") then
+    inst.components.builder:UnlockRecipe("mutanthealerhive")
+  end
+end
+
+local function IncrBeeQueenKilledCount(inst)
+  inst._numbeequeenkilled = math.min(10, (inst._numbeequeenkilled ~= nil and inst._numbeequeenkilled or 0) + 1) -- cap at 10
+end
+
+local function OnConsumeHealOrb(inst)
+  inst._healorbeffect = math.max(inst._healorbeffect * 0.7, 0.3) -- 20% decay, to minimum of 30%
+
+  if inst._firsthealorb then
+    inst._firsthealorb = false
+
+    -- reset heal orb effectiveness after 10 secs
+    inst:DoTaskInTime(10, function(inst)
+      inst._firsthealorb = true
+      inst._healorbeffect = 1.0
+    end)
+  end
+end
+
 -- This initializes for both the server and client. Tags can be added here.
 local common_postinit = function(inst)
   inst.soundsname = "zeta"
@@ -259,13 +286,22 @@ local common_postinit = function(inst)
   inst:AddTag("beemutant")
   inst:AddTag("insect")
   inst:AddTag("beemaster")
-  inst:AddTag(UPGRADETYPES.DEFAULT.."_upgradeuser")
 
   inst.components.talker.colour = Vector3(.9, .9, .3)
 
   if not TheNet:IsDedicated() then
     inst._activefx = {}
     inst:ListenForEvent("playeractivated", EnablePollenFx)
+  end
+end
+
+local function OnSave(inst, data)
+  data._numbeequeenkilled = inst._numbeequeenkilled ~= nil and inst._numbeequeenkilled or nil
+end
+
+local function OnLoad(inst, data)
+  if data ~= nil then
+    inst._numbeequeenkilled = data._numbeequeenkilled or 0
   end
 end
 
@@ -296,6 +332,17 @@ local master_postinit = function(inst)
   inst:ListenForEvent("oneat", OnEat)
 
   inst:DoTaskInTime(0, OnInit)
+  inst:DoTaskInTime(3, OnBeeQueenKilled)
+
+  inst.IncrBeeQueenKilledCount = IncrBeeQueenKilledCount
+  inst.OnBeeQueenKilled = OnBeeQueenKilled
+
+  inst._firsthealorb = true
+  inst._healorbeffect = 1.0
+  inst.OnConsumeHealOrb = OnConsumeHealOrb
+
+  inst.OnSave = OnSave
+  inst.OnLoad = OnLoad
 end
 
 return MakePlayerCharacter("zeta", prefabs, assets, common_postinit, master_postinit)

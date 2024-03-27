@@ -1,47 +1,4 @@
 local MAX_WANDER_DIST = 32
-local MAX_TARGET_SHARES = 10
-local SHARE_TARGET_DIST = 30
-
-local function OnAttacked(inst, data)
-	local attacker = data and data.attacker
-
-	if not attacker then
-		return
-	end
-
-	inst.components.combat:SetTarget(attacker)
-
-	-- If attacker has tag "beemutant" or "beemaster" then don't share target
-	if attacker:HasTag("beemutant") or attacker:HasTag("beemaster") then
-		return
-	end
-
-	local targetshares = MAX_TARGET_SHARES
-	if inst.components.homeseeker and inst.components.homeseeker.home then
-		local home = inst.components.homeseeker.home
-		if home and home.components.childspawner then
-			targetshares = targetshares - home.components.childspawner.childreninside
-
-			if home.OnHit then
-				home:OnHit(attacker)
-			end
-		end
-	end
-	inst.components.combat:ShareTarget(attacker, SHARE_TARGET_DIST, function(dude)
-		if inst.components.homeseeker and dude.components.homeseeker then  --don't bring bees from other hives
-			if dude.components.homeseeker.home and dude.components.homeseeker.home ~= inst.components.homeseeker.home then
-				return false
-			end
-		end
-
-		if dude.components.follower and dude.components.follower.leader then
-			return false
-		end
-
-		return dude:HasTag("beemutant") and
-			not (dude:IsInLimbo() or (dude.components.health and dude.components.health:IsDead()))
-	end, targetshares)
-end
 
 local function GoHomeAction(inst)
 	local homeseeker = inst.components.homeseeker
@@ -128,6 +85,11 @@ local function estimate_atk_time(epic)
 end
 
 local function IsEpicAttackComing(inst)
+	if inst.components.health and inst.components.health:GetPercent() >= 0.5 then
+		return false
+	end
+
+
 	local epic = FindEpicEnemy(inst)
 
   if not epic then
@@ -178,7 +140,7 @@ local function IsEpicAttackComing(inst)
   	-- 25% to be brave, fuck it we ball
   	if math.random() <= 0.25 then
   		inst._avoidendtime = nil
-  		inst._braveendtime = GetTime() + 1 + math.random() * 2
+  		inst._braveendtime = GetTime() + 10 + math.random() * 2 -- for 10 - 12 secs
   		-- print("FUCK IT WE BALL ", GetTime(), inst._braveendtime)
   		return false
   	end
@@ -275,10 +237,8 @@ return {
 	ShouldDespawn = ShouldDespawn,
 	ShouldGoBackHome = ShouldGoBackHome,
 	DespawnAction = DespawnAction,
-	OnAttacked = OnAttacked,
 	IsBeingChased = IsBeingChased,
 	IsEpicAttackComing = IsEpicAttackComing,
-
   AvoidEpicAtkNode = AvoidEpicAtkNode,
   AvoidEpicAtkNode_Defender = AvoidEpicAtkNode_Defender,
 

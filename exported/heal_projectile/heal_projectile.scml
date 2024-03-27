@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<spriter_data scml_version="1.0" generator="BrashMonkey Spriter" generator_version="r11">
+    <folder id="0" name="orb">
+        <file id="0" name="orb/orb-0.png" width="100" height="100" pivot_x="0.5" pivot_y="0.5"/>
+    </folder>
+    <folder id="1" name="heal_fx">
+        <file id="0" name="heal_fx/heal_fx-0.png" width="75" height="75" pivot_x="0.493333" pivot_y="0.533333"/>
+    </folder>
+    <entity id="0" name="heal_projectile">
+        <animation id="0" name="idle" length="1020" interval="100">
+            <mainline>
+                <key id="0" curve_type="cubic" c1="0.995025" c2="0.995025">
+                    <object_ref id="0" timeline="0" key="0" z_index="0"/>
+                </key>
+                <key id="1" time="170" curve_type="cubic" c1="0" c2="0">
+                    <object_ref id="0" timeline="0" key="1" z_index="0"/>
+                </key>
+                <key id="2" time="340" curve_type="cubic" c1="0.995025" c2="0.995025">
+                    <object_ref id="0" timeline="0" key="2" z_index="0"/>
+                </key>
+                <key id="3" time="510" curve_type="cubic" c1="0" c2="0">
+                    <object_ref id="0" timeline="0" key="3" z_index="0"/>
+                </key>
+                <key id="4" time="680" curve_type="cubic" c1="0.995025" c2="0.995025">
+                    <object_ref id="0" timeline="0" key="4" z_index="0"/>
+                </key>
+                <key id="5" time="850" curve_type="cubic" c1="0" c2="0">
+                    <object_ref id="0" timeline="0" key="5" z_index="0"/>
+                </key>
+                <key id="6" time="1020">
+                    <object_ref id="0" timeline="0" key="6" z_index="0"/>
+                </key>
+            </mainline>
+            <timeline id="0" name="orb-0">
+                <key id="0" spin="0">
+                    <object folder="0" file="0" y="18" angle="0"/>
+                </key>
+                <key id="1" time="170" spin="0">
+                    <object folder="0" file="0" y="40" angle="0"/>
+                </key>
+                <key id="2" time="340" spin="0">
+                    <object folder="0" file="0" y="18" angle="0"/>
+                </key>
+                <key id="3" time="510" spin="0">
+                    <object folder="0" file="0" y="40" angle="0"/>
+                </key>
+                <key id="4" time="680" spin="0">
+                    <object folder="0" file="0" y="18" angle="0"/>
+                </key>
+                <key id="5" time="850" spin="0">
+                    <object folder="0" file="0" y="40" angle="0"/>
+                </key>
+                <key id="6" time="1020" spin="0">
+                    <object folder="0" file="0" y="18" angle="0"/>
+                </key>
+            </timeline>
+        </animation>
+        <animation id="1" name="launch_loop" length="600" interval="100">
+            <mainline>
+                <key id="0">
+                    <object_ref id="0" timeline="0" key="0" z_index="0"/>
+                </key>
+                <key id="1" time="300">
+                    <object_ref id="0" timeline="0" key="1" z_index="0"/>
+                </key>
+                <key id="2" time="600">
+                    <object_ref id="0" timeline="0" key="2" z_index="0"/>
+                </key>
+            </mainline>
+            <timeline id="0" name="orb-0_000">
+                <key id="0" spin="-1">
+                    <object folder="0" file="0"/>
+                </key>
+                <key id="1" time="300" spin="-1">
+                    <object folder="0" file="0" x="0.147059" y="0.147059" angle="180.172837" scale_x="1" scale_y="1"/>
+                </key>
+                <key id="2" time="600" spin="-1">
+                    <object folder="0" file="0" angle="0.327401" scale_x="1"/>
+                </key>
+            </timeline>
+        </animation>
+        <animation id="2" name="fx" length="700" interval="100">
+            <mainline>
+                <key id="0" curve_type="cubic" c1="0.995025" c2="0.995025">
+                    <object_ref id="0" timeline="0" key="0" z_index="0"/>
+                    <object_ref id="1" timeline="1" key="0" z_index="1"/>
+                    <object_ref id="2" timeline="2" key="0" z_index="2"/>
+                </key>
+                <key id="1" time="500" curve_type="cubic" c1="0.995025" c2="0.995025">
+                    <object_ref id="0" timeline="0" key="1" z_index="0"/>
+                    <object_ref id="1" timeline="1" key="1" z_index="1"/>
+                    <object_ref id="2" timeline="2" key="1" z_index="2"/>
+                </key>
+                <key id="2" time="700" curve_type="cubic" c1="0.995025" c2="0.995025">
+                    <object_ref id="0" timeline="0" key="2" z_index="0"/>
+                    <object_ref id="1" timeline="1" key="2" z_index="1"/>
+                    <object_ref id="2" timeline="2" key="2" z_index="2"/>
+                </key>
+            </mainline>
+            <timeline id="0" name="heal_fx-0">
+                <key id="0" spin="0">
+                    <object folder="1" file="0" x="-39.310885" y="11.197689" angle="0" a="0.3"/>
+                </key>
+                <key id="1" time="500" spin="0">
+                    <object folder="1" file="0" x="-39.310885" y="111.19769" angle="0"/>
+                </key>
+                <key id="2" time="700" spin="0">
+                    <object folder="1" file="0" x="-39.310885" y="111.19769" angle="0" a="0"/>
+                </key>
+            </timeline>
+            <timeline id="1" name="heal_fx-0_000">
+                <key id="0" spin="0">
+                    <object folder="1" file="0" x="35.580837" y="29.176849" angle="0" scale_x="0.419978" scale_y="0.419978" a="0.3"/>
+                </key>
+                <key id="1" time="500" spin="0">
+                    <object folder="1" file="0" x="35.580837" y="129.17685" angle="0" scale_x="0.419978" scale_y="0.419978"/>
+                </key>
+                <key id="2" time="700" spin="0">
+                    <object folder="1" file="0" x="35.580837" y="129.17685" angle="0" scale_x="0.419978" scale_y="0.419978" a="0"/>
+                </key>
+            </timeline>
+            <timeline id="2" name="heal_fx-0_001">
+                <key id="0" spin="0">
+                    <object folder="1" file="0" x="15.826733" y="-28.016991" angle="0" scale_x="0.622077" scale_y="0.622077" a="0.3"/>
+                </key>
+                <key id="1" time="500" spin="0">
+                    <object folder="1" file="0" x="15.826733" y="72.01699" angle="0" scale_x="0.622077" scale_y="0.622077"/>
+                </key>
+                <key id="2" time="700" spin="0">
+                    <object folder="1" file="0" x="15.826733" y="72.01699" angle="0" scale_x="0.622077" scale_y="0.622077" a="0"/>
+                </key>
+            </timeline>
+        </animation>
+    </entity>
+</spriter_data>

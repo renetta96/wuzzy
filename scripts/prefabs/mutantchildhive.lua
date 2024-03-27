@@ -12,6 +12,7 @@ local assets =
   Asset("ANIM", "anim/mutantassassinhive.zip"),
   Asset("ANIM", "anim/mutantrangerhive.zip"),
   Asset("ANIM", "anim/mutantshadowhive.zip"),
+  Asset("ANIM", "anim/mutanthealerhive.zip"),
   Asset("ANIM", "anim/mutantbarrack.zip"),
 }
 
@@ -143,6 +144,12 @@ local function shadowhive()
   return inst
 end
 
+local function healerhive()
+  -- TODO: update art
+  local inst = commonslavefn("mutanthealerhive", "mutanthealerhive", {"mutanthealerhive"}, "mutanthealerhive.tex")
+  return inst
+end
+
 local function barrackhive()
   local inst = commonslavefn("mutantbarrack", "mutantbarrack", {"mutantbarrack"}, nil)
 
@@ -182,6 +189,11 @@ STRINGS.NAMES.MUTANTSHADOWHIVE = "Metapis Shadow Hive"
 STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTSHADOWHIVE = "It's made from ancient technology."
 STRINGS.RECIPE_DESC.MUTANTSHADOWHIVE = "Adds Metapis Shadow to Mother Hive."
 
+STRINGS.MUTANTHEALERHIVE = "Metapis Alchemist Hive"
+STRINGS.NAMES.MUTANTHEALERHIVE = "Metapis Alchemist Hive"
+STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTHEALERHIVE = "Oozes with honey."
+STRINGS.RECIPE_DESC.MUTANTHEALERHIVE = "Adds Metapis Alchemist to Mother Hive."
+
 STRINGS.MUTANTBARRACK = "Metapis Barrack"
 STRINGS.NAMES.MUTANTBARRACK = "Metapis Barrack"
 STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTBARRACK = "For the swarm."
@@ -195,6 +207,7 @@ return Prefab("mutantdefenderhive", defenderhive, assets, prefabs),
   MakePlacer("mutantassassinhive_placer", "mutantassassinhive", "mutantassassinhive", "idle"),
   Prefab("mutantshadowhive", shadowhive, assets, prefabs),
   MakePlacer("mutantshadowhive_placer", "mutantshadowhive", "mutantshadowhive", "idle"),
+  Prefab("mutanthealerhive", healerhive, assets, prefabs),
+  MakePlacer("mutanthealerhive_placer", "mutanthealerhive", "mutanthealerhive", "idle"),
   Prefab("mutantbarrack", barrackhive, assets, prefabs),
   MakePlacer("mutantbarrack_placer", "mutantbarrack", "mutantbarrack", "idle")
-
