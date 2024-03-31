@@ -395,6 +395,7 @@ local function CommonInit(bank, build, tags, options, checkupgradefn)
     inst:AddTag("cattoyairborne")
     inst:AddTag("flying")
     inst:AddTag("beemutant")
+    inst:AddTag("beemutantminion")
     inst:AddTag("companion")
 
     for i, v in ipairs(tags) do

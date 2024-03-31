@@ -86,6 +86,10 @@ local function ishealable(inst, guy)
     and inst:GetOwner() == guy:GetOwner() -- nil owner will heal nil owner
 end
 
+local HEAL_MUST_TAGS = {"_combat", "_health"}
+local HEAL_MUST_NOT_TAGS = {"player", "INLIMBO"}
+local HEAL_MUST_ONE_OF_TAGS = {"beemutantminion"}
+
 local function FindHealingTarget(inst, origin)
   if not origin then
     origin = inst
@@ -94,7 +98,7 @@ local function FindHealingTarget(inst, origin)
 
   local ally = FindEntity(origin, 8, function(guy)
     return ishealable(inst, guy)
-  end, {"_combat", "_health"}, {"player", "INLIMBO"}, {"beemutant"})
+  end, HEAL_MUST_TAGS, HEAL_MUST_NOT_TAGS, HEAL_MUST_ONE_OF_TAGS)
 
   return ally
 end
@@ -112,7 +116,7 @@ local function BounceHeal(inst, ally, num_bounced)
   local allies = TheSim:FindEntities(
     x, y, z,
     8,
-    {"_combat", "_health"}, {"player", "INLIMBO"}, {"beemutant"}
+    HEAL_MUST_TAGS, HEAL_MUST_NOT_TAGS, HEAL_MUST_ONE_OF_TAGS
   )
 
   local bounce_left = inst._numbounce
@@ -128,7 +132,7 @@ local function BounceHeal(inst, ally, num_bounced)
 end
 
 local function Heal(inst, ally)
-  if ally and ally:IsValid() and ally:HasTag("beemutant") and ally.components.health then
+  if ally and ally:IsValid() and ally:HasTag("beemutantminion") and ally.components.health then
     DoHeal(inst, ally)
     DoHeal(inst, inst) -- heal itself
 
