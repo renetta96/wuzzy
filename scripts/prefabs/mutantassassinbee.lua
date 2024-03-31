@@ -44,17 +44,7 @@ local function OnStealthAttack(inst, data)
     end
 end
 
-local function DoPoisonDamage(inst, poison_damage)
-    if inst._poisonticks <= 0 or inst.components.health:IsDead() then
-        inst._poisontask:Cancel()
-        inst._poisontask = nil
-        return
-    end
-
-    -- Leave at least 1 health
-    local delta = math.min(poison_damage, inst.components.health.currenthealth - 1)
-    inst.components.health:DoDelta(-delta, true, "poison_sting")
-
+local function PoisonColor(inst)
     local c_r, c_g, c_b, c_a = inst.AnimState:GetMultColour()
     inst.AnimState:SetMultColour(0.8, 0.2, 0.8, 1)
     inst:DoTaskInTime(
@@ -63,32 +53,40 @@ local function DoPoisonDamage(inst, poison_damage)
             inst.AnimState:SetMultColour(c_r, c_g, c_b, c_a)
         end
     )
-
-    inst._poisonticks = inst._poisonticks - 1
-
-    if inst._poisonticks <= 0 or inst.components.health:IsDead() then
-        inst._poisontask:Cancel()
-        inst._poisontask = nil
-    end
 end
 
 local function OnAttackOtherWithPoison(inst, data)
     if
-        data.target and data.target.components.health and not data.target.components.health:IsDead() and
-            data.target.components.combat
+        data.target and data.target.components.health
+        and not data.target.components.health:IsDead()
+        and not data.target:HasTag("player")
     then
-        -- No target players.
-        if not data.target:HasTag("player") then
-            data.target._poisonticks = TUNING.MUTANT_BEE_MAX_POISON_TICKS
-            if data.target._poisontask == nil then
-                data.target._poisontask = data.target:DoPeriodicTask(
-                    TUNING.MUTANT_BEE_POISON_PERIOD,
-                    function()
-                        DoPoisonDamage(data.target, BarrackModifier(inst, TUNING.MUTANT_BEE_POISON_DAMAGE))
-                    end
-                )
+        local source = "single_poison"
+        local basedamage = TUNING.MUTANT_BEE_POISON_DAMAGE
+        local numticks = TUNING.MUTANT_BEE_MAX_POISON_TICKS
+
+        local owner = inst:GetOwner()
+        if owner and owner:HasTag("beemaster") and owner.components.skilltreeupdater:IsActivated("zeta_metapis_assassin_1") then
+            source = "stackable_poison"
+            basedamage = TUNING.MUTANT_BEE_POISON_DAMAGE * 0.5
+            numticks = TUNING.MUTANT_BEE_STACK_POISON_TICKS
+        end
+
+        if not data.target.components.dotable then
+            data.target:AddComponent('dotable')
+        end
+
+        data.target.components.dotable:AddSource("single_poison", 1)
+        data.target.components.dotable:AddSource("stackable_poison")
+        if not data.target.components.dotable.ontickfn then
+            data.target.components.dotable.ontickfn = function(inst, damaged_sources)
+                if #damaged_sources > 0 then
+                    PoisonColor(inst)
+                end
             end
         end
+
+        data.target.components.dotable:Add(source, basedamage, numticks)
     end
 end
 

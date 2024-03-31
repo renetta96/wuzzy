@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Atlas>
+	<Texture filename="skilltree_zeta.tex" />
+	<Elements>
+		<Element name="zeta_background.tex" u1="0.001" u2="0.8300546875" v2="0.999" v1="0.2636953125" variant="" />
+	</Elements>
+</Atlas>

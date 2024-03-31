@@ -7,14 +7,12 @@ local SpawnPrefab = GLOBAL.SpawnPrefab
 local Action = GLOBAL.Action
 local SEASONS = GLOBAL.SEASONS
 local RECIPETABS = GLOBAL.RECIPETABS
-local SendRPCToClient = GLOBAL.SendRPCToClient
-local CLIENT_RPC = GLOBAL.CLIENT_RPC
-local TheGenericKV = GLOBAL.TheGenericKV
 --
 local _G = GLOBAL
 local PREFAB_SKINS = _G.PREFAB_SKINS
 local PREFAB_SKINS_IDS = _G.PREFAB_SKINS_IDS
 -- local SKIN_AFFINITY_INFO = GLOBAL.require("skin_affinity_info")
+local SkillTreeDefs = require("prefabs/skilltree_defs")
 
 PrefabFiles = {
     "mutantworkerbee",
@@ -105,7 +103,10 @@ Assets = {
     Asset("ATLAS", "images/inventoryimages/mutantbeehive.xml"),
     Asset("IMAGE", "images/inventoryimages/mutantbeehive.tex"),
     Asset("ATLAS", "images/inventoryimages/mutantcontainer.xml"),
-    Asset("IMAGE", "images/inventoryimages/mutantcontainer.tex")
+    Asset("IMAGE", "images/inventoryimages/mutantcontainer.tex"),
+
+    Asset("ATLAS", "images/skilltree_zeta.xml"),
+    Asset("IMAGE", "images/skilltree_zeta.tex"),
 }
 
 RemapSoundEvent("dontstarve/characters/zeta/hurt", "zeta/zeta/hurt")
@@ -167,9 +168,9 @@ TUNING.MUTANT_BEE_ASSASSIN_ATTACK_PERIOD = 2
 TUNING.MUTANT_BEE_ASSASSIN_BACKSTAB_DAMAGE_MULT = 1.25
 TUNING.MUTANT_BEE_ASSSASIN_HEALTH = 300
 TUNING.MUTANT_BEE_ASSSASIN_DAMAGE = 17
-TUNING.MUTANT_BEE_MAX_POISON_TICKS = 5
+TUNING.MUTANT_BEE_MAX_POISON_TICKS = 10
+TUNING.MUTANT_BEE_STACK_POISON_TICKS = 10
 TUNING.MUTANT_BEE_POISON_DAMAGE = 7
-TUNING.MUTANT_BEE_POISON_PERIOD = 0.75
 
 TUNING.MUTANT_BEE_SOLDIER_HEALTH = 350
 TUNING.MUTANT_BEE_SOLDIER_ABSORPTION = 0.25
@@ -257,6 +258,26 @@ AddMinimapAtlas("images/map_icons/mutantrangerhive.xml")
 AddMinimapAtlas("images/map_icons/mutantassassinhive.xml")
 AddMinimapAtlas("images/map_icons/mutantshadowhive.xml")
 AddMinimapAtlas("images/map_icons/mutantteleportal.xml")
+
+
+-- Skill tree
+local function CreateSkillTree()
+    local BuildSkillsData = require("prefabs/skilltree_zeta")
+    if BuildSkillsData then
+        local data = BuildSkillsData(SkillTreeDefs.FN)
+
+        if data then
+            SkillTreeDefs.CreateSkillTreeFor("zeta", data.SKILLS)
+            SkillTreeDefs.SKILLTREE_ORDERS["zeta"] = data.ORDERS
+            print("created skilltree")
+        end
+    end
+end
+
+RegisterSkilltreeBGForCharacter("images/skilltree_zeta.xml", "zeta")
+
+CreateSkillTree()
+
 
 --Skins api
 -- modimport("scripts/tools/skins_api")
