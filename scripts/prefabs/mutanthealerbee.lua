@@ -81,7 +81,7 @@ local function OnTimerDone(inst, data)
 end
 
 local function ishealable(inst, guy)
-  return guy and guy:IsValid() and guy.components.health:IsHurt()
+  return inst:IsValid() and guy and guy:IsValid() and guy.components.health:IsHurt()
     and not (guy.components.combat and guy.components.combat.target and guy.components.combat.target:HasTag("beemutant")) -- don't heal bees fighting bees
     and inst:GetOwner() == guy:GetOwner() -- nil owner will heal nil owner
 end
@@ -94,7 +94,6 @@ local function FindHealingTarget(inst, origin)
   if not origin then
     origin = inst
   end
-
 
   local ally = FindEntity(origin, 8, function(guy)
     return ishealable(inst, guy)

@@ -438,6 +438,38 @@ local function BarrackModifier(inst, v)
 end
 
 
+local function IsPoisonable(guy)
+    return guy and guy:IsValid() and guy.components.health
+        and not guy.components.health:IsDead()
+        and not guy:HasTag("player")
+end
+
+local function poisoncolor(inst)
+    local c_r, c_g, c_b, c_a = inst.AnimState:GetMultColour()
+    inst.AnimState:SetMultColour(0.8, 0.2, 0.8, 1)
+    inst:DoTaskInTime(
+        0.2,
+        function(inst)
+            inst.AnimState:SetMultColour(c_r, c_g, c_b, c_a)
+        end
+    )
+end
+
+local function MakePoisonable(inst)
+    if not inst.components.dotable then
+        inst:AddComponent('dotable')
+    end
+
+    inst.components.dotable:AddSource("single_poison", 1)
+    inst.components.dotable:AddSource("stackable_poison", 20)
+    if not inst.components.dotable.ontickfn then
+        inst.components.dotable.ontickfn = function(inst, damaged_sources)
+            if #damaged_sources > 0 then
+                poisoncolor(inst)
+            end
+        end
+    end
+end
 
 return {
     CommonInit = CommonInit,
@@ -446,5 +478,7 @@ return {
     IsAlly = IsAlly,
     IsHostile = IsHostile,
     FindTarget = FindTarget,
-    FindEnemies = FindEnemies
+    FindEnemies = FindEnemies,
+    IsPoisonable = IsPoisonable,
+    MakePoisonable = MakePoisonable,
 }

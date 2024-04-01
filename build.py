@@ -55,3 +55,10 @@ def rm_files_without_exts(path, exts):
 rm_files_without_exts(os.path.join(mod_build_dir, 'sound'), ['.fev', '.fsb'])
 rm_files_without_exts(os.path.join(mod_build_dir, 'images'), ['.tex', '.xml'])
 rm_files_without_exts(os.path.join(mod_build_dir, 'bigportraits'), ['.tex', '.xml'])
+
+
+dst_dir = "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Don't Starve Together\\mods"
+dst_build_dir = os.path.join(dst_dir, "Ozzy {}".format(version))
+shutil.rmtree(dst_build_dir, ignore_errors=True)
+
+shutil.copytree(mod_build_dir, dst_build_dir)
