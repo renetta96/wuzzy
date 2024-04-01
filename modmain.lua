@@ -107,6 +107,9 @@ Assets = {
 
     Asset("ATLAS", "images/skilltree_zeta.xml"),
     Asset("IMAGE", "images/skilltree_zeta.tex"),
+
+    Asset("ATLAS", "images/skilltree_zeta_icons.xml"),
+    Asset("IMAGE", "images/skilltree_zeta_icons.tex"),
 }
 
 RemapSoundEvent("dontstarve/characters/zeta/hurt", "zeta/zeta/hurt")
@@ -275,6 +278,8 @@ local function CreateSkillTree()
 end
 
 RegisterSkilltreeBGForCharacter("images/skilltree_zeta.xml", "zeta")
+RegisterSkilltreeIconsAtlas("images/skilltree_zeta_icons.xml", "zeta_metapis_assassin_1.tex")
+RegisterSkilltreeIconsAtlas("images/skilltree_zeta_icons.xml", "zeta_metapis_assassin_2.tex")
 
 CreateSkillTree()
 

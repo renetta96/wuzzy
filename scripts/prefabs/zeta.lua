@@ -1,5 +1,9 @@
 local MakePlayerCharacter = require "prefabs/player_common"
 
+local metapis_common = require "metapis_common"
+local IsPoisonable = metapis_common.IsPoisonable
+local MakePoisonable = metapis_common.MakePoisonable
+
 local assets = {
   Asset("SCRIPT", "scripts/prefabs/player_common.lua"),
   Asset("ANIM", "anim/zeta.zip"),
@@ -279,6 +283,21 @@ local function OnConsumeHealOrb(inst)
   end
 end
 
+local function EnablePoisonAttack(inst)
+  if not inst._poisonatk then
+    inst._poisonatk = true
+    inst:DoTaskInTime(10, function(inst) inst._poisonatk = false end)
+  end
+end
+
+local function OnAttackOther(inst, data)
+  if data and IsPoisonable(data.target) and inst._poisonatk then
+    MakePoisonable(data.target)
+
+    data.target.components.dotable:Add("stackable_poison", 5, TUNING.MUTANT_BEE_STACK_POISON_TICKS)
+  end
+end
+
 -- This initializes for both the server and client. Tags can be added here.
 local common_postinit = function(inst)
   inst.soundsname = "zeta"
@@ -342,6 +361,10 @@ local master_postinit = function(inst)
   inst._firsthealorb = true
   inst._healorbeffect = 1.0
   inst.OnConsumeHealOrb = OnConsumeHealOrb
+
+  inst._poisonatk = false
+  inst.EnablePoisonAttack = EnablePoisonAttack
+  inst:ListenForEvent("onattackother", OnAttackOther)
 
   inst.OnSave = OnSave
   inst.OnLoad = OnLoad

@@ -23,8 +23,8 @@ local function BuildSkillsData(SkillTreeFns)
         },
         zeta_metapis_assassin_1 = {
             title = "Metapis Mutant I",
-            desc = "Less poison base damage but it becomes stackable.",
-            icon = "wilson_alchemy_1",
+            desc = "Less poison base damage but it becomes stackable. Maximum 20 stacks.",
+            icon = "zeta_metapis_assassin_1",
             pos = {-62,176},
             group = "metapis",
             tags = {"metapis_minion_root", "metapis_minion"},
@@ -37,8 +37,8 @@ local function BuildSkillsData(SkillTreeFns)
         },
         zeta_metapis_assassin_2 = {
             title = "Metapis Mutant II",
-            desc = "test",
-            icon = "wilson_alchemy_1",
+            desc = "Directly summoned Metapis Mutants have a chance to coat Wuzzy's attacks in poison. This effect lasts 10 seconds.",
+            icon = "zeta_metapis_assassin_2",
             pos = {-62+38,176},
             group = "metapis",
             tags = {"metapis_minion"},

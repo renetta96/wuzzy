@@ -22,7 +22,7 @@ local DOTable = Class(function(self, inst)
 end)
 
 local function _gc(inst, self)
-	print("GC")
+	-- print("GC")
 
 	self.stacks = self:GetEffectiveStacks()
 
@@ -58,7 +58,7 @@ function DOTable:HasEffectiveStack()
 end
 
 function DOTable:DoDamage(source, damage)
-	print("DOT DAMAGE: ", source, damage)
+	-- print("DOT DAMAGE: ", source, damage)
 
 	if self.inst:IsValid() and self.inst.components.health and not self.inst.components.health:IsDead() then
 		local delta = math.min(damage, self.inst.components.health.currenthealth - 1)
@@ -68,7 +68,7 @@ function DOTable:DoDamage(source, damage)
 end
 
 local function OnTick(inst, self)
-	print("ON TICK")
+	-- print("ON TICK")
 
 	local damaged_sources = {}
 
@@ -172,7 +172,7 @@ function DOTable:Add(source, damage, numticks)
 end
 
 function DOTable:OnSave()
-	print("ON SAVE")
+	-- print("ON SAVE")
 	return {
 		stacks = self:GetEffectiveStacks(),
 		sources = self.sources,
@@ -181,7 +181,7 @@ function DOTable:OnSave()
 end
 
 function DOTable:OnLoad(data)
-	print("ON LOAD")
+	-- print("ON LOAD")
 	if data and data.sources ~= nil then
 		self.sources = data.sources
 	end
@@ -191,7 +191,7 @@ function DOTable:OnLoad(data)
 		self.stacks = self:GetEffectiveStacks()
 
 		if self:HasEffectiveStack() then
-			print("CONTINUE FROM LOAD")
+			-- print("CONTINUE FROM LOAD")
 			self:StartTicking()
 		end
 	end

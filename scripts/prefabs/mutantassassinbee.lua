@@ -3,6 +3,8 @@ local metapis_common = require "metapis_common"
 local IsAlly = metapis_common.IsAlly
 local BarrackModifier = metapis_common.BarrackModifier
 local FindTarget = metapis_common.FindTarget
+local IsPoisonable = metapis_common.IsPoisonable
+local MakePoisonable = metapis_common.MakePoisonable
 
 local assets = {
     Asset("ANIM", "anim/mutantassassinbee.zip"),
@@ -44,23 +46,8 @@ local function OnStealthAttack(inst, data)
     end
 end
 
-local function PoisonColor(inst)
-    local c_r, c_g, c_b, c_a = inst.AnimState:GetMultColour()
-    inst.AnimState:SetMultColour(0.8, 0.2, 0.8, 1)
-    inst:DoTaskInTime(
-        0.2,
-        function(inst)
-            inst.AnimState:SetMultColour(c_r, c_g, c_b, c_a)
-        end
-    )
-end
-
 local function OnAttackOtherWithPoison(inst, data)
-    if
-        data.target and data.target.components.health
-        and not data.target.components.health:IsDead()
-        and not data.target:HasTag("player")
-    then
+    if data and IsPoisonable(data.target) then
         local source = "single_poison"
         local basedamage = TUNING.MUTANT_BEE_POISON_DAMAGE
         local numticks = TUNING.MUTANT_BEE_MAX_POISON_TICKS
@@ -72,21 +59,18 @@ local function OnAttackOtherWithPoison(inst, data)
             numticks = TUNING.MUTANT_BEE_STACK_POISON_TICKS
         end
 
-        if not data.target.components.dotable then
-            data.target:AddComponent('dotable')
-        end
+        MakePoisonable(data.target)
 
-        data.target.components.dotable:AddSource("single_poison", 1)
-        data.target.components.dotable:AddSource("stackable_poison")
-        if not data.target.components.dotable.ontickfn then
-            data.target.components.dotable.ontickfn = function(inst, damaged_sources)
-                if #damaged_sources > 0 then
-                    PoisonColor(inst)
-                end
-            end
-        end
+        basedamage = BarrackModifier(inst, basedamage)
 
         data.target.components.dotable:Add(source, basedamage, numticks)
+    end
+
+    local owner = inst:GetOwner()
+    if owner and owner:IsValid() and owner:HasTag("beemaster") and not IsEntityDeadOrGhost(owner) then
+        if owner.components.skilltreeupdater:IsActivated("zeta_metapis_assassin_2") and math.random() <= 0.25 then
+            owner:EnablePoisonAttack()
+        end
     end
 end
 
@@ -94,11 +78,11 @@ end
 
 local function CheckAssassinUpgrade(inst, stage)
     if stage >= 2 then
-        inst:ListenForEvent("onattackother", OnAttackOtherWithPoison)
+        inst:ListenForEvent("onattackother", OnStealthAttack)
     end
 
     if stage >= 3 then
-        inst:ListenForEvent("onattackother", OnStealthAttack)
+        inst:ListenForEvent("onattackother", OnAttackOtherWithPoison)
     end
 
     inst.components.health:SetMaxHealth(BarrackModifier(inst, TUNING.MUTANT_BEE_ASSSASIN_HEALTH))
