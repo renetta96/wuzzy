@@ -191,9 +191,49 @@ local function OnCommonLoad(inst, data)
     end
 end
 
+local function SpawnShadowlings(inst, num_spawn)
+    local spikeondeath = false
+    local owner = inst:GetOwner()
+    if owner and owner:HasTag("beemaster") then
+        if owner.components.skilltreeupdater:IsActivated("zeta_metapis_shadow_2") then
+            spikeondeath = true
+        end
+    end
+
+    for i = 1, num_spawn do
+        local s = SpawnPrefab("mutantshadowling")
+        local offset = FindWalkableOffset(inst:GetPosition(), math.random() * 2 * PI, 2, 5, true, false, nil, true, true)
+        local pos = inst:GetPosition()
+        if offset ~= nil then
+            pos.x = pos.x + offset.x
+            pos.z = pos.z + offset.z
+        end
+
+        s.Transform:SetPosition(pos:Get())
+        s.components.combat:SetTarget(inst.components.combat.target)
+
+        if spikeondeath then
+            s:ListenForEvent("death", s.SpikeOnDeath)
+        end
+    end
+end
+
 local function OnCommonInit(inst)
     if inst.buffed then
         inst:Buff()
+    end
+
+    local owner = inst:GetOwner()
+    if owner and owner:HasTag("beemaster") then
+        if owner.components.skilltreeupdater:IsActivated("zeta_metapis_shadow_3") then
+            inst:ListenForEvent("death",
+                function(inst)
+                    if math.random() <= TUNING.MUTANT_SHADOWLING_SPAWN_CHANCE then
+                        SpawnShadowlings(inst, math.random(2, 3))
+                    end
+                end
+            )
+        end
     end
 end
 
@@ -297,16 +337,30 @@ local function TrackLastCombatTime(inst)
     )
 end
 
+-- get owner, prefer player, otherwise hive
 local function GetOwner(inst)
+    -- wuzzy summoned bees
     if inst.components.follower and inst.components.follower.leader ~= nil then
         return inst.components.follower.leader
     end
 
+    -- mother hive or teleportal
     if inst.components.homeseeker and inst.components.homeseeker.home then
+        -- mother hive
         if inst.components.homeseeker.home._owner then
             return inst.components.homeseeker.home._owner
         end
 
+        -- both mother hive and teleportal
+        if inst.components.homeseeker.home._ownerid then
+            for i, player in ipairs(AllPlayers) do
+                if player:HasTag('player') and player.userid == inst.components.homeseeker.home._ownerid then
+                  return player
+                end
+            end
+        end
+
+        -- wuzzy is not online
         return inst.components.homeseeker.home
     end
 
@@ -367,12 +421,15 @@ local function CommonMasterInit(inst, options, checkupgradefn)
     inst.GetOwner = GetOwner
 
     inst:DoTaskInTime(0, OnCommonInit)
-    inst:DoTaskInTime(
-        0,
-        function(inst)
-            OnInitUpgrade(inst, checkupgradefn, 0)
-        end
-    )
+
+    if checkupgradefn ~= nil then
+        inst:DoTaskInTime(
+            0,
+            function(inst)
+                OnInitUpgrade(inst, checkupgradefn, 0)
+            end
+        )
+    end
 end
 
 local function CommonInit(bank, build, tags, options, checkupgradefn)
@@ -389,6 +446,7 @@ local function CommonInit(bank, build, tags, options, checkupgradefn)
 
     inst.DynamicShadow:SetSize(.8, .5)
     inst.Transform:SetFourFaced()
+    inst.Transform:SetScale(1.2, 1.2, 1.2)
 
     inst:AddTag("insect")
     inst:AddTag("smallcreature")
@@ -417,10 +475,7 @@ local function CommonInit(bank, build, tags, options, checkupgradefn)
 
     CommonMasterInit(inst, options, checkupgradefn)
 
-
     inst:SetStateGraph("SGmutantbee")
-
-    inst.Transform:SetScale(1.2, 1.2, 1.2)
 
     if options and options.sounds == "killer" then
         inst.sounds = killersounds
@@ -481,4 +536,5 @@ return {
     FindEnemies = FindEnemies,
     IsPoisonable = IsPoisonable,
     MakePoisonable = MakePoisonable,
+    SpawnShadowlings = SpawnShadowlings,
 }

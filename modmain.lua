@@ -7,10 +7,10 @@ local SpawnPrefab = GLOBAL.SpawnPrefab
 local Action = GLOBAL.Action
 local SEASONS = GLOBAL.SEASONS
 local RECIPETABS = GLOBAL.RECIPETABS
---
-local _G = GLOBAL
-local PREFAB_SKINS = _G.PREFAB_SKINS
-local PREFAB_SKINS_IDS = _G.PREFAB_SKINS_IDS
+local SendRPCToClient = GLOBAL.SendRPCToClient
+local CLIENT_RPC = GLOBAL.CLIENT_RPC
+local PREFAB_SKINS = GLOBAL.PREFAB_SKINS
+local PREFAB_SKINS_IDS = GLOBAL.PREFAB_SKINS_IDS
 -- local SKIN_AFFINITY_INFO = GLOBAL.require("skin_affinity_info")
 local SkillTreeDefs = require("prefabs/skilltree_defs")
 
@@ -186,6 +186,12 @@ TUNING.MUTANT_BEE_SHADOW_ATK_PERIOD = 4
 TUNING.MUTANT_BEE_SHADOW_ATK_RANGE = 5
 TUNING.MUTANT_BEE_SHADOW_DEFAULT_NUM_SPIKES = 2
 
+TUNING.MUTANT_SHADOWLING_HEALTH = 150
+TUNING.MUTANT_SHADOWLING_DAMAGE = 5
+TUNING.MUTANT_SHADOWLING_SPAWN_CHANCE = 0.25
+TUNING.MUTANT_SHADOWLING_DECAY_RATE = 1.25
+TUNING.MUTANT_SHADOWLING_DAMAGE_CAP = 0.15
+
 TUNING.MUTANT_BEE_HEALER_HEALTH = 300
 TUNING.MUTANT_BEE_HEALER_DAMAGE = 5
 TUNING.MUTANT_BEE_HEALER_HEAL_COOLDOWN = 5
@@ -280,6 +286,9 @@ end
 RegisterSkilltreeBGForCharacter("images/skilltree_zeta.xml", "zeta")
 RegisterSkilltreeIconsAtlas("images/skilltree_zeta_icons.xml", "zeta_metapis_assassin_1.tex")
 RegisterSkilltreeIconsAtlas("images/skilltree_zeta_icons.xml", "zeta_metapis_assassin_2.tex")
+RegisterSkilltreeIconsAtlas("images/skilltree_zeta_icons.xml", "zeta_metapis_shadow_1.tex")
+RegisterSkilltreeIconsAtlas("images/skilltree_zeta_icons.xml", "zeta_metapis_shadow_2.tex")
+RegisterSkilltreeIconsAtlas("images/skilltree_zeta_icons.xml", "zeta_metapis_shadow_3.tex")
 
 CreateSkillTree()
 
@@ -615,6 +624,25 @@ local function BeeQueenPostInit(inst)
 end
 
 AddPrefabPostInit("beequeen", BeeQueenPostInit)
+
+local function MonkeyQueenPostInit(inst)
+    if not GLOBAL.TheWorld.ismastersim then
+        return
+    end
+
+    if inst.components.trader then
+        local oldonaccept = inst.components.trader.onaccept
+        inst.components.trader.onaccept = function(inst, giver, item, ...)
+            if giver:HasTag("player") and giver:HasTag("beemaster") then
+                SendRPCToClient(CLIENT_RPC.UpdateAccomplishment, giver.userid, "zeta_monkeyqueen_traded")
+            end
+
+            return oldonaccept(inst, giver, item, ...)
+        end
+    end
+end
+
+AddPrefabPostInit("monkeyqueen", MonkeyQueenPostInit)
 
 -- Recipes
 local containers = GLOBAL.require("containers")
