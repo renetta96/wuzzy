@@ -304,6 +304,34 @@ local states =
             end),
         }
     },
+
+    State{
+        name = "stomp",
+        tags = { "busy", "stomp", "nofreeze" },
+
+        onenter = function(inst)
+          inst.Physics:Stop()
+          inst.AnimState:PlayAnimation("stomp")
+        end,
+
+        timeline = {
+            TimeEvent(
+                5 * FRAMES,
+                function(inst)
+                    inst:IceNova()
+                end
+            )
+        },
+
+        events = {
+            EventHandler(
+                "animover",
+                function(inst)
+                    inst.sg:GoToState("idle")
+                end
+            )
+        }
+    },
 }
 
 local function CleanupIfSleepInterrupted(inst)

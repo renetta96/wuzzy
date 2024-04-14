@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<spriter_data scml_version="1.0" generator="BrashMonkey Spriter" generator_version="r11">
+    <folder id="0" name="wave">
+        <file id="0" name="wave/wave-0.png" width="600" height="600" pivot_x="0.515" pivot_y="0.526667"/>
+    </folder>
+    <entity id="0" name="icenova_fx">
+        <animation id="0" name="nova" length="1350" interval="100">
+            <mainline>
+                <key id="0" curve_type="cubic" c1="0.995025" c2="0.995025">
+                    <object_ref id="0" timeline="0" key="0" z_index="0"/>
+                </key>
+                <key id="1" time="240">
+                    <object_ref id="0" timeline="0" key="1" z_index="0"/>
+                </key>
+                <key id="2" time="390">
+                    <object_ref id="0" timeline="0" key="2" z_index="0"/>
+                </key>
+                <key id="3" time="1350">
+                    <object_ref id="0" timeline="0" key="3" z_index="0"/>
+                </key>
+            </mainline>
+            <timeline id="0" name="wave-0">
+                <key id="0" spin="0">
+                    <object folder="0" file="0" angle="0" scale_x="0.2" scale_y="0.2" a="0.20923"/>
+                </key>
+                <key id="1" time="240" spin="0">
+                    <object folder="0" file="0" angle="0" scale_x="2.5" scale_y="2.5"/>
+                </key>
+                <key id="2" time="390" spin="0">
+                    <object folder="0" file="0" angle="0" scale_x="2.5" scale_y="2.5"/>
+                </key>
+                <key id="3" time="1350" spin="0">
+                    <object folder="0" file="0" angle="0" scale_x="3" scale_y="3" a="0"/>
+                </key>
+            </timeline>
+        </animation>
+    </entity>
+</spriter_data>

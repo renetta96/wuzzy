@@ -34,22 +34,11 @@ local function DoSpike(inst, target, onlyfx)
 end
 
 local function Spike(inst, origin, numspikes, spike_origin)
-    local entities = FindEnemies(origin, 5)
-
     if spike_origin == nil then
         spike_origin = true
     end
 
-    local validtargets = {}
-    for i, e in ipairs(entities) do
-        if inst.components.combat:CanTarget(e) then
-            if e.components.combat and (IsAlly(e.components.combat.target) or IsHostile(e)) then
-                if e ~= origin then
-                    table.insert(validtargets, e)
-                end
-            end
-        end
-    end
+    local validtargets = FindEnemies(origin, 5, function(e) return e ~= origin end)
 
     if spike_origin then
         DoSpike(inst, origin, true)
@@ -132,7 +121,9 @@ end
 
 local function OnTimerDone(inst, data)
   if data.name == "shadowling_cooldown" then
-    SpawnShadowlings(inst, math.random(3, 5))
+    if inst.components.combat:HasTarget() then
+        SpawnShadowlings(inst, math.random(3, 5))
+    end
 
     if not inst.components.timer:TimerExists("shadowling_cooldown") then
       inst.components.timer:StartTimer("shadowling_cooldown", GetRandomWithVariance(15, 5))
@@ -191,7 +182,7 @@ local function lessershadowfn()
         "bee",
         "mutantshadowbee",
         {"lessershadowbee", "killer", "scarytoprey"},
-        {notburnable = true, notfreezable = true, notsleep = true, sounds = "killer"}
+        {notburnable = true, notfreezable = true, notsleep = true, notprotectable = true, sounds = "killer"}
     )
 
     local r, g, b = inst.AnimState:GetMultColour()

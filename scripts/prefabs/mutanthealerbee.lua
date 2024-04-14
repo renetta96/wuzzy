@@ -13,7 +13,6 @@ local assets = {
 local prefabs = {
   "stinger",
   "honey",
-  "explode_small",
   "heal_fx",
   "heal_projectile"
 }

@@ -8,9 +8,27 @@ local strike_anims = {
 	"strike_0", "strike_1", "strike_2"
 }
 
-local function PlayStrikeAnim(inst)
-	local r, g, b = inst.AnimState:GetMultColour()
-	inst.AnimState:SetMultColour(r, g, b, 0.6)
+local function PlayStrikeAnim(proxy)
+  local inst = CreateEntity()
+
+  inst.entity:AddTransform()
+  inst.entity:AddAnimState()
+
+  inst:AddTag("FX")
+  inst:AddTag("shadowspikefx")
+  --[[Non-networked entity]]
+  inst.entity:SetCanSleep(false)
+  inst.persists = false
+
+  local r, g, b = inst.AnimState:GetMultColour()
+  inst.AnimState:SetMultColour(r, g, b, 0.6)
+
+  local parent = proxy.entity:GetParent()
+  if parent ~= nil then
+    inst.entity:SetParent(parent.entity)
+  end
+
+  inst.Transform:SetFromProxy(proxy.GUID)
 
 	local anim = strike_anims[math.random( #strike_anims )]
 
@@ -22,14 +40,10 @@ local function fn()
 	local inst = CreateEntity()
 
   inst.entity:AddTransform()
-  inst.entity:AddAnimState()
   inst.entity:AddNetwork()
 
   inst:AddTag("FX")
   inst:AddTag("shadowspikefx")
-
-  inst.AnimState:SetBank("shadowspike_fx")
-  inst.AnimState:SetBuild("shadowspike_fx")
 
   if not TheNet:IsDedicated() then
   	inst:DoTaskInTime(0, PlayStrikeAnim)

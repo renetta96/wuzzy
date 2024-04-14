@@ -291,6 +291,23 @@ local function EnablePoisonAttack(inst)
 end
 
 local function OnAttackOther(inst, data)
+  if data and data.target and data.target:IsValid() then
+    local x, y, z = inst.Transform:GetWorldPosition()
+    local allies = TheSim:FindEntities(
+      x, y, z,
+      15,
+      {"_combat", "_health"}, {"INLIMBO", "player"}, {"beemutantminion"}
+    )
+
+    for i, e in pairs(allies) do
+      if e ~= data.target and e:GetOwner() == inst and not (e:IsInLimbo() or e.components.health:IsDead()) then
+        e.components.combat:SetTarget(data.target)
+        e._focusatktime = GetTime() + 5
+      end
+    end
+  end
+
+
   if data and IsPoisonable(data.target) and inst._poisonatk then
     MakePoisonable(data.target)
 

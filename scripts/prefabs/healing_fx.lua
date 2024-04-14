@@ -77,7 +77,7 @@ local function Heal(inst, other)
 
     inst:Remove()
 
-    local fx = SpawnPrefab("heal_fx")
+    local fx = SpawnPrefab("player_heal_fx")
     fx:Attach(other)
   end
 end
@@ -140,16 +140,38 @@ local function orb_fn()
   return inst
 end
 
-local function PlayAnim(inst)
-    inst.AnimState:PlayAnimation("fx")
-    inst:ListenForEvent("animover", inst.Remove)
+local function PlayAnim(proxy)
+  local inst = CreateEntity()
+
+  inst.entity:AddTransform()
+  inst.entity:AddAnimState()
+  inst.AnimState:SetBank("heal_projectile")
+  inst.AnimState:SetBuild("heal_projectile")
+  inst.AnimState:SetBloomEffectHandle("shaders/anim.ksh")
+  inst.AnimState:SetLightOverride(0.7)
+  inst.AnimState:SetSortOrder(3)
+
+  if proxy._scale ~= nil then
+    inst.AnimState:SetScale(proxy._scale, proxy._scale, proxy._scale)
+  end
+
+  inst:AddTag("FX")
+  --[[Non-networked entity]]
+  inst.entity:SetCanSleep(false)
+  inst.persists = false
+
+  local parent = proxy.entity:GetParent()
+  if parent ~= nil then
+    inst.entity:SetParent(parent.entity)
+  end
+
+  inst.Transform:SetFromProxy(proxy.GUID)
+
+  inst.AnimState:PlayAnimation("fx")
+  inst:ListenForEvent("animover", inst.Remove)
 end
 
 local function Attach(inst, target)
-  if target:HasTag("player") then
-    inst.AnimState:SetScale(1.5, 1.5, 1.5) -- bigger for player
-  end
-
   if target.components.combat then
     inst.entity:AddFollower():FollowSymbol(target.GUID, target.components.combat.hiteffectsymbol, 0, 0, 0)
   else
@@ -157,21 +179,15 @@ local function Attach(inst, target)
   end
 end
 
-local function fx()
+local function makefx(scale)
+  return function()
     local inst = CreateEntity()
+    inst._scale = scale
 
     inst.entity:AddTransform()
     inst.entity:AddNetwork()
-    inst.entity:AddAnimState()
 
     inst:AddTag("FX")
-
-    inst.AnimState:SetBank("heal_projectile")
-    inst.AnimState:SetBuild("heal_projectile")
-
-    inst.AnimState:SetBloomEffectHandle("shaders/anim.ksh")
-    inst.AnimState:SetLightOverride(0.7)
-    inst.AnimState:SetSortOrder(3)
 
     -- Dedicated server does not need to spawn the local fx
     if not TheNet:IsDedicated() then
@@ -189,8 +205,10 @@ local function fx()
     inst:DoTaskInTime(1, inst.Remove)
 
     return inst
+  end
 end
 
 return Prefab("heal_projectile", fn, assets),
   Prefab("heal_orb", orb_fn, assets),
-  Prefab("heal_fx", fx, assets)
+  Prefab("heal_fx", makefx(), assets),
+  Prefab("player_heal_fx", makefx(1.5), assets)

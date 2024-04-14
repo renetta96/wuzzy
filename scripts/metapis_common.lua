@@ -48,16 +48,31 @@ local TARGET_MUST_TAGS = {"_combat", "_health"}
 local TARGET_MUST_ONE_OF_TAGS = {"monster", "insect", "animal", "character"}
 local TARGET_IGNORE_TAGS = {"beemutant", "INLIMBO", "player"}
 
-local function FindEnemies(inst, dist)
+local function FindEnemies(inst, dist, checkfn)
     local x, y, z = inst.Transform:GetWorldPosition()
-    local enemies = TheSim:FindEntities(
+    local entities = TheSim:FindEntities(
         x, y, z,
         dist,
         TARGET_MUST_TAGS,
         TARGET_IGNORE_TAGS,
         TARGET_MUST_ONE_OF_TAGS
     )
-    return enemies
+
+
+    local validtargets = {}
+    for i, e in ipairs(entities) do
+        if inst.components.combat:CanTarget(e)
+            and e.components.combat and (IsAlly(e.components.combat.target) or IsHostile(e))
+            and e.components.health and not e.components.health:IsDead()
+        then
+            if checkfn == nil or checkfn(e) then
+                table.insert(validtargets, e)
+            end
+        end
+    end
+
+
+    return validtargets
 end
 
 local function FindTarget(inst, dist)
@@ -267,7 +282,9 @@ local function OnAttacked(inst, data)
         return
     end
 
-    inst.components.combat:SetTarget(attacker)
+    if not (inst._focusatktime ~= nil and inst._focusatktime >= GetTime()) then
+        inst.components.combat:SetTarget(attacker)
+    end
 
     -- If attacker has tag "beemutant" or "beemaster" then don't share target
     if attacker:HasTag("beemutant") or attacker:HasTag("beemaster") then
@@ -276,19 +293,20 @@ local function OnAttacked(inst, data)
 
     local targetshares = MAX_TARGET_SHARES
     inst.components.combat:ShareTarget(attacker, SHARE_TARGET_DIST, function(dude)
-        if inst.components.homeseeker and dude.components.homeseeker then  --don't bring bees from other hives
-            if dude.components.homeseeker.home and dude.components.homeseeker.home ~= inst.components.homeseeker.home then
-                return false
-            end
-        end
-
-        if dude.components.follower and dude.components.follower.leader then
+        if dude:IsInLimbo() or (dude.components.health and dude.components.health:IsDead()) then
             return false
         end
 
-        return dude:HasTag("beemutant") and
-            not (dude:IsInLimbo() or (dude.components.health and dude.components.health:IsDead()))
-    end, targetshares)
+        if dude.GetOwner ~= nil and dude:GetOwner() ~= inst:GetOwner() then
+            return false
+        end
+
+        if dude.components.follower and dude.components.follower.leader then -- don't share to Wuzzy's summoned bees
+            return false
+        end
+
+        return true
+    end, targetshares, {"_combat", "_health", "beemutantminion"})
 end
 
 local function OnInitUpgrade(inst, checkupgradefn, retries)
@@ -367,6 +385,35 @@ local function GetOwner(inst)
     return nil
 end
 
+local function findprotector(inst)
+    return FindEntity(inst, 10, function(guy)
+        return not guy.components.health:IsDead() and guy._protectaura and guy:GetOwner() == inst:GetOwner()
+    end, {"beemutant", "_combat", "_health"}, {"INLIMBO"}, {"defender"})
+end
+
+local function MakeProtectable(inst)
+    if not inst.components.health or not inst.components.combat then
+        return
+    end
+
+    local oldDoDelta = inst.components.health.DoDelta
+    inst.components.health.DoDelta = function(comp, amount, ...)
+        if amount < 0 and inst.components.health.currenthealth + amount < 0.5 * inst.components.health.maxhealth and math.random() <= 0.25 then
+            local owner = inst:GetOwner()
+            if owner and owner:HasTag("beemaster") and owner.components.skilltreeupdater:IsActivated("zeta_metapis_defender_1") then
+                local protector = findprotector(inst)
+                if protector ~= nil then
+                    -- print("FOUND PROTECTOR", protector, amount)
+                    protector.components.health:DoDelta(amount, ...)
+                    return 0
+                end
+            end
+        end
+
+        return oldDoDelta(comp, amount, ...)
+    end
+end
+
 local function CommonMasterInit(inst, options, checkupgradefn)
     inst:AddComponent("inspectable")
     inst:AddComponent("knownlocations")
@@ -395,6 +442,10 @@ local function CommonMasterInit(inst, options, checkupgradefn)
     inst.components.combat.hiteffectsymbol = "body"
     inst.components.combat:SetPlayerStunlock(PLAYERSTUNLOCK.RARELY)
     inst.components.combat:SetKeepTargetFunction(keeptargetfn)
+
+    if not (options and options.notprotectable) then
+        MakeProtectable(inst)
+    end
 
     if not (options and options.notsleep) then
         inst:AddComponent("sleeper")
