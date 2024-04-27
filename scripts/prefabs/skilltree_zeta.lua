@@ -122,6 +122,33 @@ local function BuildSkillsData(SkillTreeFns)
                 inst:AddTag("zeta_metapis_defender_2")
             end,
         },
+
+        zeta_metapis_lock_4 = MakeMetapisLock({-62-W_GAP,176-H_GAP-H_GAP-H_GAP}, {"zeta_metapis_ranger_1"}, "metapis_ranger"),
+        zeta_metapis_ranger_1 = {
+            title = "Metapis Voltwing I",
+            desc = "Metapis Voltwings orbit around their target, periodically firing electric balls.",
+            icon = "zeta_metapis_ranger_1",
+            pos = {-62,176-H_GAP-H_GAP-H_GAP},
+            group = "metapis",
+            tags = {"metapis_minion_root", "metapis_minion", "metapis_ranger"},
+            onactivate = function(inst, fromload)
+                inst:AddTag("zeta_metapis_ranger_1")
+            end,
+            connects = {
+                "zeta_metapis_ranger_2",
+            },
+        },
+        zeta_metapis_ranger_2 = {
+            title = "Metapis Voltwing II",
+            desc = "Metapis Voltwings charge up electricity with each attack. At maximum charge, an electric wisp spawns and accelerates toward their target.",
+            icon = "zeta_metapis_ranger_2",
+            pos = {-62+W_GAP,176-H_GAP-H_GAP-H_GAP},
+            group = "metapis",
+            tags = {"metapis_minion", "metapis_ranger"},
+            onactivate = function(inst, fromload)
+                inst:AddTag("zeta_metapis_ranger_2")
+            end,
+        },
     }
 
     return {

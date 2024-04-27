@@ -7,6 +7,8 @@ require "behaviours/follow"
 require "behaviours/faceentity"
 
 local beecommon = require "brains/mutantbeecommon"
+local IfElseNode = beecommon.IfElseNode
+local CircleAroundTarget = beecommon.CircleAroundTarget
 
 local RUN_START_DIST = 8
 local RUN_STOP_DIST = 10
@@ -17,6 +19,9 @@ local MAX_CHASE_DIST = 30
 local MIN_FOLLOW_DIST = 4
 local MAX_FOLLOW_DIST = 8
 local TARGET_FOLLOW_DIST = 6
+
+local CIRCLE_RADIUS = 12
+local AVOID_RADIUS = 15
 
 local function ShouldRunAway(guy)
     return guy:HasTag("monster")
@@ -59,27 +64,26 @@ local RangedKillerBeeBrain = Class(Brain, function(self, inst)
 end)
 
 function RangedKillerBeeBrain:OnStart()
-    local root =
-        PriorityNode(
-        {
-            WhileNode(function() return self.inst.components.hauntable and self.inst.components.hauntable.panic end, "PanicHaunted", Panic(self.inst)),
-            WhileNode(function() return self.inst.components.health.takingfiredamage end, "OnFire", Panic(self.inst)),
+    local root = PriorityNode(
+    {
+        WhileNode(function() return self.inst.components.hauntable and self.inst.components.hauntable.panic end, "PanicHaunted", Panic(self.inst)),
+        WhileNode(function() return self.inst.components.health.takingfiredamage end, "OnFire", Panic(self.inst)),
 
-            beecommon.AvoidEpicAtkNode(self.inst),
+        beecommon.AvoidEpicAtkNode(self.inst),
 
-            WhileNode(function() return beecommon.IsBeingChased(self.inst, 5) end, "Dodge", RunAway(self.inst, ShouldRunAway, RUN_START_DIST, RUN_STOP_DIST)),
-        	WhileNode(function() return CanAttackNow(self.inst) end, "AttackMomentarily", ChaseAndAttack(self.inst, MAX_CHASE_TIME, MAX_CHASE_DIST)),
-            IfNode(function() return beecommon.ShouldDespawn(self.inst) end, "TryDespawn",
-                DoAction(self.inst, function() return beecommon.DespawnAction(self.inst) end, "Despawn", true)
-            ),
-            Follow(self.inst, function() return GetLeader(self.inst) end, MIN_FOLLOW_DIST, TARGET_FOLLOW_DIST, MAX_FOLLOW_DIST),
-            IfNode(function() return GetLeader(self.inst) ~= nil end, "HasLeader",
-                FaceEntity(self.inst, GetFaceTargetFn, KeepFaceTargetFn )),
-            IfNode(function() return beecommon.ShouldGoBackHome(self.inst) end, "TryGoHome",
-                DoAction(self.inst, function() return beecommon.GoHomeAction(self.inst) end, "GoHome", true)
-            ),
-            Wander(self.inst, function() return self.inst.components.knownlocations:GetLocation("home") end, beecommon.MAX_WANDER_DIST)
-        }, 1)
+        WhileNode(function() return beecommon.IsBeingChased(self.inst, 5) end, "Dodge", RunAway(self.inst, ShouldRunAway, RUN_START_DIST, RUN_STOP_DIST)),
+        WhileNode(function() return CanAttackNow(self.inst) end, "AttackMomentarily", ChaseAndAttack(self.inst, MAX_CHASE_TIME, MAX_CHASE_DIST)),
+        IfNode(function() return beecommon.ShouldDespawn(self.inst) end, "TryDespawn",
+            DoAction(self.inst, function() return beecommon.DespawnAction(self.inst) end, "Despawn", true)
+        ),
+        Follow(self.inst, function() return GetLeader(self.inst) end, MIN_FOLLOW_DIST, TARGET_FOLLOW_DIST, MAX_FOLLOW_DIST),
+        IfNode(function() return GetLeader(self.inst) ~= nil end, "HasLeader",
+            FaceEntity(self.inst, GetFaceTargetFn, KeepFaceTargetFn )),
+        IfNode(function() return beecommon.ShouldGoBackHome(self.inst) end, "TryGoHome",
+            DoAction(self.inst, function() return beecommon.GoHomeAction(self.inst) end, "GoHome", true)
+        ),
+        Wander(self.inst, function() return self.inst.components.knownlocations:GetLocation("home") end, beecommon.MAX_WANDER_DIST)
+    }, 1)
 
 
     self.bt = BT(self.inst, root)
@@ -89,4 +93,43 @@ function RangedKillerBeeBrain:OnInitializationComplete()
     self.inst.components.knownlocations:RememberLocation("home", Point(self.inst.Transform:GetWorldPosition()))
 end
 
-return RangedKillerBeeBrain
+
+local RangedKillerBeeCircleBrain = Class(Brain, function(self, inst)
+    Brain._ctor(self, inst)
+end)
+
+function RangedKillerBeeCircleBrain:OnStart()
+    local root = PriorityNode(
+    {
+        WhileNode(function() return self.inst.components.hauntable and self.inst.components.hauntable.panic end, "PanicHaunted", Panic(self.inst)),
+        WhileNode(function() return self.inst.components.health.takingfiredamage end, "OnFire", Panic(self.inst)),
+        beecommon.AvoidEpicAtkNode(self.inst, 7),
+
+        WhileNode(function() return self.inst.components.combat:HasTarget() end, "Circle",
+            CircleAroundTarget(self.inst, CIRCLE_RADIUS, AVOID_RADIUS, 1)
+        ),
+
+        IfNode(function() return beecommon.ShouldDespawn(self.inst) end, "TryDespawn",
+            DoAction(self.inst, function() return beecommon.DespawnAction(self.inst) end, "Despawn", true)
+        ),
+        Follow(self.inst, function() return GetLeader(self.inst) end, MIN_FOLLOW_DIST, TARGET_FOLLOW_DIST, MAX_FOLLOW_DIST),
+        IfNode(function() return GetLeader(self.inst) ~= nil end, "HasLeader",
+            FaceEntity(self.inst, GetFaceTargetFn, KeepFaceTargetFn )),
+        IfNode(function() return beecommon.ShouldGoBackHome(self.inst) end, "TryGoHome",
+            DoAction(self.inst, function() return beecommon.GoHomeAction(self.inst) end, "GoHome", true)
+        ),
+        Wander(self.inst, function() return self.inst.components.knownlocations:GetLocation("home") end, beecommon.MAX_WANDER_DIST)
+    }, 1)
+
+
+    self.bt = BT(self.inst, root)
+end
+
+function RangedKillerBeeCircleBrain:OnInitializationComplete()
+    self.inst.components.knownlocations:RememberLocation("home", Point(self.inst.Transform:GetWorldPosition()))
+end
+
+return {
+    normal_brain = RangedKillerBeeBrain,
+    circle_brain = RangedKillerBeeCircleBrain
+}

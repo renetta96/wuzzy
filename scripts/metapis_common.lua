@@ -37,8 +37,10 @@ local function IsWithinLeaderRange(inst)
         return false
     end
 
+    local dist = inst._leader_dist or MAX_DIST_FROM_LEADER
+
     if inst.components.follower and inst.components.follower.leader and inst.components.follower.leader:IsValid() then
-        return inst:GetDistanceSqToInst(inst.components.follower.leader) < MAX_DIST_FROM_LEADER * MAX_DIST_FROM_LEADER
+        return inst:GetDistanceSqToInst(inst.components.follower.leader) < dist * dist
     end
 
     return true
@@ -112,7 +114,7 @@ local function FindTarget(inst, dist)
     end
 
     -- 50% force retarget
-    return lowestenemy, math.random() <= 0.5
+    return lowestenemy, not (inst._focusatktime ~= nil and inst._focusatktime >= GetTime()) and math.random() <= 0.5
 end
 
 local function IsFollowing(inst)

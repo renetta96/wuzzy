@@ -41,8 +41,8 @@ end
 local AVOID_EPIC_DIST = 15
 local STOP_AVOID_EPIC_DIST = 15
 
-local function FindEpicEnemy(inst)
-	return GetClosestInstWithTag({"epic"}, inst, AVOID_EPIC_DIST)
+local function FindEpicEnemy(inst, dist)
+	return GetClosestInstWithTag({"epic"}, inst, dist or AVOID_EPIC_DIST)
 end
 
 -- special cases when epic doesn't explicitly have AOE damage, but still does AOE damage attack
@@ -84,13 +84,13 @@ local function estimate_atk_time(epic)
 	return 1
 end
 
-local function IsEpicAttackComing(inst)
+local function IsEpicAttackComing(inst, dist)
 	if inst.components.health and inst.components.health:GetPercent() >= 0.5 then
 		return false
 	end
 
 
-	local epic = FindEpicEnemy(inst)
+	local epic = FindEpicEnemy(inst, dist)
 
   if not epic then
   	return false
@@ -182,17 +182,17 @@ local function IsEpicAttackComing_Defender(inst)
 	return IsEpicAttackComing(inst)
 end
 
-local function AvoidEpicAtkNode(inst)
+local function AvoidEpicAtkNode(inst, dist)
 	return WhileNode(
 		function()
-			local iscoming = IsEpicAttackComing(inst)
+			local iscoming = IsEpicAttackComing(inst, dist)
 			-- print("IS EPIC COMING ", iscoming)
 			return iscoming
 		end,
 		"AvoidEpicAttack",
 		RunAway(
 			inst,
-			function() return FindEpicEnemy(inst) end,
+			function() return FindEpicEnemy(inst, dist) end,
 			AVOID_EPIC_DIST, STOP_AVOID_EPIC_DIST
 		)
 	)
@@ -232,6 +232,113 @@ local function IsBeingChased(inst, dist)
 	return false
 end
 
+local IfElseNode = Class(BehaviourNode, function(self, condition, if_node, else_node)
+  BehaviourNode._ctor(self, "If-Else")
+  self.condition = condition
+  self.if_node = if_node
+  self.else_node = else_node
+end)
+
+function IfElseNode:Visit()
+  if self.condition() then
+    return self.if_node:Visit()
+  else
+    return self.else_node:Visit()
+  end
+end
+
+local CircleAroundTarget = Class(BehaviourNode, function(self, inst, radius, avoid_radius, thetaincrement, max_time)
+	BehaviourNode._ctor(self, "CircleAroundTarget")
+
+	self.inst = inst
+	self.radius = radius
+	self.avoid_radius = avoid_radius
+	self.theta = 0
+  self.thetaincrement = thetaincrement or 1
+  self.lasttick = nil
+  self.max_time = max_time
+end)
+
+function CircleAroundTarget:Visit()
+	local combat = self.inst.components.combat
+
+	-- print("VISIT")
+
+	if self.status == READY then
+		-- print("READY")
+
+		combat:ValidateTarget()
+
+    if combat.target ~= nil then
+      self.inst.components.combat:BattleCry()
+      self.startruntime = GetTime()
+
+      -- local pt = Point(combat.target.Transform:GetWorldPosition())
+      -- local mypos = Point(self.inst.Transform:GetWorldPosition())
+      -- self.theta = VecUtil_GetAngleInRads(mypos.x - pt.x, mypos.z - pt.z)
+
+      self.theta = math.random() * 2 * PI
+
+      self.status = RUNNING
+    else
+      self.status = FAILED
+    end
+	end
+
+	if self.status == RUNNING then
+		-- recalculate theta
+		if self.lasttick ~= nil and GetTick() > self.lasttick then
+			local dt = (GetTick() - self.lasttick) * GetTickTime()
+			self.theta = self.theta + (dt * self.thetaincrement)
+			if self.theta > 2 * PI then
+				self.theta = self.theta - 2 * PI
+			end
+		end
+
+		combat:ValidateTarget()
+		if combat.target == nil then
+			combat:TryRetarget() -- try retarget once to make movement smooth
+		end
+
+		-- print("RUNNING", self.theta)
+
+		if combat.target == nil or not combat.target.entity:IsValid() then
+      self.status = FAILED
+      combat:SetTarget(nil)
+      self.inst.components.locomotor:Stop()
+    elseif combat.target.components.health ~= nil and combat.target.components.health:IsDead() then
+      self.status = SUCCESS
+      combat:SetTarget(nil)
+      self.inst.components.locomotor:Stop()
+    else
+    	local pt = Point(combat.target.Transform:GetWorldPosition())
+
+    	local radius = self.radius
+    	if IsEpicAttackComing(self.inst) then
+    		radius = self.avoid_radius
+    	end
+
+    	local offset = Vector3(radius * math.cos(self.theta), 0, -radius * math.sin(self.theta))
+    	local destpos = pt + offset
+    	local mypos = Point(self.inst.Transform:GetWorldPosition())
+    	-- print("POS", mypos, destpos, pt, offset)
+
+    	if distsq(destpos, mypos) >= 0.15 then	--if you're almost at your target just stop.
+				self.inst.components.locomotor:GoToPoint(destpos)
+			end
+
+			if self.max_time ~= nil and self.startruntime ~= nil and GetTime() - self.startruntime >= self.max_time then
+				self.status = FAILED
+        self.inst.components.combat:GiveUp()
+        self.inst.components.locomotor:Stop()
+        return
+			end
+    end
+
+    self.lasttick = GetTick()
+	end
+end
+
 return {
 	GoHomeAction = GoHomeAction,
 	ShouldDespawn = ShouldDespawn,
@@ -241,6 +348,8 @@ return {
 	IsEpicAttackComing = IsEpicAttackComing,
   AvoidEpicAtkNode = AvoidEpicAtkNode,
   AvoidEpicAtkNode_Defender = AvoidEpicAtkNode_Defender,
+  IfElseNode = IfElseNode,
+  CircleAroundTarget = CircleAroundTarget,
 
 	MAX_WANDER_DIST = MAX_WANDER_DIST,
 }
