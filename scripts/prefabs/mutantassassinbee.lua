@@ -4,7 +4,7 @@ local IsAlly = metapis_common.IsAlly
 local BarrackModifier = metapis_common.BarrackModifier
 local FindTarget = metapis_common.FindTarget
 local IsPoisonable = metapis_common.IsPoisonable
-local MakePoisonable = metapis_common.MakePoisonable
+local DealPoison = metapis_common.DealPoison
 
 local assets = {
     Asset("ANIM", "anim/mutantassassinbee.zip"),
@@ -47,23 +47,8 @@ local function OnStealthAttack(inst, data)
 end
 
 local function OnAttackOtherWithPoison(inst, data)
-    if data and IsPoisonable(data.target) then
-        local source = "single_poison"
-        local basedamage = TUNING.MUTANT_BEE_POISON_DAMAGE
-        local numticks = TUNING.MUTANT_BEE_MAX_POISON_TICKS
-
-        local owner = inst:GetOwner()
-        if owner and owner:HasTag("beemaster") and owner.components.skilltreeupdater:IsActivated("zeta_metapis_assassin_1") then
-            source = "stackable_poison"
-            basedamage = TUNING.MUTANT_BEE_POISON_DAMAGE * 0.5
-            numticks = TUNING.MUTANT_BEE_STACK_POISON_TICKS
-        end
-
-        MakePoisonable(data.target)
-
-        basedamage = BarrackModifier(inst, basedamage)
-
-        data.target.components.dotable:Add(source, basedamage, numticks)
+    if data ~= nil then
+        DealPoison(inst, data.target)
     end
 
     local owner = inst:GetOwner()

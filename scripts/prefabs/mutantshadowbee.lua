@@ -1,11 +1,10 @@
 local metapis_common = require "metapis_common"
 
-local IsAlly = metapis_common.IsAlly
-local IsHostile = metapis_common.IsHostile
 local BarrackModifier = metapis_common.BarrackModifier
 local FindTarget = metapis_common.FindTarget
 local FindEnemies = metapis_common.FindEnemies
 local SpawnShadowlings = metapis_common.SpawnShadowlings
+local DoAreaDamage = metapis_common.DoAreaDamage
 
 local assets = {
     Asset("ANIM", "anim/mutantshadowbee.zip"),
@@ -15,59 +14,72 @@ local assets = {
 
 local prefabs = {
     "stinger",
-    "honey"
+    "honey",
+    "shadowspike_ring_4s",
+    "shadowspike_ring_6s",
+    "shadowspike_ring_3s"
 }
 
-local function DoSpike(inst, target, onlyfx)
+
+local function SpikeRingSmall(inst, target)
     if not target or not inst:IsValid() or not inst.components.combat:CanTarget(target) then
         return
     end
 
-    local spikefx = SpawnPrefab("shadowspike_fx")
+    local spikefx = SpawnPrefab("shadowspike_ring_4s")
     if spikefx then
         spikefx.Transform:SetPosition(target.Transform:GetWorldPosition())
     end
 
-    if not onlyfx then
-        inst.components.combat:DoAttack(target, nil, nil, "spikeattack")
-    end
+    inst:DoTaskInTime(0.25, function()
+        -- because area damage ignores current target
+        if target:IsValid() and not target.components.health:IsDead() then
+            inst.components.combat:DoAttack(target, nil, nil, "spikeattack")
+        end
+
+        DoAreaDamage(inst, target, 2)
+    end)
+
+    inst:DoTaskInTime(0.5, function()
+        if target:IsValid() and not target.components.health:IsDead() then
+            inst.components.combat:DoAttack(target, nil, nil, "spikeattack")
+        end
+
+        DoAreaDamage(inst, target, 4)
+    end)
 end
 
-local function Spike(inst, origin, numspikes, spike_origin)
-    if spike_origin == nil then
-        spike_origin = true
-    end
-
-    local validtargets = FindEnemies(origin, 5, function(e) return e ~= origin end)
-
-    if spike_origin then
-        DoSpike(inst, origin, true)
-    end
-
-    if not (numspikes and numspikes > 0) then
+local function SpikeRingBig(inst, target)
+    if not target or not inst:IsValid() or not inst.components.combat:CanTarget(target) then
         return
     end
 
-    -- strike origin if not enough targets
-    if spike_origin and #validtargets < numspikes then
-        local remain = numspikes - #validtargets
-        for i = 1,remain do
-            table.insert(validtargets, origin)
-        end
+    local spikefx = SpawnPrefab("shadowspike_ring_6s")
+    if spikefx then
+        spikefx.Transform:SetPosition(target.Transform:GetWorldPosition())
     end
 
-    for i, target in ipairs(validtargets) do
-        if i > numspikes then
-            break
+    inst:DoTaskInTime(0.25, function()
+        -- because area damage ignores current target
+        if target:IsValid() and not target.components.health:IsDead() then
+            inst.components.combat:DoAttack(target, nil, nil, "spikeattack")
         end
 
-        -- random delay from 0.25 to 1 sec
-        inst:DoTaskInTime(
-            math.random(25, 100) / 100,
-            function()
-                DoSpike(inst, target)
-            end
-        )
+        DoAreaDamage(inst, target, 3)
+    end)
+
+    inst:DoTaskInTime(0.5, function()
+        if target:IsValid() and not target.components.health:IsDead() then
+            inst.components.combat:DoAttack(target, nil, nil, "spikeattack")
+        end
+
+        DoAreaDamage(inst, target, 6)
+    end)
+end
+
+local function Spike(inst, target)
+    if inst._spikefn ~= nil then
+        inst._spikefn(inst, target)
     end
 end
 
@@ -77,7 +89,7 @@ local function OnShadowAttack(inst, data)
     end
 
     if data.target then
-        Spike(inst, data.target, inst._numspikes)
+        Spike(inst, data.target)
     end
 end
 
@@ -89,7 +101,7 @@ local function CheckShadowUpgrade(inst, stage)
 
     -- Add 1 more spike
     if stage >= 3 then
-        inst._numspikes = TUNING.MUTANT_BEE_SHADOW_DEFAULT_NUM_SPIKES + 1
+        inst._spikefn = SpikeRingBig
     end
 
     inst.components.health:SetMaxHealth(BarrackModifier(inst, TUNING.MUTANT_BEE_SHADOW_HEALTH))
@@ -116,7 +128,38 @@ local function retargetfn(inst)
 end
 
 local function SpikeOnDeath(inst)
-    Spike(inst, inst, math.random(2, 5), false)
+    -- 15% chance
+    if math.random() > 0.15 then
+        return
+    end
+
+    local spikefx = SpawnPrefab("shadowspike_ring_3s")
+    if spikefx ~= nil then
+        spikefx.Transform:SetPosition(inst.Transform:GetWorldPosition())
+    end
+
+    inst:DoTaskInTime(0.25, function()
+        local enemies = FindEnemies(inst, 2)
+        for i, target in ipairs(enemies) do
+            if i > 3 then
+                break
+            end
+
+            inst.components.combat:DoAttack(target, nil, nil, "spikeattack")
+        end
+    end)
+
+
+    inst:DoTaskInTime(0.5, function()
+        local enemies = FindEnemies(inst, 4)
+        for i, target in ipairs(enemies) do
+            if i > 3 then
+                break
+            end
+
+            inst.components.combat:DoAttack(target, nil, nil, "spikeattack")
+        end
+    end)
 end
 
 local function OnTimerDone(inst, data)
@@ -159,8 +202,9 @@ local function shadowbee()
     inst.components.combat:SetRange(TUNING.MUTANT_BEE_SHADOW_ATK_RANGE, TUNING.MUTANT_BEE_SHADOW_ATK_RANGE + 3)
     inst.components.combat:SetRetargetFunction(1, retargetfn)
 
-    inst._numspikes = TUNING.MUTANT_BEE_SHADOW_DEFAULT_NUM_SPIKES
+    inst._spikefn = SpikeRingSmall
     inst.canteleport = false
+
     inst:ListenForEvent("onattackother", OnShadowAttack)
 
     inst:SetBrain(shadowbeebrain)

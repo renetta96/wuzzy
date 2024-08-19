@@ -49,6 +49,14 @@ local events = {
         end
     ),
     EventHandler(
+        "mimic",
+        function(inst)
+            if not inst.components.health:IsDead() then
+                inst.sg:GoToState("mimic_morph")
+            end
+        end
+    ),
+    EventHandler(
         "doattack",
         function(inst)
             if not (inst.sg:HasStateTag("busy") or inst.components.health:IsDead()) then
@@ -386,6 +394,30 @@ local states = {
                     else
                         inst.sg:GoToState("idle")
                     end
+                end
+            )
+        }
+    },
+    State {
+        name = "mimic_morph",
+        tags = {"busy"},
+        onenter = function(inst)
+            inst.AnimState:PlayAnimation("hit")
+            inst.Physics:Stop()
+        end,
+        timeline = {
+            TimeEvent(
+                16 * FRAMES,
+                function(inst)
+                    inst:Morph()
+                end
+            ),
+        },
+        events = {
+            EventHandler(
+                "animover",
+                function(inst)
+                    inst.sg:GoToState("idle")
                 end
             )
         }

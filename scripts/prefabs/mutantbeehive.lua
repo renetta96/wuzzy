@@ -1,17 +1,16 @@
 local hive_common = require "hive_common"
 
-local tocheck = {
-  mutantdefenderbee = "mutantdefenderhive",
-  mutantrangerbee = "mutantrangerhive",
-  mutantassassinbee = "mutantassassinhive",
-  mutantshadowbee = "mutantshadowhive",
-  mutantkillerbee = true,
-  mutanthealerbee = "mutanthealerhive",
-}
-
 local prefabs =
 {
   "mutantbee",
+  "mutantkillerbee",
+  "mutantdefenderbee",
+  "mutantrangerbee",
+  "mutantassassinbee",
+  "mutantshadowbee",
+  "mutanthealerbee",
+  "mutantmimicbee",
+
 
   "honey",
   "honeycomb",
@@ -20,9 +19,6 @@ local prefabs =
   "mutantbeehive_lamp",
 }
 
-for k,v in pairs(tocheck) do
-  table.insert(prefabs, k)
-end
 
 local assets =
 {
@@ -82,6 +78,45 @@ local SPEECH =
     "FINALLY WE'RE UNITED!"
   }
 }
+
+local function GetSource(inst)
+  if not inst._ownerid then
+    return nil
+  end
+
+  for i, player in ipairs(AllPlayers) do
+    if player:HasTag('player') and player.userid == inst._ownerid then
+      return player._hive
+    end
+  end
+
+  return nil
+end
+
+local function gettocheck(inst)
+  if inst.prefab == 'mutantteleportal' then
+    inst = GetSource(inst)
+  end
+
+  local owner = inst._owner
+
+  local basechild = "mutantkillerbee"
+  if owner and owner:HasTag("beemaster") then
+    if owner.components.skilltreeupdater:IsActivated("zeta_metapis_mimic_1") then
+      basechild = "mutantmimicbee"
+    end
+  end
+
+
+  return {
+    mutantdefenderbee = "mutantdefenderhive",
+    mutantrangerbee = "mutantrangerhive",
+    mutantassassinbee = "mutantassassinhive",
+    mutantshadowbee = "mutantshadowhive",
+    [basechild] = true,
+    mutanthealerbee = "mutanthealerhive",
+  }, basechild
+end
 
 local function Say(inst, script)
   if not script then
@@ -435,19 +470,6 @@ local function OnSlave(inst)
   end
 end
 
-local function GetSource(inst)
-  if not inst._ownerid then
-    return nil
-  end
-
-  for i, player in ipairs(AllPlayers) do
-    if player:HasTag('player') and player.userid == inst._ownerid then
-      return player._hive
-    end
-  end
-
-  return nil
-end
 
 local function CanSpawn(inst, prefab)
   if inst.prefab == 'mutantteleportal' then
@@ -457,6 +479,8 @@ local function CanSpawn(inst, prefab)
   if not inst then
     return false
   end
+
+  local tocheck, basechild = gettocheck(inst)
 
   if tocheck[prefab] == true then
     return true
@@ -484,19 +508,21 @@ local function PickChildPrefab(inst)
   local numprefabs = 0
   local ratio = {}
 
+  local tocheck, basechild = gettocheck(inst)
+
   for prefab, v in pairs(tocheck) do
     ratio[prefab] = 0
     numprefabs = numprefabs + 1
   end
 
-  ratio["mutantkillerbee"] = numprefabs
+  ratio[basechild] = numprefabs
 
-  local canspawnprefabs = {"mutantkillerbee"}
+  local canspawnprefabs = {basechild}
 
   for prefab, v in pairs(ratio) do
-    if prefab ~= "mutantkillerbee" and CanSpawn(inst, prefab) then
+    if prefab ~= basechild and CanSpawn(inst, prefab) then
       ratio[prefab] = 1
-      ratio["mutantkillerbee"] = ratio["mutantkillerbee"] - 1
+      ratio[basechild] = ratio[basechild] - 1
       table.insert(canspawnprefabs, prefab)
     end
   end

@@ -17,6 +17,7 @@ local SkillTreeDefs = require("prefabs/skilltree_defs")
 PrefabFiles = {
     "mutantworkerbee",
     "mutantsoldierbee",
+    "mutantmimicbee",
     "mutantassassinbee",
     "mutantrangerbee",
     "mutantshadowbee",
@@ -38,6 +39,7 @@ PrefabFiles = {
     "electric_bubble",
     "healing_fx",
     "icenova_fx",
+    "poison_fx",
 }
 
 Assets = {
@@ -184,10 +186,9 @@ TUNING.MUTANT_BEE_SOLDIER_ABSORPTION = 0.25
 TUNING.MUTANT_BEE_SOLDIER_COUNTER_ATK_CHANCE = 0.35
 
 TUNING.MUTANT_BEE_SHADOW_HEALTH = 200
-TUNING.MUTANT_BEE_SHADOW_DAMAGE = 10
+TUNING.MUTANT_BEE_SHADOW_DAMAGE = 8
 TUNING.MUTANT_BEE_SHADOW_ATK_PERIOD = 2
 TUNING.MUTANT_BEE_SHADOW_ATK_RANGE = 5
-TUNING.MUTANT_BEE_SHADOW_DEFAULT_NUM_SPIKES = 2
 
 TUNING.MUTANT_SHADOWLING_HEALTH = 150
 TUNING.MUTANT_SHADOWLING_DAMAGE = 5
@@ -296,6 +297,7 @@ RegisterSkilltreeIconsAtlas("images/skilltree_zeta_icons.xml", "zeta_metapis_def
 RegisterSkilltreeIconsAtlas("images/skilltree_zeta_icons.xml", "zeta_metapis_defender_2.tex")
 RegisterSkilltreeIconsAtlas("images/skilltree_zeta_icons.xml", "zeta_metapis_ranger_1.tex")
 RegisterSkilltreeIconsAtlas("images/skilltree_zeta_icons.xml", "zeta_metapis_ranger_2.tex")
+RegisterSkilltreeIconsAtlas("images/skilltree_zeta_icons.xml", "zeta_metapis_mimic_1.tex")
 
 CreateSkillTree()
 

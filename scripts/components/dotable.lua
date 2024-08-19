@@ -62,8 +62,7 @@ function DOTable:DoDamage(source, damage)
 
 	if self.inst:IsValid() and self.inst.components.health and not self.inst.components.health:IsDead() then
 		local delta = math.min(damage, self.inst.components.health.currenthealth - 1)
-
-	  self.inst.components.health:DoDelta(-delta, true, "dot_tick_" .. source)
+	 	self.inst.components.health:DoDelta(-delta, true, "dot_tick_" .. source)
 	end
 end
 
@@ -71,6 +70,7 @@ local function OnTick(inst, self)
 	-- print("ON TICK")
 
 	local damaged_sources = {}
+	local all_damage = 0
 
 	for source, stacks in pairs(self.stacks) do
 		-- print("SOURCE", source)
@@ -87,14 +87,16 @@ local function OnTick(inst, self)
 			end
 		end
 
+		all_damage = all_damage + total_damage
+
 		if total_damage > 0 then
 			self:DoDamage(source, total_damage)
 			table.insert(damaged_sources, source)
 		end
 	end
 
-	if self.ontickfn then
-		self.ontickfn(self.inst, damaged_sources)
+	if self.ontickfn ~= nil then
+		self.ontickfn(self.inst, damaged_sources, all_damage)
 	end
 end
 

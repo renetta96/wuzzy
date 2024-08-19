@@ -144,13 +144,14 @@ local function LightningStrike(inst)
     if target and target:IsValid() and not target.components.health:IsDead() then
         -- print("DO ATTACK", target, inst._resetatks)
         inst.components.combat:DoAttack(target)
-        if inst._shouldcharge then
-            Charge(inst)
-        end
     end
 end
 
 local function OnAttack(inst, data)
+    if inst._shouldcharge then
+        Charge(inst)
+    end
+
     if inst._resetatks > 0 then
         -- print("RESET ATK", inst._resetatks)
         inst._resetatks = inst._resetatks - 1

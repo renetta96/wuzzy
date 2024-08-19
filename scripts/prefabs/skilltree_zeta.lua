@@ -99,7 +99,7 @@ local function BuildSkillsData(SkillTreeFns)
         zeta_metapis_lock_3 = MakeMetapisLock({-62-W_GAP,176-H_GAP-H_GAP}, {"zeta_metapis_defender_1"}, "metapis_defender"),
         zeta_metapis_defender_1 = {
             title = "Metapis Moonguard I",
-            desc = "Metapis Moonguards now reduce incoming damage by 30% to 80%, depending on their missing health, reaching maximum reduction at 30% health. Additionally, they possess a chance to shield nearby ally Metapises from any incoming damage.",
+            desc = "Metapis Moonguards now reduce incoming damage by 30% to 80%, depending on their missing health, reaching maximum reduction at 30% health. Additionally, they possess a chance to shield nearby ally Metapises from any incoming damage. Activates only at Mother Hive level 2.",
             icon = "zeta_metapis_defender_1",
             pos = {-62,176-H_GAP-H_GAP},
             group = "metapis",
@@ -113,7 +113,7 @@ local function BuildSkillsData(SkillTreeFns)
         },
         zeta_metapis_defender_2 = {
             title = "Metapis Moonguard II",
-            desc = "Metapis Moonguards have a chance to retaliate with an ice nova upon receiving any damage. This also applies to damage received from shielding allies.",
+            desc = "Metapis Moonguards have a chance to retaliate with an ice nova upon receiving any damage. This also applies to damage received from shielding allies. Activates only at Mother Hive level 3.",
             icon = "zeta_metapis_defender_2",
             pos = {-62+W_GAP,176-H_GAP-H_GAP},
             group = "metapis",
@@ -148,6 +148,22 @@ local function BuildSkillsData(SkillTreeFns)
             onactivate = function(inst, fromload)
                 inst:AddTag("zeta_metapis_ranger_2")
             end,
+        },
+
+        zeta_metapis_lock_5 = MakeMetapisLock({-62-W_GAP,176-H_GAP-H_GAP-H_GAP-H_GAP}, {"zeta_metapis_mimic_1"}, "metapis_mimic"),
+        zeta_metapis_mimic_1 = {
+            title = "Metapis Mimic I",
+            desc = "Evolve Metapis Soldiers into Metapis Mimics, which randomly change their attacks based on nearby Metapises.",
+            icon = "zeta_metapis_mimic_1",
+            pos = {-62,176-H_GAP-H_GAP-H_GAP-H_GAP},
+            group = "metapis",
+            tags = {"metapis_minion_root", "metapis_minion", "metapis_mimic"},
+            onactivate = function(inst, fromload)
+                inst:AddTag("zeta_metapis_mimic_1")
+            end,
+            -- connects = {
+            --     "zeta_metapis_ranger_2",
+            -- },
         },
     }
 

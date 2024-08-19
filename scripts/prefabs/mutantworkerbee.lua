@@ -42,9 +42,6 @@ local function workerbee()
 
     inst:SetBrain(workerbrain)
 
-    MakeHauntableChangePrefab(inst, "mutantkillerbee")
-
-
     return inst
 end
 

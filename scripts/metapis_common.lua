@@ -552,9 +552,10 @@ local function IsPoisonable(guy)
         and not guy:HasTag("player")
 end
 
-local function poisoncolor(inst)
+local function poisoncolor(inst, mr, mg, mb)
     local c_r, c_g, c_b, c_a = inst.AnimState:GetMultColour()
-    inst.AnimState:SetMultColour(0.8, 0.2, 0.8, 1)
+
+    inst.AnimState:SetMultColour(mr, mg, mb, c_a)
     inst:DoTaskInTime(
         0.2,
         function(inst)
@@ -570,12 +571,62 @@ local function MakePoisonable(inst)
 
     inst.components.dotable:AddSource("single_poison", 1)
     inst.components.dotable:AddSource("stackable_poison", 20)
-    if not inst.components.dotable.ontickfn then
-        inst.components.dotable.ontickfn = function(inst, damaged_sources)
-            if #damaged_sources > 0 then
-                poisoncolor(inst)
+
+    if inst.components.dotable.ontickfn ~= nil then
+        return
+    end
+
+    inst.components.dotable.ontickfn = function(inst, damaged_sources, all_damage)
+        if #damaged_sources > 0 then
+            poisoncolor(inst, 0.8, 0.2, 0.8)
+        end
+
+        if inst._crit_poison_end_time ~= nil and inst._crit_poison_end_time > GetTime() and math.random() <= 0.3 then
+            inst.components.dotable:DoDamage("crit_poison", all_damage * 2)
+
+            local fx = SpawnPrefab("poison_fx")
+            if fx ~= nil then
+                local scale = math.max(inst:GetPhysicsRadius(0.5) * 8, 4.0) -- min 4 to be visible
+                fx.Transform:SetScale(scale, scale, scale)
+
+                if inst.components.combat then
+                    fx.entity:AddFollower():FollowSymbol(inst.GUID, inst.components.combat.hiteffectsymbol, 0, 0, 0)
+                end
             end
         end
+    end
+end
+
+local function DoAreaDamage(inst, target, radius)
+    if not target:IsValid() then
+        return
+    end
+
+    inst.components.combat:DoAreaAttack(
+        target, radius, nil,
+        function(guy)
+            return IsHostile(guy) or (guy.components.combat and IsAlly(guy.components.combat.target))
+        end,
+        nil, {"INLIMBO", "player", "beemutant"})
+end
+
+local function DealPoison(inst, target)
+    if IsPoisonable(target) then
+        MakePoisonable(target)
+
+        local source = "single_poison"
+        local basedamage = TUNING.MUTANT_BEE_POISON_DAMAGE
+        local numticks = TUNING.MUTANT_BEE_MAX_POISON_TICKS
+
+        local owner = inst:GetOwner()
+        if owner and owner:HasTag("beemaster") and owner.components.skilltreeupdater:IsActivated("zeta_metapis_assassin_1") then
+            source = "stackable_poison"
+            basedamage = TUNING.MUTANT_BEE_POISON_DAMAGE * 0.5
+            numticks = TUNING.MUTANT_BEE_STACK_POISON_TICKS
+        end
+
+        basedamage = BarrackModifier(inst, basedamage)
+        target.components.dotable:Add(source, basedamage, numticks)
     end
 end
 
@@ -590,4 +641,6 @@ return {
     IsPoisonable = IsPoisonable,
     MakePoisonable = MakePoisonable,
     SpawnShadowlings = SpawnShadowlings,
+    DoAreaDamage = DoAreaDamage,
+    DealPoison = DealPoison,
 }

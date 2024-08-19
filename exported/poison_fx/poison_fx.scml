@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<spriter_data scml_version="1.0" generator="BrashMonkey Spriter" generator_version="r11">
+    <folder id="0" name="fx">
+        <file id="0" name="fx/fx-0.png" width="100" height="100" pivot_x="0.58" pivot_y="0.45"/>
+        <file id="1" name="fx/fx-1.png" width="100" height="100" pivot_x="0" pivot_y="1"/>
+        <file id="2" name="fx/fx-2.png" width="100" height="100" pivot_x="0" pivot_y="1"/>
+        <file id="3" name="fx/fx-3.png" width="100" height="100" pivot_x="0" pivot_y="1"/>
+        <file id="4" name="fx/fx-4.png" width="100" height="100" pivot_x="0" pivot_y="1"/>
+        <file id="5" name="fx/fx-5.png" width="100" height="100" pivot_x="0" pivot_y="1"/>
+        <file id="6" name="fx/fx-6.png" width="100" height="100" pivot_x="0" pivot_y="1"/>
+        <file id="7" name="fx/fx-7.png" width="100" height="100" pivot_x="0" pivot_y="1"/>
+    </folder>
+    <entity id="0" name="poison_fx">
+        <animation id="0" name="poison" length="512" interval="100">
+            <mainline>
+                <key id="0">
+                    <object_ref id="0" timeline="0" key="0" z_index="0"/>
+                </key>
+                <key id="1" time="63">
+                    <object_ref id="0" timeline="0" key="1" z_index="0"/>
+                    <object_ref id="1" timeline="5" key="0" z_index="1"/>
+                </key>
+                <key id="2" time="126">
+                    <object_ref id="0" timeline="0" key="2" z_index="0"/>
+                    <object_ref id="1" timeline="5" key="1" z_index="1"/>
+                    <object_ref id="2" timeline="1" key="0" z_index="2"/>
+                </key>
+                <key id="3" time="189">
+                    <object_ref id="0" timeline="1" key="1" z_index="0"/>
+                    <object_ref id="1" timeline="6" key="0" z_index="1"/>
+                    <object_ref id="2" timeline="5" key="2" z_index="2"/>
+                </key>
+                <key id="4" time="254">
+                    <object_ref id="0" timeline="1" key="2" z_index="0"/>
+                    <object_ref id="1" timeline="6" key="1" z_index="1"/>
+                    <object_ref id="2" timeline="2" key="0" z_index="2"/>
+                </key>
+                <key id="5" time="317">
+                    <object_ref id="0" timeline="2" key="1" z_index="0"/>
+                    <object_ref id="1" timeline="7" key="0" z_index="1"/>
+                    <object_ref id="2" timeline="6" key="2" z_index="2"/>
+                </key>
+                <key id="6" time="383">
+                    <object_ref id="0" timeline="2" key="2" z_index="0"/>
+                    <object_ref id="1" timeline="7" key="1" z_index="1"/>
+                    <object_ref id="2" timeline="3" key="0" z_index="2"/>
+                </key>
+                <key id="7" time="449">
+                    <object_ref id="0" timeline="3" key="1" z_index="0"/>
+                    <object_ref id="1" timeline="4" key="0" z_index="1"/>
+                    <object_ref id="2" timeline="7" key="2" z_index="2"/>
+                </key>
+                <key id="8" time="512">
+                    <object_ref id="0" timeline="4" key="1" z_index="0"/>
+                    <object_ref id="1" timeline="3" key="2" z_index="1"/>
+                </key>
+            </mainline>
+            <timeline id="0" name="fx-0">
+                <key id="0" spin="0">
+                    <object folder="0" file="0" x="0.645161" y="0.645161" angle="0" a="0"/>
+                </key>
+                <key id="1" time="63" spin="0">
+                    <object folder="0" file="0" x="0.645161" y="0.645161" angle="0"/>
+                </key>
+                <key id="2" time="126" spin="0">
+                    <object folder="0" file="0" x="0.645161" y="0.645161" angle="0" a="0"/>
+                </key>
+            </timeline>
+            <timeline id="1" name="fx-2">
+                <key id="0" time="126" spin="0">
+                    <object folder="0" file="2" x="-56.129032" y="56.129032" angle="0" a="0"/>
+                </key>
+                <key id="1" time="189" spin="0">
+                    <object folder="0" file="2" x="-56.129032" y="56.129032" angle="0"/>
+                </key>
+                <key id="2" time="254" spin="0">
+                    <object folder="0" file="2" x="-56.129032" y="56.129032" angle="0" a="0"/>
+                </key>
+            </timeline>
+            <timeline id="2" name="fx-4">
+                <key id="0" time="254" spin="0">
+                    <object folder="0" file="4" x="-54.83871" y="52.580645" angle="0" a="0"/>
+                </key>
+                <key id="1" time="317" spin="0">
+                    <object folder="0" file="4" x="-54.83871" y="52.580645" angle="0"/>
+                </key>
+                <key id="2" time="383" spin="0">
+                    <object folder="0" file="4" x="-54.83871" y="52.580645" angle="0" a="0"/>
+                </key>
+            </timeline>
+            <timeline id="3" name="fx-6">
+                <key id="0" time="383" spin="0">
+                    <object folder="0" file="6" x="-56.341214" y="52.244601" angle="0" a="0"/>
+                </key>
+                <key id="1" time="449" spin="0">
+                    <object folder="0" file="6" x="-56.341214" y="52.244601" angle="0"/>
+                </key>
+                <key id="2" time="512" spin="0">
+                    <object folder="0" file="6" x="-56.341214" y="52.244601" angle="0" a="0"/>
+                </key>
+            </timeline>
+            <timeline id="4" name="fx-7">
+                <key id="0" time="449" spin="0">
+                    <object folder="0" file="7" x="-53.255426" y="52.921536" angle="0" a="0"/>
+                </key>
+                <key id="1" time="512" spin="0">
+                    <object folder="0" file="7" x="-53.255426" y="52.921536" angle="0"/>
+                </key>
+            </timeline>
+            <timeline id="5" name="fx-1">
+                <key id="0" time="63" spin="0">
+                    <object folder="0" file="1" x="-55.582888" y="58.139037" angle="0" a="0"/>
+                </key>
+                <key id="1" time="126" spin="0">
+                    <object folder="0" file="1" x="-55.582888" y="58.139037" angle="0"/>
+                </key>
+                <key id="2" time="189" spin="0">
+                    <object folder="0" file="1" x="-55.582888" y="58.139037" angle="0" a="0"/>
+                </key>
+            </timeline>
+            <timeline id="6" name="fx-3">
+                <key id="0" time="189" spin="0">
+                    <object folder="0" file="3" x="-56.417112" y="56.417112" angle="0" a="0"/>
+                </key>
+                <key id="1" time="254" spin="0">
+                    <object folder="0" file="3" x="-56.417112" y="56.417112" angle="0"/>
+                </key>
+                <key id="2" time="317" spin="0">
+                    <object folder="0" file="3" x="-56.417112" y="56.417112" angle="0" a="0"/>
+                </key>
+            </timeline>
+            <timeline id="7" name="fx-5">
+                <key id="0" time="317" spin="0">
+                    <object folder="0" file="5" x="-55.649733" y="52.008556" angle="0" a="0"/>
+                </key>
+                <key id="1" time="383" spin="0">
+                    <object folder="0" file="5" x="-55.649733" y="52.008556" angle="0"/>
+                </key>
+                <key id="2" time="449" spin="0">
+                    <object folder="0" file="5" x="-55.649733" y="52.008556" angle="0" a="0"/>
+                </key>
+            </timeline>
+        </animation>
+    </entity>
+</spriter_data>

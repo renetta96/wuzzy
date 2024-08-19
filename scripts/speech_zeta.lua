@@ -3305,7 +3305,7 @@ return {
         SWEATERVEST = "Looks cozy... for now.",
         SWEETPOTATO = "Sweet potato, nature's sugary delight. A vegetable with an identity crisis.",
         SWEETTEA = "Honeyed nectar, the world's fleeting solace.",
-        SWORD_LUNARPLANT = "I'd carry it, but I'm allergic to moon dust.",
+        SWORD_LUNARPLANT = "Moonlit blade, sharp and mystical.",
         TABLE_WINTERS_FEAST = {
             BURNT = "Pathetic attempt at festive warmth.",
             GENERIC = "A table full of tempting treats. Don't mind if I do.",
@@ -3915,7 +3915,7 @@ return {
         WORMWOOD = {
             ATTACKER = "Those thorns won't stop me from harvesting honey, %s.",
             FIRESTARTER = "Why don't you embrace your fiery side, %s?",
-            GENERIC = "What did I do to deserve this, %s?",
+            GENERIC = "Nature’s buddy, always thriving, %s!",
             GHOST = "Creepy Flora Sprout, huh?",
             MURDERER = "Time for a bee-sting detox, %s!",
             REVIVER = "Bring life back, planty boy. You've got this, %s."

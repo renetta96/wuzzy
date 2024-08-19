@@ -83,13 +83,6 @@ local function retargetfn(inst)
     return FindTarget(inst, TUNING.MUTANT_BEE_TARGET_DIST)
 end
 
-local function OnSpawnedFromHaunt(inst)
-    if inst.components.hauntable ~= nil then
-        inst.components.hauntable:Panic()
-    end
-end
-
-
 local killerbrain = require("brains/mutantkillerbeebrain")
 local function killerbee()
     local inst = metapis_common.CommonInit(
@@ -113,7 +106,6 @@ local function killerbee()
     inst:SetBrain(killerbrain)
 
     MakeHauntablePanic(inst)
-    inst:ListenForEvent("spawnedfromhaunt", OnSpawnedFromHaunt)
 
     return inst
 end

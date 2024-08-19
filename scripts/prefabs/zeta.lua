@@ -33,8 +33,14 @@ end
 
 local function GetChildPrefab(inst)
   local maxchildren = inst.components.beesummoner.maxchildren
+
+  local basechild = "mutantkillerbee"
+  if inst.components.skilltreeupdater:IsActivated("zeta_metapis_mimic_1") then
+    basechild = "mutantmimicbee"
+  end
+
   local expect = {
-    mutantkillerbee = maxchildren,
+    [basechild] = maxchildren,
     mutantdefenderbee = 0,
     mutantrangerbee = 0,
     mutantassassinbee = 0,
@@ -42,12 +48,12 @@ local function GetChildPrefab(inst)
     mutanthealerbee = 0,
   }
 
-  local cansummon = {"mutantkillerbee"}
+  local cansummon = {basechild}
 
   for prefab, v in pairs(expect) do
-    if prefab ~= "mutantkillerbee" and CanSummon(inst, prefab) then
+    if prefab ~= basechild and CanSummon(inst, prefab) then
       expect[prefab] = expect[prefab] + 1
-      expect["mutantkillerbee"] = expect["mutantkillerbee"] - 1
+      expect[basechild] = expect[basechild] - 1
       table.insert(cansummon, prefab)
     end
   end
