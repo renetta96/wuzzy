@@ -384,7 +384,7 @@ end
 -- I only want to isolate and make changes to Wuzzy stategraph
 -- and try to do it every second (with cached flag) because state graph can be cleared and set to anything any time
 local function ModifySG(inst)
-  if inst and inst.sg ~= nil and inst.sg.sg ~= nil and inst.sg.sg._modified_zeta == nil then
+  if inst.sg ~= nil and inst.sg.sg ~= nil and inst.sg.sg._modified_zeta == nil then
     if inst.sg.sg.name == "wilson" then
       ModifySGMaster(inst.sg.sg)
     end
@@ -394,6 +394,18 @@ local function ModifySG(inst)
     end
 
     inst.sg.sg._modified_zeta = true
+  end
+end
+
+local function tryModifySG(inst)
+  if inst ~= ThePlayer then
+    print("NOT THE PLAYER")
+    return
+  end
+
+  inst:DoTaskInTime(0, ModifySG)
+  if inst._modifysgtask == nil then
+    inst._modifysgtask = inst:DoPeriodicTask(1, ModifySG)
   end
 end
 
@@ -410,11 +422,7 @@ local common_postinit = function(inst)
 
   inst.components.talker.colour = Vector3(.9, .9, .3)
 
-  inst:DoTaskInTime(0, ModifySG)
-  if inst._modifysgtask == nil then
-    inst._modifysgtask = inst:DoPeriodicTask(1, ModifySG)
-  end
-
+  inst:DoTaskInTime(0, tryModifySG)
 
   if not TheNet:IsDedicated() then
     inst._activefx = {}
