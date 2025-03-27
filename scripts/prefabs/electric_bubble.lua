@@ -1,3 +1,6 @@
+local metapis_common = require "metapis_common"
+local BarrackModifier = metapis_common.BarrackModifier
+
 local assets = {
     Asset("ANIM", "anim/electric_bubble.zip")
 }
@@ -204,7 +207,7 @@ local function wisp()
     inst.components.projectile:SetOnThrownFn(OnThrownWisp)
 
     inst:AddComponent("weapon")
-    inst.components.weapon:SetDamage(40)
+    inst.components.weapon:SetDamage(TUNING.MUTANT_BEE_RANGED_WISP_DAMAGE)
 
     inst:DoTaskInTime(10, inst.Remove)
 
@@ -225,6 +228,8 @@ end
 local function OnHitGround(inst)
     if inst._target ~= nil and inst._owner ~= nil then
         local w = SpawnPrefab("electric_wisp")
+        w.components.weapon:SetDamage(BarrackModifier(inst._owner, TUNING.MUTANT_BEE_RANGED_WISP_DAMAGE))
+
         w.Transform:SetPosition(inst.Transform:GetWorldPosition())
         w.components.projectile.overridestartpos = inst:GetPosition()
         w.components.projectile:Throw(inst._owner, inst._target)

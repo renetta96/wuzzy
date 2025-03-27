@@ -1,0 +1,72 @@
+ideas
+
+summoner style :
+(2p) either
+- Tyrant I: buff charater, nerf minions, affect other skills
+- Tyrant II: on receive any damage, has % to deal 10x that damage to a nearby minion. Higher % at lower health, reaching 100% at 30% hp
+or
+- Shepherd I: buff minions, nerf character, affect other skills
+- Shepherd II: enrage X minions on attacked, stronger buff when low health
+
+(2p)
+- summon rotation: instead of round robin, fix the same type every 20s
+- swarm: deal more damage as more same type around, compared to others => rewarding building fewer variants, or the above
+
+Metapis (only unlock at most 3)
+
+(8p)
+- mutant: 
+	. I
+	. II
+- shadow: 
+	. I
+	. II
+	. III => merge into II
+- moonguard:
+	. I
+	. II
+- voltwing
+	. I
+	. II
+- mimic
+	. I ??: if no other types around => what to copy? maybe do nothing => weaker 
+	. II ??: swarm - deal more damage as more mimics around, any other minion die => % to spawn a lesser mimic
+- alchemist
+	. I ??
+	. II ??
+
+Honeysmith (9p)
+- melissa
+	. I
+	. II
+	. III
+- honeysuit
+	. I
+	. II
+	. III
+- (new) totem
+	. I
+	. II
+	. III
+
+
+Affinity (2p)
+- shadow
+- lunar
+
+melissa ideas:
+- slam attack every x attacks
+- magic enhance: target minion to swap place, consume durability
+- magic enhance: target minion to explode, dealing huge damange
+- magic enhance: target aoe to assemble bigger minion
+
+
+honeysuit ideas:
+- tyranny: direct damage to a random bee, immediately kill the bee. maybe only below % HP, and % trigger, recover health
+- leadership: enrage X nearby bees, incr damage, atk speed
+- upon absorbing X damage => aoe damage? some effect? stinger projectile around? 
+
+totem ideas
+- fire stingers
+- fire honey traps
+- buff 

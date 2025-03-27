@@ -11,7 +11,6 @@ local SendRPCToClient = GLOBAL.SendRPCToClient
 local CLIENT_RPC = GLOBAL.CLIENT_RPC
 local PREFAB_SKINS = GLOBAL.PREFAB_SKINS
 local PREFAB_SKINS_IDS = GLOBAL.PREFAB_SKINS_IDS
--- local SKIN_AFFINITY_INFO = GLOBAL.require("skin_affinity_info")
 local SkillTreeDefs = require("prefabs/skilltree_defs")
 
 PrefabFiles = {
@@ -40,6 +39,7 @@ PrefabFiles = {
     "healing_fx",
     "icenova_fx",
     "poison_fx",
+    "metapis_buffs",
 }
 
 Assets = {
@@ -128,6 +128,9 @@ TUNING.ZETA_HEALTH = 175
 TUNING.ZETA_SANITY = 100
 TUNING.ZETA_HUNGER = 150
 TUNING.OZZY_DEFAULT_DAMAGE_MULTIPLIER = 0.75
+TUNING.OZZY_TYRANT_DAMAGE_MULTIPLIER = 1.5
+TUNING.OZZY_SHEPHERD_DAMAGE_MULTIPLIER = 0.6
+
 TUNING.OZZY_HUNGER_SCALE = 1
 TUNING.OZZY_NUM_POLLENS_PER_HONEY = 10
 TUNING.OZZY_SPRING_SPEED_MULTIPLIER = 1.15
@@ -138,6 +141,9 @@ TUNING.OZZY_MAX_BEES_STORE = 6
 TUNING.OZZY_HONEYED_FOOD_ABSORPTION = 1.25
 TUNING.OZZY_NON_HONEYED_FOOD_ABSORPTION = 0.5
 TUNING.OZZY_PICK_FLOWER_SANITY = -3 * TUNING.SANITY_TINY
+TUNING.OZZY_TYRANT_REDIRECT_DAMAGE_MINIONS = 3
+TUNING.OZZY_SHEPHERD_BUFF_MINIONS = 5
+TUNING.OZZY_ENRAGE_BUFF_DURATION = 10
 
 TUNING.GAMEMODE_STARTING_ITEMS.DEFAULT.ZETA = {
     "honeycomb",
@@ -159,6 +165,7 @@ TUNING.MUTANT_BEE_RANGED_TARGET_DIST = 10
 TUNING.MUTANT_BEE_RANGED_DAMAGE = 8
 TUNING.MUTANT_BEE_RANGED_ATK_PERIOD = 3
 TUNING.MUTANT_BEE_RANGED_HEALTH = 150
+TUNING.MUTANT_BEE_RANGED_WISP_DAMAGE = 40
 
 TUNING.MUTANT_BEE_DEFENDER_HEALTH = 400
 TUNING.MUTANT_BEE_DEFENDER_DAMAGE = 10
@@ -207,6 +214,8 @@ TUNING.MUTANT_BEE_HEALER_HEAL_ORB_COOLDOWN = 12
 TUNING.MUTANT_BEE_HEALER_MAX_HEAL_ORB_MIN_DISTANCE = 2
 TUNING.MUTANT_BEE_HEALER_MAX_HEAL_ORB_MAX_DISTANCE = 5
 
+TUNING.MUTANT_BEE_RAGED_DAMAGE_BUFF = 1.25
+
 -- Mutant beehive stats
 TUNING.MUTANT_BEEHIVE_DEFAULT_EMERGENCY_BEES = 0
 TUNING.MUTANT_BEEHIVE_EMERGENCY_BEES_PER_PLAYER = 500
@@ -225,7 +234,7 @@ TUNING.MUTANT_BEEHIVE_NUM_POLLENS_PER_HONEY = 5
 TUNING.MUTANT_BEEHIVE_MASTER_SLAVE_DIST = 10
 TUNING.MUTANT_BEEHIVE_CHILDREN_PER_SLAVE = 1
 TUNING.MUTANT_BEEHIVE_CHILDREN_PER_BARRACK = 2
-TUNING.MUTANT_BEEHIVE_BARRACK_MODIFIER = 0.03
+TUNING.MUTANT_BEEHIVE_BARRACK_MODIFIER = 0.05
 
 -- Armor honey
 TUNING.ARMORHONEY_MAX_ABSORPTION = 0.7
@@ -292,27 +301,27 @@ RegisterSkilltreeIconsAtlas("images/skilltree_zeta_icons.xml", "zeta_metapis_ass
 RegisterSkilltreeIconsAtlas("images/skilltree_zeta_icons.xml", "zeta_metapis_assassin_2.tex")
 RegisterSkilltreeIconsAtlas("images/skilltree_zeta_icons.xml", "zeta_metapis_shadow_1.tex")
 RegisterSkilltreeIconsAtlas("images/skilltree_zeta_icons.xml", "zeta_metapis_shadow_2.tex")
-RegisterSkilltreeIconsAtlas("images/skilltree_zeta_icons.xml", "zeta_metapis_shadow_3.tex")
 RegisterSkilltreeIconsAtlas("images/skilltree_zeta_icons.xml", "zeta_metapis_defender_1.tex")
 RegisterSkilltreeIconsAtlas("images/skilltree_zeta_icons.xml", "zeta_metapis_defender_2.tex")
 RegisterSkilltreeIconsAtlas("images/skilltree_zeta_icons.xml", "zeta_metapis_ranger_1.tex")
 RegisterSkilltreeIconsAtlas("images/skilltree_zeta_icons.xml", "zeta_metapis_ranger_2.tex")
 RegisterSkilltreeIconsAtlas("images/skilltree_zeta_icons.xml", "zeta_metapis_mimic_1.tex")
+RegisterSkilltreeIconsAtlas("images/skilltree_zeta_icons.xml", "zeta_metapimancer_tyrant_1.tex")
+RegisterSkilltreeIconsAtlas("images/skilltree_zeta_icons.xml", "zeta_metapimancer_tyrant_2.tex")
+RegisterSkilltreeIconsAtlas("images/skilltree_zeta_icons.xml", "zeta_metapimancer_shepherd_1.tex")
+RegisterSkilltreeIconsAtlas("images/skilltree_zeta_icons.xml", "zeta_metapimancer_shepherd_2.tex")
+RegisterSkilltreeIconsAtlas("images/skilltree_zeta_icons.xml", "zeta_honeysmith_melissa_1.tex")
 
 CreateSkillTree()
 
 
---Skins api
--- modimport("scripts/tools/skins_api")
 PREFAB_SKINS["zeta"] = {
     "zeta_none"
 }
-PREFAB_SKINS_IDS = {}
-for prefab, skins in pairs(PREFAB_SKINS) do
-    PREFAB_SKINS_IDS[prefab] = {}
-    for k, v in pairs(skins) do
-        PREFAB_SKINS_IDS[prefab][v] = k
-    end
+
+PREFAB_SKINS_IDS["zeta"] = {}
+for k, v in pairs(PREFAB_SKINS["zeta"]) do
+    PREFAB_SKINS_IDS["zeta"][v] = k
 end
 
 -- Add mod character to mod character list. Also specify a gender. Possible genders are MALE, FEMALE, ROBOT, NEUTRAL, and PLURAL.
@@ -1063,3 +1072,197 @@ local function PlayerPostConstruct(inst)
 end
 
 AddPlayerPostInit(PlayerPostConstruct)
+
+local State = GLOBAL.State
+local TimeEvent = GLOBAL.TimeEvent
+local EventHandler = GLOBAL.EventHandler
+local FRAMES = GLOBAL.FRAMES
+local EQUIPSLOTS = GLOBAL.EQUIPSLOTS
+
+local function spawn_land_fx(inst, target)
+    local distance = 1.1
+
+    if inst and target and inst:IsValid() and target:IsValid() then
+        local x1, y1, z1 = inst.Transform:GetWorldPosition()
+        local x2, y2, z2 = target.Transform:GetWorldPosition()
+
+        -- Compute direction vector from inst to target
+        local dir_x = x2 - x1
+        local dir_z = z2 - z1
+        local length = math.sqrt(dir_x * dir_x + dir_z * dir_z)
+
+        -- Normalize the direction vector
+        if length > 0 then
+            dir_x = dir_x / length
+            dir_z = dir_z / length
+        end
+
+        -- Calculate the spawn location at 'distance' from inst in the direction of the target
+        local spawn_x = x1 + dir_x * distance
+        local spawn_z = z1 + dir_z * distance
+
+        -- Spawn the prefab at the computed location
+        local spawned = SpawnPrefab("groundpound_fx")
+        if spawned then
+            spawned.Transform:SetPosition(spawn_x, 0, spawn_z)
+        end
+
+        inst.SoundEmitter:PlaySound("dontstarve_DLC001/creatures/bearger/groundpound")
+    end
+end
+
+local perform_atk_frame = 9
+AddStategraphState("wilson", State{
+    name = "attack_zeta_smash",
+    tags = { "attack", "notalking", "abouttoattack", "autopredict" },
+
+    onenter = function(inst)
+        if inst.components.combat:InCooldown() then
+            inst.sg:RemoveStateTag("abouttoattack")
+            inst:ClearBufferedAction()
+            inst.sg:GoToState("idle", true)
+            return
+        end
+
+        if inst.sg.laststate == inst.sg.currentstate then
+            inst.sg.statemem.chained = true
+        end
+
+        local buffaction = inst:GetBufferedAction()
+        local target = buffaction ~= nil and buffaction.target or nil
+        -- local equip = inst.components.inventory:GetEquippedItem(EQUIPSLOTS.HANDS)
+        inst.components.combat:SetTarget(target)
+        inst.components.combat:StartAttack()
+        inst.components.locomotor:Stop()
+
+        local cooldown = inst.components.combat.min_attack_period
+
+        inst.AnimState:PlayAnimation("pickaxe_pre")
+        inst.AnimState:PushAnimation("pickaxe_loop", false)
+        inst.SoundEmitter:PlaySound("dontstarve/wilson/attack_whoosh", nil, nil, true)
+
+        cooldown = math.max(cooldown, 21 * FRAMES)
+        inst.sg:SetTimeout(cooldown)
+        if target ~= nil then
+            inst.components.combat:BattleCry()
+            if target:IsValid() then
+                inst:FacePoint(target:GetPosition())
+                inst.sg.statemem.attacktarget = target
+                inst.sg.statemem.retarget = target
+            end
+        end
+    end,
+
+    ontimeout = function(inst)
+        inst.sg:RemoveStateTag("attack")
+        inst.sg:AddStateTag("idle")
+    end,
+
+    timeline = {
+        TimeEvent(perform_atk_frame * FRAMES, function(inst)
+            local buffaction = inst:GetBufferedAction()
+            local target = buffaction ~= nil and buffaction.target or nil
+            spawn_land_fx(inst, target)
+
+            local damagemultiplier = inst.components.combat.damagemultiplier
+            inst.components.combat.damagemultiplier = (damagemultiplier or 1) * 2.0
+            inst:PerformBufferedAction()
+            inst.components.combat.damagemultiplier = damagemultiplier
+            inst.sg:RemoveStateTag("abouttoattack")
+        end)
+    },
+
+    events =
+    {
+        EventHandler("equip", function(inst) inst.sg:GoToState("idle") end),
+        EventHandler("unequip", function(inst) inst.sg:GoToState("idle") end),
+        EventHandler("animqueueover", function(inst)
+            if inst.AnimState:AnimDone() then
+                inst.AnimState:PlayAnimation("pickaxe_pst")
+                inst.sg:GoToState("idle")
+            end
+        end),
+    },
+
+    onexit = function(inst)
+        inst.components.combat:SetTarget(nil)
+        if inst.sg:HasStateTag("abouttoattack") then
+            inst.components.combat:CancelAttack()
+        end
+    end,
+})
+
+AddStategraphState("wilson_client", State{
+    name = "attack_zeta_smash",
+    tags = { "attack", "notalking", "abouttoattack" },
+
+    onenter = function(inst)
+        local combat = inst.replica.combat
+        if combat:InCooldown() then
+            inst.sg:RemoveStateTag("abouttoattack")
+            inst:ClearBufferedAction()
+            inst.sg:GoToState("idle", true)
+            return
+        end
+
+        local cooldown = combat:MinAttackPeriod()
+        if inst.sg.laststate == inst.sg.currentstate then
+            inst.sg.statemem.chained = true
+        end
+        combat:StartAttack()
+        inst.components.locomotor:Stop()
+        -- local equip = inst.replica.inventory:GetEquippedItem(EQUIPSLOTS.HANDS)
+
+        inst.AnimState:PlayAnimation("pickaxe_pre")
+        inst.AnimState:PushAnimation("pickaxe_loop", false)
+        inst.SoundEmitter:PlaySound("dontstarve/wilson/attack_whoosh", nil, nil, true)
+        if cooldown > 0 then
+            cooldown = math.max(cooldown, 21 * FRAMES)
+        end
+
+        local buffaction = inst:GetBufferedAction()
+        if buffaction ~= nil then
+            inst:PerformPreviewBufferedAction()
+
+            if buffaction.target ~= nil and buffaction.target:IsValid() then
+                inst:FacePoint(buffaction.target:GetPosition())
+                inst.sg.statemem.attacktarget = buffaction.target
+                inst.sg.statemem.retarget = buffaction.target
+            end
+        end
+
+        if cooldown > 0 then
+            inst.sg:SetTimeout(cooldown)
+        end
+    end,
+
+    timeline = {
+        TimeEvent(perform_atk_frame * FRAMES, function(inst)
+            local buffaction = inst:GetBufferedAction()
+            local target = buffaction ~= nil and buffaction.target or nil
+
+            inst:ClearBufferedAction()
+            inst.sg:RemoveStateTag("abouttoattack")
+        end)
+    },
+
+    ontimeout = function(inst)
+        inst.sg:RemoveStateTag("attack")
+        inst.sg:AddStateTag("idle")
+    end,
+
+    events = {
+        EventHandler("animqueueover", function(inst)
+            if inst.AnimState:AnimDone() then
+                inst.AnimState:PlayAnimation("pickaxe_pst")
+                inst.sg:GoToState("idle")
+            end
+        end),
+    },
+
+    onexit = function(inst)
+        if inst.sg:HasStateTag("abouttoattack") then
+            inst.replica.combat:CancelAttack()
+        end
+    end,
+})

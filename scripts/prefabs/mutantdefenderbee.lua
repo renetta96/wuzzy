@@ -181,7 +181,17 @@ local function OnDefenderAttacked(inst, data)
 
     CauseFrostBite(attacker)
 
-    AddColdness(attacker)
+    if math.random() < 0.4 then
+        AddColdness(attacker)
+    end
+end
+
+local function calcMaxHealth(inst)
+    if inst.buffed then
+        return TUNING.MUTANT_BEE_DEFENDER_HEALTH + 250
+    end
+
+    return TUNING.MUTANT_BEE_DEFENDER_HEALTH
 end
 
 local function CheckDefenderUpgrade(inst, stage)
@@ -212,16 +222,14 @@ local function CheckDefenderUpgrade(inst, stage)
         inst:ListenForEvent("attacked", OnDefenderAttacked)
     end
 
-    inst.components.health:SetMaxHealth(BarrackModifier(inst, TUNING.MUTANT_BEE_DEFENDER_HEALTH))
-    inst.components.combat:SetDefaultDamage(BarrackModifier(inst, TUNING.MUTANT_BEE_DEFENDER_DAMAGE))
+    inst.components.health:SetMaxHealth(BarrackModifier(inst, calcMaxHealth(inst)))
+    inst:RefreshBaseDamage()
 
     return true
 end
 
 local function GuardianBuff(inst)
-    inst:DoTaskInTime(1, function()
-        inst.components.health:SetMaxHealth(BarrackModifier(inst, TUNING.MUTANT_BEE_DEFENDER_HEALTH) + 250)
-    end)
+    inst.components.health:SetMaxHealth(BarrackModifier(inst, calcMaxHealth(inst)))
 end
 
 local function retargetfn(inst)
@@ -281,7 +289,12 @@ local function defenderbee()
         return inst
     end
 
-    CommonMasterInit(inst, {notburnable = true, notfreezable = true, notprotectable = true, buff = GuardianBuff}, CheckDefenderUpgrade)
+    CommonMasterInit(inst,
+    {
+        notburnable = true, notfreezable = true, notprotectable = true,
+        buff = GuardianBuff, hitsymbol = "mane",
+        basedamagefn = function() return TUNING.MUTANT_BEE_DEFENDER_DAMAGE end
+    }, CheckDefenderUpgrade)
     inst.components.locomotor.walkspeed = 3
     inst.components.locomotor.pathcaps = {allowocean = true}
 
@@ -322,7 +335,6 @@ local function defenderbee()
     inst.components.combat:SetRange(TUNING.MUTANT_BEE_DEFENDER_ATTACK_RANGE)
     inst.components.combat:SetRetargetFunction(1, retargetfn)
     inst.components.combat.battlecryenabled = false
-    inst.components.combat.hiteffectsymbol = "mane"
 
     MakeSmallFreezableCharacter(inst, "mane")
     inst.components.freezable:SetResistance(8)

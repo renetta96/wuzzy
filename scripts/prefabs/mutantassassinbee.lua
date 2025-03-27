@@ -16,8 +16,16 @@ local prefabs = {
     "honey"
 }
 
+local function calcBaseDamage(inst)
+    if inst.buffed then
+        return TUNING.MUTANT_BEE_ASSSASIN_DAMAGE + 3
+    end
+
+    return TUNING.MUTANT_BEE_ASSSASIN_DAMAGE
+end
+
 local function AssassinBuff(inst)
-    inst.components.combat:SetDefaultDamage(TUNING.MUTANT_BEE_ASSSASIN_DAMAGE + 3)
+    inst:RefreshBaseDamage()
 end
 
 local function OnStealthAttack(inst, data)
@@ -26,7 +34,7 @@ local function OnStealthAttack(inst, data)
     end
 
     if data.stimuli and data.stimuli == "stealthattack" then
-        return
+        return -- avoid inf recursive
     end
 
     local target = data.target
@@ -41,7 +49,7 @@ local function OnStealthAttack(inst, data)
             nil,
             nil,
             "stealthattack",
-            TUNING.MUTANT_BEE_ASSASSIN_BACKSTAB_DAMAGE_MULT
+            damagemult
         )
     end
 end
@@ -71,7 +79,7 @@ local function CheckAssassinUpgrade(inst, stage)
     end
 
     inst.components.health:SetMaxHealth(BarrackModifier(inst, TUNING.MUTANT_BEE_ASSSASIN_HEALTH))
-    inst.components.combat:SetDefaultDamage(BarrackModifier(inst, TUNING.MUTANT_BEE_ASSSASIN_DAMAGE))
+    inst:RefreshBaseDamage()
 
     return true
 end
@@ -96,7 +104,7 @@ local function assassinbee()
     local inst = metapis_common.CommonInit(
     	"bee", "mutantassassinbee",
     	{"killer", "assassin", "scarytoprey"},
-        {buff = AssassinBuff, sounds = "killer"},
+        {buff = AssassinBuff, sounds = "killer", basedamagefn = calcBaseDamage},
     	CheckAssassinUpgrade)
 
     if not TheWorld.ismastersim then

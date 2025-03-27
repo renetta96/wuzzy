@@ -33,6 +33,8 @@ local function CheckHealerUpgrade(inst, stage)
   end
 
   inst.components.health:SetMaxHealth(BarrackModifier(inst, TUNING.MUTANT_BEE_HEALER_HEALTH))
+  inst:RefreshBaseDamage()
+
   inst._healamount = BarrackModifier(inst, TUNING.MUTANT_BEE_HEALER_HEAL_AMOUNT)
   inst._healcumatk = BarrackModifier(inst, TUNING.MUTANT_BEE_HEALER_HEAL_ATK_AMOUNT)
 
@@ -40,7 +42,7 @@ local function CheckHealerUpgrade(inst, stage)
 end
 
 local function HealerBuff(inst)
-    inst.components.combat:SetAttackPeriod(TUNING.MUTANT_BEE_ATTACK_PERIOD - 0.5)
+  inst.components.combat:SetAttackPeriod(TUNING.MUTANT_BEE_ATTACK_PERIOD - 0.5)
 end
 
 local function HealOrb(inst)
@@ -162,7 +164,7 @@ local function healerbee()
     "bee",
     "mutanthealerbee",
     {"healer", "killer", "scarytoprey"},
-    {buff = HealerBuff, sounds = "killer"},
+    {buff = HealerBuff, sounds = "killer", basedamagefn = function() return TUNING.MUTANT_BEE_HEALER_DAMAGE end},
     CheckHealerUpgrade
   )
 

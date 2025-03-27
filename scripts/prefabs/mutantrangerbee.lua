@@ -222,8 +222,7 @@ local function CheckRangerUpgrade(inst, stage)
     end
 
     inst.components.health:SetMaxHealth(BarrackModifier(inst, TUNING.MUTANT_BEE_RANGED_HEALTH))
-    inst.components.combat:SetDefaultDamage(BarrackModifier(inst, TUNING.MUTANT_BEE_RANGED_DAMAGE))
-    inst.weapon.components.weapon:SetDamage(inst.components.combat.defaultdamage)
+    inst:RefreshBaseDamage()
 
     return true
 end
@@ -237,7 +236,7 @@ local function rangerbee()
     	"bee",
     	"mutantrangerbee",
     	{"killer", "ranger", "scarytoprey"},
-    	{buff = RangerBuff, sounds = "killer"},
+    	{buff = RangerBuff, sounds = "killer", basedamagefn = function() return TUNING.MUTANT_BEE_RANGED_DAMAGE end},
     	CheckRangerUpgrade)
 
     inst.entity:AddLight()
@@ -268,8 +267,8 @@ local function rangerbee()
         weapon.entity:AddTransform()
         MakeInventoryPhysics(weapon)
         weapon:AddComponent("weapon")
-        weapon.components.weapon:SetDamage(inst.components.combat.defaultdamage)
-        weapon.components.weapon:SetRange(inst.components.combat.attackrange)
+        weapon.components.weapon:SetDamage(TUNING.MUTANT_BEE_RANGED_DAMAGE)
+        weapon.components.weapon:SetRange(TUNING.MUTANT_BEE_WEAPON_ATK_RANGE)
         weapon.components.weapon:SetProjectile("electric_bubble")
         weapon.components.weapon:SetElectric()
 

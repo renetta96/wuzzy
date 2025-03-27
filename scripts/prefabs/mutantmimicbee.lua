@@ -32,7 +32,7 @@ local function OnAttackOtherDefender(inst, data)
         return
     end
 
-    if target.components.freezable then
+    if target.components.freezable and math.random() < 0.2 then
         target.components.freezable:AddColdness(TUNING.MUTANT_BEE_DEFENDER_COLDNESS)
         target.components.freezable:SpawnShatterFX()
     end
@@ -40,11 +40,11 @@ local function OnAttackOtherDefender(inst, data)
     if target._icebreaker_end == nil then
         target._icebreaker_end = GetTime() + 10
 
-        target:ListenForEvent("unfreeze", function(inst)
+        target:ListenForEvent("unfreeze", function()
             if GetTime() <= target._icebreaker_end and target.components.health and not target.components.health:IsDead() then
                 if target._icebreaker_time == nil or target._icebreaker_time + 5 <= GetTime() then
                     -- print("ICE BREAKER")
-                    local delta = math.max(target.components.health.maxhealth * 0.01, 40)
+                    local delta = BarrackModifier(inst, math.max(target.components.health.maxhealth * 0.005, 40))
                     target.components.health:DoDelta(-delta)
                     target._icebreaker_time = GetTime()
                 end
@@ -339,7 +339,7 @@ local function CheckMimicUpgrade(inst, stage)
     end
 
     inst.components.health:SetMaxHealth(BarrackModifier(inst, TUNING.MUTANT_BEE_SOLDIER_HEALTH))
-    inst.components.combat:SetDefaultDamage(BarrackModifier(inst, TUNING.MUTANT_BEE_DAMAGE))
+    inst:RefreshBaseDamage()
 
     MakeMimic(inst)
 
@@ -360,7 +360,7 @@ local function mimicbee()
     	"bee",
     	"mutantmimicbee",
     	{"mimic", "killer", "scarytoprey"},
-    	{buff = MimicBuff, sounds = "killer"},
+    	{buff = MimicBuff, sounds = "killer", basedamagefn = function() return TUNING.MUTANT_BEE_DAMAGE end},
     	CheckMimicUpgrade)
 
     inst.Transform:SetScale(1.0, 1.0, 1.0)

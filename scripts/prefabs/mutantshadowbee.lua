@@ -93,6 +93,14 @@ local function OnShadowAttack(inst, data)
     end
 end
 
+local function calcBaseDamage(inst)
+    if inst.buffed then
+        return TUNING.MUTANT_BEE_SHADOW_DAMAGE + 3
+    end
+
+    return TUNING.MUTANT_BEE_SHADOW_DAMAGE
+end
+
 local function CheckShadowUpgrade(inst, stage)
     -- Add teleport
     if stage >= 2 then
@@ -105,7 +113,7 @@ local function CheckShadowUpgrade(inst, stage)
     end
 
     inst.components.health:SetMaxHealth(BarrackModifier(inst, TUNING.MUTANT_BEE_SHADOW_HEALTH))
-    inst.components.combat:SetDefaultDamage(BarrackModifier(inst, TUNING.MUTANT_BEE_SHADOW_DAMAGE))
+    inst:RefreshBaseDamage()
 
     local owner = inst:GetOwner()
     if owner and owner:HasTag("beemaster") then
@@ -120,7 +128,7 @@ local function CheckShadowUpgrade(inst, stage)
 end
 
 local function ShadowBuff(inst)
-    inst.components.combat:SetDefaultDamage(TUNING.MUTANT_BEE_SHADOW_DAMAGE + 3)
+    inst:RefreshBaseDamage()
 end
 
 local function retargetfn(inst)
@@ -182,7 +190,10 @@ local function shadowbee()
         "bee",
         "mutantshadowbee",
         {"shadowbee", "killer", "scarytoprey"},
-        {notburnable = true, notfreezable = true, notsleep = true, buff = ShadowBuff, sounds = "killer"},
+        {
+            notburnable = true, notfreezable = true, notsleep = true,
+            buff = ShadowBuff, sounds = "killer", basedamagefn = calcBaseDamage
+        },
         CheckShadowUpgrade
     )
 
@@ -226,12 +237,17 @@ local function lessershadowfn()
         "bee",
         "mutantshadowbee",
         {"lessershadowbee", "killer", "scarytoprey"},
-        {notburnable = true, notfreezable = true, notsleep = true, notprotectable = true, sounds = "killer"}
+        {
+            notburnable = true, notfreezable = true, notsleep = true, notprotectable = true,
+            sounds = "killer", basedamagefn = function() return TUNING.MUTANT_SHADOWLING_DAMAGE end
+        }
     )
 
     local r, g, b = inst.AnimState:GetMultColour()
     inst.AnimState:SetMultColour(r, g, b, 0.6)
     inst.Transform:SetScale(.7, .7, .7)
+
+    inst:AddTag("lesserminion")
 
     if not TheWorld.ismastersim then
         return inst

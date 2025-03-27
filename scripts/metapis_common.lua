@@ -60,7 +60,6 @@ local function FindEnemies(inst, dist, checkfn)
         TARGET_MUST_ONE_OF_TAGS
     )
 
-
     local validtargets = {}
     for i, e in ipairs(entities) do
         if inst.components.combat:CanTarget(e)
@@ -242,7 +241,7 @@ local function OnCommonInit(inst)
 
     local owner = inst:GetOwner()
     if owner and owner:HasTag("beemaster") then
-        if owner.components.skilltreeupdater:IsActivated("zeta_metapis_shadow_3") then
+        if owner.components.skilltreeupdater:IsActivated("zeta_metapis_shadow_2") then
             inst:ListenForEvent("death",
                 function(inst)
                     if math.random() <= TUNING.MUTANT_SHADOWLING_SPAWN_CHANCE then
@@ -416,9 +415,57 @@ local function MakeProtectable(inst)
     end
 end
 
+local function BarrackModifier(inst, v)
+    local numbarracks = inst._numbarracks or 0
+
+    local barrack_modifier = 0
+    if numbarracks > 0 then
+        -- add 1, which is the default modifier for having at least 1 barrack
+        barrack_modifier = 1 + (math.log(numbarracks) / math.log(1.5))
+    end
+
+    local owner = inst:GetOwner()
+    local leader_modifier = 1.0
+    if owner and owner:IsValid() and owner.components.skilltreeupdater then
+        if owner.components.skilltreeupdater:IsActivated("zeta_metapimancer_tyrant_1") then
+            leader_modifier = 0.5
+        elseif owner.components.skilltreeupdater:IsActivated("zeta_metapimancer_shepherd_1") then
+            leader_modifier = 1.25
+        end
+    end
+
+    return v * (1.0 + TUNING.MUTANT_BEEHIVE_BARRACK_MODIFIER * barrack_modifier) * leader_modifier
+end
+
+local function CalcBaseDamage(inst)
+    local basedamage = inst._basedamagefn(inst)
+
+    if inst.raged_buff ~= nil and inst.raged_buff then
+        basedamage = basedamage * TUNING.MUTANT_BEE_RAGED_DAMAGE_BUFF
+    end
+
+    return basedamage
+end
+
+local function RefreshBaseDamage(inst)
+    local basedamage = CalcBaseDamage(inst)
+
+    inst.components.combat:SetDefaultDamage(BarrackModifier(inst, basedamage))
+
+    -- ranged bee
+    if inst.weapon ~= nil then
+        inst.weapon.components.weapon:SetDamage(BarrackModifier(inst, basedamage))
+    end
+end
+
 local function CommonMasterInit(inst, options, checkupgradefn)
     inst:AddComponent("inspectable")
     inst:AddComponent("knownlocations")
+    inst:AddComponent("debuffable")
+
+    local hitsymbol = options ~= nil and options.hitsymbol ~= nil and options.hitsymbol or "body"
+
+    inst.components.debuffable:SetFollowSymbol(hitsymbol, 0, 0, 0)
 
     inst:AddComponent("locomotor") -- locomotor must be constructed before the stategraph
     inst.components.locomotor:EnableGroundSpeedMultiplier(false)
@@ -431,17 +478,17 @@ local function CommonMasterInit(inst, options, checkupgradefn)
     inst.components.lootdropper.chancerandomloot = 0.5
 
     if not (options and options.notburnable) then
-        MakeSmallBurnableCharacter(inst, "body", Vector3(0, -1, 1))
+        MakeSmallBurnableCharacter(inst, hitsymbol, Vector3(0, -1, 1))
     end
 
     if not (options and options.notfreezable) then
-        MakeTinyFreezableCharacter(inst, "body", Vector3(0, -1, 1))
+        MakeTinyFreezableCharacter(inst, hitsymbol, Vector3(0, -1, 1))
     end
 
     inst:AddComponent("health")
     inst:AddComponent("combat")
     inst.components.combat:SetRange(TUNING.BEE_ATTACK_RANGE)
-    inst.components.combat.hiteffectsymbol = "body"
+    inst.components.combat.hiteffectsymbol = hitsymbol
     inst.components.combat:SetPlayerStunlock(PLAYERSTUNLOCK.RARELY)
     inst.components.combat:SetKeepTargetFunction(keeptargetfn)
 
@@ -454,6 +501,9 @@ local function CommonMasterInit(inst, options, checkupgradefn)
         inst.components.sleeper:SetSleepTest(ShouldSleep)
         inst.components.sleeper:SetWakeTest(ShouldWakeUp)
     end
+
+    assert(options ~= nil and options.basedamagefn ~= nil) -- required
+    inst._basedamagefn = options.basedamagefn
 
     inst:ListenForEvent("attacked", OnAttacked)
     TrackLastCombatTime(inst)
@@ -472,6 +522,7 @@ local function CommonMasterInit(inst, options, checkupgradefn)
         end
     end
     inst.GetOwner = GetOwner
+    inst.RefreshBaseDamage = RefreshBaseDamage
 
     inst:DoTaskInTime(0, OnCommonInit)
 
@@ -538,13 +589,6 @@ local function CommonInit(bank, build, tags, options, checkupgradefn)
 
     return inst
 end
-
-local function BarrackModifier(inst, v)
-    local numbarracks = inst._numbarracks or 0
-
-    return v * (1.0 + TUNING.MUTANT_BEEHIVE_BARRACK_MODIFIER * numbarracks)
-end
-
 
 local function IsPoisonable(guy)
     return guy and guy:IsValid() and guy.components.health

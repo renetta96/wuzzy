@@ -266,7 +266,7 @@ end
 local function OnBeeQueenKilled(inst)
   local numkilled = inst._numbeequeenkilled ~= nil and inst._numbeequeenkilled or 0
 
-  if numkilled >= 3 and inst.components.builder and not inst.components.builder:KnowsRecipe("mutanthealerhive") then
+  if numkilled >= 2 and inst.components.builder and not inst.components.builder:KnowsRecipe("mutanthealerhive") then
     inst.components.builder:UnlockRecipe("mutanthealerhive")
   end
 end
@@ -321,17 +321,100 @@ local function OnAttackOther(inst, data)
   end
 end
 
+local function ModifySGClient(sg)
+  print("GOT CLIENT SG ", sg.name)
+  local atk_handler = sg.actionhandlers[ACTIONS.ATTACK]
+  local atk_deststate_fn = atk_handler.deststate
+
+  local new_handler = ActionHandler(
+    ACTIONS.ATTACK,
+    function(inst, action, ...)
+      local state = atk_deststate_fn(inst, action, ...)
+      local equip = inst.replica.inventory:GetEquippedItem(EQUIPSLOTS.HANDS)
+      local rider = inst.replica.rider
+
+      if inst.prefab == "zeta" and state == "attack" and
+        inst.components.skilltreeupdater ~= nil and
+        inst.components.skilltreeupdater:IsActivated("zeta_honeysmith_melissa_1") and
+        not (rider ~= nil and rider:IsRiding()) and
+        equip ~= nil and equip:HasTag("beemaster_weapon") and
+        equip.ShouldSmashClient ~= nil and equip:ShouldSmashClient()
+      then
+          return "attack_zeta_smash"
+      end
+
+      return state
+    end,
+    atk_handler.condition
+  )
+
+  sg.actionhandlers[new_handler.action] = new_handler
+end
+
+local function ModifySGMaster(sg)
+  print("GOT MASTER SG ", sg.name)
+  local atk_handler = sg.actionhandlers[ACTIONS.ATTACK]
+  local atk_deststate_fn = atk_handler.deststate
+
+  local new_handler = ActionHandler(
+    ACTIONS.ATTACK,
+    function(inst, action, ...)
+      local state = atk_deststate_fn(inst, action, ...)
+      local weapon = inst.components.combat ~= nil and inst.components.combat:GetWeapon() or nil
+
+      if inst.prefab == "zeta" and state == "attack" and
+        inst.components.skilltreeupdater ~= nil and
+        inst.components.skilltreeupdater:IsActivated("zeta_honeysmith_melissa_1") and
+        not (inst.components.rider ~= nil and inst.components.rider:IsRiding()) and
+        weapon ~= nil and weapon:HasTag("beemaster_weapon") and
+        weapon.ShouldSmash ~= nil and weapon:ShouldSmash()
+      then
+        return "attack_zeta_smash"
+      end
+
+      return state
+    end,
+    atk_handler.condition
+  )
+
+  sg.actionhandlers[new_handler.action] = new_handler
+end
+
+-- because I don't want to affect other characters' stategraph.
+-- I only want to isolate and make changes to Wuzzy stategraph
+-- and try to do it every second (with cached flag) because state graph can be cleared and set to anything any time
+local function ModifySG(inst)
+  if inst and inst.sg ~= nil and inst.sg.sg ~= nil and inst.sg.sg._modified_zeta == nil then
+    if inst.sg.sg.name == "wilson" then
+      ModifySGMaster(inst.sg.sg)
+    end
+
+    if inst.sg.sg.name == "wilson_client" then
+      ModifySGClient(inst.sg.sg)
+    end
+
+    inst.sg.sg._modified_zeta = true
+  end
+end
+
 -- This initializes for both the server and client. Tags can be added here.
 local common_postinit = function(inst)
   inst.soundsname = "zeta"
   inst.carolsoundoverride = "dontstarve/characters/wilson/carol"
+
   -- Minimap icon
-  inst.MiniMapEntity:SetIcon( "zeta.tex" )
+  inst.MiniMapEntity:SetIcon("zeta.tex")
   inst:AddTag("beemutant")
   inst:AddTag("insect")
   inst:AddTag("beemaster")
 
   inst.components.talker.colour = Vector3(.9, .9, .3)
+
+  inst:DoTaskInTime(0, ModifySG)
+  if inst._modifysgtask == nil then
+    inst._modifysgtask = inst:DoPeriodicTask(1, ModifySG)
+  end
+
 
   if not TheNet:IsDedicated() then
     inst._activefx = {}
@@ -347,6 +430,94 @@ local function OnLoad(inst, data)
   if data ~= nil then
     inst._numbeequeenkilled = data._numbeequeenkilled or 0
   end
+end
+
+local function OnSkillChange(inst)
+  local skilltreeupdater = inst.components.skilltreeupdater
+  if not skilltreeupdater then
+    return
+  end
+
+  if skilltreeupdater:IsActivated("zeta_metapimancer_tyrant_1") then
+    inst.components.health:SetMaxHealth(math.floor(TUNING.ZETA_HEALTH * 1.5))
+    inst.components.hunger:SetMax(math.floor(TUNING.ZETA_HUNGER * 1.5))
+    inst.components.sanity:SetMax(math.floor(TUNING.ZETA_SANITY * 1.5))
+    inst.components.combat.damagemultiplier = TUNING.OZZY_TYRANT_DAMAGE_MULTIPLIER
+  elseif skilltreeupdater:IsActivated("zeta_metapimancer_shepherd_1") then
+    inst.components.health:SetMaxHealth(math.ceil(TUNING.ZETA_HEALTH * 0.75))
+    inst.components.hunger:SetMax(math.ceil(TUNING.ZETA_HUNGER * 0.75))
+    inst.components.sanity:SetMax(math.ceil(TUNING.ZETA_SANITY * 0.75))
+    inst.components.combat.damagemultiplier = TUNING.OZZY_SHEPHERD_DAMAGE_MULTIPLIER
+  else
+    inst.components.health:SetMaxHealth(TUNING.ZETA_HEALTH)
+    inst.components.hunger:SetMax(TUNING.ZETA_HUNGER)
+    inst.components.sanity:SetMax(TUNING.ZETA_SANITY)
+    inst.components.combat.damagemultiplier = TUNING.OZZY_DEFAULT_DAMAGE_MULTIPLIER
+  end
+end
+
+local function OnActivateSkill(inst, data)
+  OnSkillChange(inst)
+end
+
+local function OnDeactivateSkill(inst, data)
+  OnSkillChange(inst)
+end
+
+local function OnSkillTreeInitialized(inst)
+  OnSkillChange(inst)
+end
+
+local function calcChance(inst, minchance, maxchance, minthreshold)
+  local healthpercent = inst.components.health:GetPercent()
+
+  if healthpercent <= minthreshold then
+    return maxchance
+  end
+
+  return Lerp(minchance, maxchance, (1.0 - healthpercent) / (1.0 - minthreshold))
+end
+
+local function calcNumEnrageMinions(inst)
+  local healthpercent = inst.components.health:GetPercent()
+
+  if healthpercent <= 0.33 then
+    return 8
+  elseif healthpercent <= 0.67 then
+    return 6
+  else
+    return 4
+  end
+end
+
+local function findNearbyMinion(inst)
+  return FindEntity(
+    inst,
+    10,
+    function(guy)
+      return not guy.components.health:IsDead() and guy:IsValid() and guy:GetOwner() == inst
+    end,
+    {"beemutant", "_combat", "_health"}, {"INLIMBO", "lesserminion"}, {"beemutantminion"})
+end
+
+local function findNearbyMinions(inst, num)
+  local x, y, z = inst.Transform:GetWorldPosition()
+  local minions = TheSim:FindEntities(
+    x, y, z,
+    10,
+    {"beemutant", "_combat", "_health"}, {"INLIMBO", "lesserminion"}, {"beemutantminion"})
+
+  local res = {}
+  local cnt = 0
+  for i, e in ipairs(minions) do
+    table.insert(res, e)
+    cnt = cnt + 1
+    if cnt >= num then
+      break
+    end
+  end
+
+  return res
 end
 
 -- This initializes for the server only. Components are added here.
@@ -388,6 +559,54 @@ local master_postinit = function(inst)
   inst._poisonatk = false
   inst.EnablePoisonAttack = EnablePoisonAttack
   inst:ListenForEvent("onattackother", OnAttackOther)
+
+  inst:DoTaskInTime(0, ModifySG)
+  if inst._modifysgtask == nil then
+    inst._modifysgtask = inst:DoPeriodicTask(1, ModifySG)
+  end
+
+  inst:ListenForEvent("onactivateskill_server", OnActivateSkill)
+  inst:ListenForEvent("ondeactivateskill_server", OnDeactivateSkill)
+  inst:ListenForEvent("ms_skilltreeinitialized", OnSkillTreeInitialized)
+
+  local oldDoDelta = inst.components.health.DoDelta
+  inst.components.health.DoDelta = function(comp, amount, ...)
+    if amount < 0 then -- taking damage from any source
+      local skilltreeupdater = inst.components.skilltreeupdater
+
+      if skilltreeupdater:IsActivated("zeta_metapimancer_tyrant_2") and math.random() <= calcChance(inst, 0.25, 1.0, 0.3) then
+        local minions = findNearbyMinions(inst, TUNING.OZZY_TYRANT_REDIRECT_DAMAGE_MINIONS)
+
+        if #minions >= TUNING.OZZY_TYRANT_REDIRECT_DAMAGE_MINIONS then
+          for i, m in ipairs(minions) do
+            -- print("DIRECT DAMAGE ", m)
+            m.components.health:DoDelta(10 * amount)
+            local explode_fx = SpawnPrefab("explode_small")
+            if explode_fx ~= nil then
+              explode_fx.entity:AddFollower():FollowSymbol(
+                m.GUID,
+                m.components.combat.hiteffectsymbol,
+                0, 0, 0)
+            end
+          end
+
+          return 0
+        end
+      end
+
+      if skilltreeupdater:IsActivated("zeta_metapimancer_shepherd_2") and math.random() <= calcChance(inst, 0.2, 0.5, 0.3) then
+        local minions = findNearbyMinions(inst, TUNING.OZZY_SHEPHERD_BUFF_MINIONS)
+
+        for i, m in ipairs(minions) do
+          m.components.debuffable:AddDebuff("metapis_haste_buff", "metapis_haste_buff")
+          m.components.debuffable:AddDebuff("metapis_rage_buff", "metapis_rage_buff")
+        end
+      end
+    end
+
+    -- default
+    return oldDoDelta(comp, amount, ...)
+  end
 
   inst.OnSave = OnSave
   inst.OnLoad = OnLoad

@@ -25,7 +25,7 @@ local function workerbee()
     	"bee",
     	"mutantworkerbee",
     	{"worker", "pollinator"},
-    	{ sounds = "worker" },
+    	{ sounds = "worker", basedamagefn = function() return TUNING.MUTANT_BEE_DAMAGE end },
     	CheckWorkerUpgrade
     )
 

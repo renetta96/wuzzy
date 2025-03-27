@@ -14,45 +14,6 @@ local prefabs = {
     "honey"
 }
 
--- local HEAL_IGNORE_TAGS = {"INLIMBO", "soldier"}
--- local HEAL_MUST_ONE_OF_TAGS = {"beemutant", "beemaster"}
--- local TARGET_MUST_TAGS = {"_combat", "_health"}
-
--- local function HealAllies(inst, amount)
---     local x, y, z = inst.Transform:GetWorldPosition()
---     local allies =
---         TheSim:FindEntities(
---         x,
---         y,
---         z,
---         TUNING.MUTANT_BEE_SOLDIER_HEAL_DIST,
---         TARGET_MUST_TAGS,
---         HEAL_IGNORE_TAGS,
---         HEAL_MUST_ONE_OF_TAGS
---     )
-
---     for i, ally in ipairs(allies) do
---         if
---             ally:IsValid() and ally.components.health and not ally.components.health:IsDead() and
---                 ally.components.locomotor and
---                 ally.components.combat and
---                 not IsAlly(ally.components.combat.target)
---          then
---             ally.components.health:DoDelta(amount)
---         end
---     end
--- end
-
-
--- local function OnAttackRegen(inst, data)
---     if inst.components.health then
---         local amount = Lerp(1, 5, 1 - inst.components.health:GetPercent())
---         inst.components.health:DoDelta(amount)
-
---         HealAllies(inst, amount / 2)
---     end
--- end
-
 local function CounterAttack(inst)
     if inst:IsValid() and math.random() <= BarrackModifier(inst, TUNING.MUTANT_BEE_SOLDIER_COUNTER_ATK_CHANCE) then
         -- print("COUNTER ATTACK")
@@ -70,7 +31,7 @@ local function CheckSoldierUpgrade(inst, stage)
     end
 
     inst.components.health:SetMaxHealth(BarrackModifier(inst, TUNING.MUTANT_BEE_SOLDIER_HEALTH))
-    inst.components.combat:SetDefaultDamage(BarrackModifier(inst, TUNING.MUTANT_BEE_DAMAGE))
+    inst:RefreshBaseDamage()
 
     return true
 end
@@ -89,7 +50,7 @@ local function killerbee()
     	"bee",
     	"mutantsoldierbee",
     	{"soldier", "killer", "scarytoprey"},
-    	{buff = SoldierBuff, sounds = "killer"},
+    	{buff = SoldierBuff, sounds = "killer", basedamagefn = function() return TUNING.MUTANT_BEE_DAMAGE end},
     	CheckSoldierUpgrade)
 
     if not TheWorld.ismastersim then
