@@ -552,24 +552,24 @@ end
 
 AddPrefabPostInit("wasphive", WaspHivePostInit)
 
-local function RangerHiveBlueprintPostInit(prefab)
-    if not GLOBAL.TheWorld.ismastersim then
-        return
-    end
+-- local function RangerHiveBlueprintPostInit(prefab)
+--     if not GLOBAL.TheWorld.ismastersim then
+--         return
+--     end
 
-    if prefab.components.teacher then
-        local oldTeach = prefab.components.teacher.Teach
-        prefab.components.teacher.Teach = function(comp, target, ...)
-            if target and not target:HasTag("beemaster") then
-                return false, "CANTLEARN"
-            end
+--     if prefab.components.teacher then
+--         local oldTeach = prefab.components.teacher.Teach
+--         prefab.components.teacher.Teach = function(comp, target, ...)
+--             if target and not target:HasTag("beemaster") then
+--                 return false, "CANTLEARN"
+--             end
 
-            return oldTeach(comp, target, ...)
-        end
-    end
-end
+--             return oldTeach(comp, target, ...)
+--         end
+--     end
+-- end
 
-AddPrefabPostInit("mutantrangerhive_blueprint", RangerHiveBlueprintPostInit)
+-- AddPrefabPostInit("mutantrangerhive_blueprint", RangerHiveBlueprintPostInit)
 
 local function wrapRetargetFn(fn)
     return function(...)
@@ -776,33 +776,31 @@ AddCharacterRecipe(
         Ingredient("honeycomb", 1),
         Ingredient("cookiecuttershell", 8)
     },
-    TECH.LOST,
+    TECH.HERMITCRABSHOP_FIVE,
     {
+        builder_tag = "beemaster",
         atlas = "images/inventoryimages/mutantrangerhive.xml",
         image = "mutantrangerhive.tex",
         placer = "mutantrangerhive_placer",
         testfn = slavehivetestfn
-    },
-    {
-        "CHARACTER"
     }
 )
 
-AddCharacterRecipe(
-    "hermitshop_mutantrangerhive_blueprint",
-    {
-        Ingredient("messagebottleempty", 3)
-    },
-    TECH.HERMITCRABSHOP_FIVE,
-    {
-        builder_tag = "beemaster",
-        image = "blueprint.tex",
-        product = "mutantrangerhive_blueprint"
-    }
-)
+-- AddCharacterRecipe(
+--     "hermitshop_mutantrangerhive_blueprint",
+--     {
+--         Ingredient("messagebottleempty", 3)
+--     },
+--     TECH.HERMITCRABSHOP_FIVE,
+--     {
+--         builder_tag = "beemaster",
+--         image = "blueprint.tex",
+--         product = "mutantrangerhive_blueprint"
+--     }
+-- )
 
-STRINGS.RECIPE_DESC.MUTANTRANGERHIVE_BLUEPRINT = "Adds Metapis Ranger to Mother Hive."
-STRINGS.NAMES.MUTANTRANGERHIVE_BLUEPRINT = "Metapis Ranger Hive Blueprint"
+-- STRINGS.RECIPE_DESC.MUTANTRANGERHIVE_BLUEPRINT = "Adds Metapis Ranger to Mother Hive."
+-- STRINGS.NAMES.MUTANTRANGERHIVE_BLUEPRINT = "Metapis Ranger Hive Blueprint"
 
 AddCharacterRecipe(
     "mutantassassinhive",
