@@ -1,5 +1,8 @@
 return {
     ACTIONFAIL = {
+        ZETA_BLINK_SWAP_APPROX = {
+            NO_MINION = "Where’s my loyal subject?!"
+        },
         ACTIVATE = {
             CARNIVAL_HOST_HERE = "Where's the carnie now?",
             EMPTY_CATCOONDEN = "Of course, an empty den. Because disappointment is my specialty.",

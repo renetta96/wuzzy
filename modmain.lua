@@ -12,6 +12,8 @@ local CLIENT_RPC = GLOBAL.CLIENT_RPC
 local PREFAB_SKINS = GLOBAL.PREFAB_SKINS
 local PREFAB_SKINS_IDS = GLOBAL.PREFAB_SKINS_IDS
 local SkillTreeDefs = require("prefabs/skilltree_defs")
+local GetClosestInstWithTag = GLOBAL.GetClosestInstWithTag
+local FindClosestEntity = GLOBAL.FindClosestEntity
 
 PrefabFiles = {
     "mutantworkerbee",
@@ -249,6 +251,7 @@ TUNING.ARMORHONEY_MULT_REGEN_TICK = 2 / 3
 -- Melissa
 TUNING.MELISSA_DAMAGE = 40
 TUNING.MELISSA_USES = 200
+TUNING.MELISSA_SWAP_USES = 20
 
 -- Sting trap
 TUNING.STING_TRAP_USES = 250
@@ -311,6 +314,7 @@ RegisterSkilltreeIconsAtlas("images/skilltree_zeta_icons.xml", "zeta_metapimance
 RegisterSkilltreeIconsAtlas("images/skilltree_zeta_icons.xml", "zeta_metapimancer_shepherd_1.tex")
 RegisterSkilltreeIconsAtlas("images/skilltree_zeta_icons.xml", "zeta_metapimancer_shepherd_2.tex")
 RegisterSkilltreeIconsAtlas("images/skilltree_zeta_icons.xml", "zeta_honeysmith_melissa_1.tex")
+RegisterSkilltreeIconsAtlas("images/skilltree_zeta_icons.xml", "zeta_honeysmith_melissa_2.tex")
 
 CreateSkillTree()
 
@@ -943,11 +947,22 @@ AddCharacterRecipe(
     }
 )
 
-GLOBAL.CONSTRUCTION_PLANS["mutantbeehive"] = {Ingredient("honeycomb", 3)}
-GLOBAL.CONSTRUCTION_PLANS["mutantbeehive_level2"] = {Ingredient("royal_jelly", 3)}
+GLOBAL.CONSTRUCTION_PLANS["mutantbeehive"] = {
+    Ingredient("honeycomb", 3),
+    Ingredient("honey", 40)
+}
+GLOBAL.CONSTRUCTION_PLANS["mutantbeehive_level2"] = {
+    Ingredient("royal_jelly", 3),
+    Ingredient("honeycomb", 3),
+    Ingredient("honey", 40)
+}
 
 GLOBAL.ACTIONS.MUTANTBEE_DESPAWN = Action()
 GLOBAL.ACTIONS.MUTANTBEE_DESPAWN.fn = function(act)
+    if act.doer._lastcombattime ~= nil and GLOBAL.GetTime() <= act.doer._lastcombattime + 10 then
+        return false
+    end
+
     if act.target ~= nil then
         if act.target.components.beesummoner then
             return act.target.components.beesummoner:Despawn(act.doer)
@@ -971,6 +986,86 @@ GLOBAL.ACTIONS.MUTANTBEE_HEAL.fn = function(act)
 
     return false
 end
+
+local function performSwap(doer, target, invobject)
+    if target ~= nil and target:IsValid() and
+        doer ~= nil and doer:IsValid() and
+        invobject ~= nil
+    then
+        return invobject.components.blinkswap:Swap(doer, target)
+    end
+
+    return false
+end
+
+local swap_approx_dist = 2
+local function findNearestMinion(pos, inst)
+    local x,y,z = pos:Get()
+
+    -- a bit longer than client find distance to compensate minion movement
+    local radius = swap_approx_dist + 4
+    local ents = GLOBAL.TheSim:FindEntities(
+        x, y, z,
+        radius,
+        {"beemutantminion"},
+        {"lesserminion", "INLIMBO"}
+    )
+
+    local closestEntity = nil
+    local rangesq = radius * radius
+    for i, v in ipairs(ents) do
+        if v:IsValid() and (not GLOBAL.IsEntityDead(v)) and v:GetOwner() == inst then
+            local distsq = v:GetDistanceSqToPoint(x, y, z)
+            if distsq < rangesq then
+                rangesq = distsq
+                closestEntity = v
+            end
+        end
+    end
+
+    return closestEntity
+end
+
+local blink_swap_approx_act = AddAction("ZETA_BLINK_SWAP_APPROX", "Swap", function(act)
+    -- print("BLINK SWAP APPROX", act.doer, act.invobject, act.target)
+
+    local minion = findNearestMinion(act:GetActionPoint(), act.doer)
+    if minion ~= nil then
+        return performSwap(act.doer, minion, act.invobject)
+    end
+
+    return false, "NO_MINION"
+end)
+blink_swap_approx_act.priority = 10
+blink_swap_approx_act.rmb = true
+blink_swap_approx_act.distance = 25
+
+local function hasNearbyMinion(pos)
+    local x,y,z = pos:Get()
+    local radius = swap_approx_dist
+    local ents = GLOBAL.TheSim:FindEntities(
+        x, y, z,
+        radius,
+        {"beemutantminion"},
+        {"lesserminion"}
+    )
+
+    return #ents > 0
+end
+
+AddComponentAction("POINT", "blinkswap", function(inst, doer, pos, actions, right, target)
+    local x,y,z = pos:Get()
+    if right and
+        inst:HasTag("beemaster_weapon") and
+        doer:HasTag("beemaster") and not doer:HasTag("steeringboat") and not doer:HasTag("rotatingboat") and
+        (GLOBAL.TheWorld.Map:IsAboveGroundAtPoint(x,y,z) or GLOBAL.TheWorld.Map:GetPlatformAtPoint(x,z) ~= nil) and
+        not GLOBAL.TheWorld.Map:IsGroundTargetBlocked(pos)
+    then
+        if hasNearbyMinion(pos) then
+            table.insert(actions, GLOBAL.ACTIONS.ZETA_BLINK_SWAP_APPROX)
+        end
+    end
+end)
 
 -- Badge
 local Badge = require("widgets/badge")

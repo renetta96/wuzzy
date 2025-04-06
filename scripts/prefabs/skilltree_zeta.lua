@@ -198,6 +198,17 @@ local function BuildSkillsData(SkillTreeFns)
             pos = {66+18-W_GAP, 176},
             group = "honeysmith",
             tags = {"honeysmith", "melissa"},
+            connects = {
+                "zeta_honeysmith_melissa_2",
+            }
+        },
+        zeta_honeysmith_melissa_2 = {
+            title = "Melissa II",
+            desc = "Wuzzy uses Melissa to switch places with another Metapis, at the cost of item durability.",
+            icon = "zeta_honeysmith_melissa_1",
+            pos = {66+18, 176},
+            group = "honeysmith",
+            tags = {"honeysmith", "melissa"},
         }
     }
 

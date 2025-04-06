@@ -348,7 +348,15 @@ local function ModifySGClient(sg)
     atk_handler.condition
   )
 
+  local blink_swap_handler = ActionHandler(
+    ACTIONS.ZETA_BLINK_SWAP_APPROX,
+    function(inst, action)
+      return "quicktele"
+    end
+  )
+
   sg.actionhandlers[new_handler.action] = new_handler
+  sg.actionhandlers[blink_swap_handler.action] = blink_swap_handler
 end
 
 local function ModifySGMaster(sg)
@@ -377,7 +385,15 @@ local function ModifySGMaster(sg)
     atk_handler.condition
   )
 
+  local blink_swap_handler = ActionHandler(
+    ACTIONS.ZETA_BLINK_SWAP_APPROX,
+    function(inst, action)
+      return "quicktele"
+    end
+  )
+
   sg.actionhandlers[new_handler.action] = new_handler
+  sg.actionhandlers[blink_swap_handler.action] = blink_swap_handler
 end
 
 -- because I don't want to affect other characters' stategraph.
@@ -432,34 +448,75 @@ end
 
 local function OnSave(inst, data)
   data._numbeequeenkilled = inst._numbeequeenkilled ~= nil and inst._numbeequeenkilled or nil
+
+  data._zeta_health = inst.components.health.currenthealth
+  data._zeta_hunger = inst.components.hunger.current
+  data._zeta_sanity = inst.components.sanity.current
 end
 
 local function OnLoad(inst, data)
   if data ~= nil then
     inst._numbeequeenkilled = data._numbeequeenkilled or 0
+
+    -- learnt from WX78, current stats have to be saved manually due to these components' save/load logic
+    if data._zeta_health ~= nil then
+      inst.components.health.currenthealth = data._zeta_health
+    end
+
+    if data._zeta_hunger ~= nil then
+      inst.components.hunger.current = data._zeta_hunger
+    end
+
+    if data._zeta_sanity ~= nil then
+      inst.components.sanity.current = data._zeta_sanity
+    end
   end
 end
 
+local function setMaxHealth(inst, amount)
+  inst.components.health.maxhealth = amount
+  inst.components.health.currenthealth = math.min(
+    inst.components.health.currenthealth,
+    inst.components.health:GetMaxWithPenalty()
+  )
+end
+
+local function setMaxHunger(inst, amount)
+  inst.components.hunger.max = amount
+  inst.components.hunger.current = math.min(inst.components.hunger.current, inst.components.hunger.max)
+end
+
+local function setMaxSanity(inst, amount)
+  inst.components.sanity.max = amount
+  inst.components.sanity.current = math.min(
+    inst.components.sanity.current,
+    inst.components.sanity:GetMaxWithPenalty()
+  )
+end
+
 local function OnSkillChange(inst)
+  -- print("ON SKILL CHANGE")
+
   local skilltreeupdater = inst.components.skilltreeupdater
   if not skilltreeupdater then
     return
   end
 
+  -- no changes to current health/hunger/sanity, only affect max values
   if skilltreeupdater:IsActivated("zeta_metapimancer_tyrant_1") then
-    inst.components.health:SetMaxHealth(math.floor(TUNING.ZETA_HEALTH * 1.5))
-    inst.components.hunger:SetMax(math.floor(TUNING.ZETA_HUNGER * 1.5))
-    inst.components.sanity:SetMax(math.floor(TUNING.ZETA_SANITY * 1.5))
+    setMaxHealth(inst, math.floor(TUNING.ZETA_HEALTH * 1.5))
+    setMaxHunger(inst, math.floor(TUNING.ZETA_HUNGER * 1.5))
+    setMaxSanity(inst, math.floor(TUNING.ZETA_SANITY * 1.5))
     inst.components.combat.damagemultiplier = TUNING.OZZY_TYRANT_DAMAGE_MULTIPLIER
   elseif skilltreeupdater:IsActivated("zeta_metapimancer_shepherd_1") then
-    inst.components.health:SetMaxHealth(math.ceil(TUNING.ZETA_HEALTH * 0.75))
-    inst.components.hunger:SetMax(math.ceil(TUNING.ZETA_HUNGER * 0.75))
-    inst.components.sanity:SetMax(math.ceil(TUNING.ZETA_SANITY * 0.75))
+    setMaxHealth(inst, math.ceil(TUNING.ZETA_HEALTH * 0.75))
+    setMaxHunger(inst, math.ceil(TUNING.ZETA_HUNGER * 0.75))
+    setMaxSanity(inst, math.ceil(TUNING.ZETA_SANITY * 0.75))
     inst.components.combat.damagemultiplier = TUNING.OZZY_SHEPHERD_DAMAGE_MULTIPLIER
   else
-    inst.components.health:SetMaxHealth(TUNING.ZETA_HEALTH)
-    inst.components.hunger:SetMax(TUNING.ZETA_HUNGER)
-    inst.components.sanity:SetMax(TUNING.ZETA_SANITY)
+    setMaxHealth(inst, TUNING.ZETA_HEALTH)
+    setMaxHunger(inst, TUNING.ZETA_HUNGER)
+    setMaxSanity(inst, TUNING.ZETA_SANITY)
     inst.components.combat.damagemultiplier = TUNING.OZZY_DEFAULT_DAMAGE_MULTIPLIER
   end
 end

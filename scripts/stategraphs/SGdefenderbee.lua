@@ -236,6 +236,33 @@ local states =
     },
 
     State{
+        name = "quicktele",
+        tags = {"busy"},
+        onenter = function(inst)
+            inst.components.locomotor:StopMoving()
+            inst.AnimState:PlayAnimation("evade")
+        end,
+        timeline = {
+            TimeEvent(
+                8 * FRAMES, -- keep sync with SGwilson
+                function(inst)
+                    -- from blinkswap component
+                    if inst._blinkfn ~= nil then
+                        inst._blinkfn()
+                        inst._blinkfn = nil
+                    end
+                end
+            )
+        },
+        events =
+        {
+            EventHandler("animover", function(inst)
+                inst.sg:GoToState("idle")
+            end)
+        },
+    },
+
+    State{
         name = "death",
         tags = { "busy" },
 

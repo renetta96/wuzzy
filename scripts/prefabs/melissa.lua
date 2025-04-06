@@ -63,6 +63,7 @@ end
 
 local function OnSave(inst, data)
   data._upgraded = inst._upgraded ~= nil and inst._upgraded or nil
+  data._canblink = inst._canblink ~= nil and inst._canblink or nil
 end
 
 local function checkmaxuses(inst)
@@ -73,21 +74,40 @@ local function checkmaxuses(inst)
   end
 end
 
+local function initBlinkSwap(inst)
+  if inst._canblink then
+    if inst.components.blinkswap == nil then
+      inst:AddComponent("blinkswap")
+    end
+
+    inst.components.blinkswap:SetOnBlinkDoerFn(function()
+      inst.components.finiteuses:Use(TUNING.MELISSA_SWAP_USES)
+    end)
+  end
+end
+
 local function OnLoad(inst, data)
   if data ~= nil then
     inst._upgraded = data._upgraded or false
+    inst._canblink = data._canblink or false
   end
 
   checkmaxuses(inst)
+  initBlinkSwap(inst)
 end
 
 local function OnBuiltFn(inst, builder)
-  if builder and builder:IsValid() and builder.prefab == "zeta" and
-    builder.components.skilltreeupdater and builder.components.skilltreeupdater:IsActivated("zeta_honeysmith_melissa_1")
-  then
-    inst._upgraded = true
-    checkmaxuses(inst)
-    inst.components.finiteuses:SetUses(TUNING.MELISSA_USES * 2)
+  if builder and builder:IsValid() and builder.prefab == "zeta" and builder.components.skilltreeupdater then
+    if builder.components.skilltreeupdater:IsActivated("zeta_honeysmith_melissa_1") then
+      inst._upgraded = true
+      checkmaxuses(inst)
+      inst.components.finiteuses:SetUses(TUNING.MELISSA_USES * 2)
+    end
+
+    if builder.components.skilltreeupdater:IsActivated("zeta_honeysmith_melissa_2") then
+      inst._canblink = true
+      initBlinkSwap(inst)
+    end
   end
 end
 

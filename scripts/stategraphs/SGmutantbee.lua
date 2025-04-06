@@ -399,6 +399,46 @@ local states = {
         }
     },
     State {
+        name = "quicktele",
+        tags = {"busy"},
+        onenter = function(inst)
+            inst.Physics:Stop()
+            inst.AnimState:PlayAnimation("hit")
+
+            -- called by blinkstaff component
+            inst.sg.statemem.onstartblinking = function()
+                inst.components.health:SetInvincible(true)
+                inst.DynamicShadow:Enable(false)
+                inst:Hide()
+            end
+            inst.sg.statemem.onstopblinking = function()
+                inst.components.health:SetInvincible(false)
+                inst.DynamicShadow:Enable(true)
+                inst:Show()
+            end
+        end,
+        timeline = {
+            TimeEvent(
+                8 * FRAMES, -- keep sync with SGwilson
+                function(inst)
+                    -- from blinkswap component
+                    if inst._blinkfn ~= nil then
+                        inst._blinkfn()
+                        inst._blinkfn = nil
+                    end
+                end
+            )
+        },
+        events = {
+            EventHandler(
+                "animover",
+                function(inst)
+                    inst.sg:GoToState("idle")
+                end
+            )
+        }
+    },
+    State {
         name = "mimic_morph",
         tags = {"busy"},
         onenter = function(inst)
