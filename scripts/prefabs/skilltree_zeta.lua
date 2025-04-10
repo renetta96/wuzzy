@@ -88,7 +88,7 @@ local function BuildSkillsData(SkillTreeFns)
         },
         zeta_metapimancer_shepherd_2 = {
             title = "Shepherd II",
-            desc = "When attacked, Wuzzy may enrage nearby Metapises, boosting their damage and speed. The chance and number affected increase as Wuzzy's health drops.",
+            desc = "Attacking or being attacked may enrage nearby Metapises, boosting their damage and speed. Chance and number affected scale with Wuzzy’s missing health.",
             icon = "zeta_metapimancer_shepherd_2",
             pos = {-214+18+W_GAP, 176-H_GAP},
             group = "metapimancer",
@@ -205,7 +205,7 @@ local function BuildSkillsData(SkillTreeFns)
         zeta_honeysmith_melissa_2 = {
             title = "Melissa II",
             desc = "Wuzzy uses Melissa to switch places with another Metapis, at the cost of item durability.",
-            icon = "zeta_honeysmith_melissa_1",
+            icon = "zeta_honeysmith_melissa_2",
             pos = {66+18, 176},
             group = "honeysmith",
             tags = {"honeysmith", "melissa"},

@@ -311,6 +311,67 @@ local function EnablePoisonAttack(inst)
   end
 end
 
+local function calcChance(inst, minchance, maxchance, minthreshold)
+  local healthpercent = inst.components.health:GetPercentWithPenalty()
+
+  if healthpercent <= minthreshold then
+    return maxchance
+  end
+
+  return Lerp(minchance, maxchance, (1.0 - healthpercent) / (1.0 - minthreshold))
+end
+
+local function findNearbyMinion(inst)
+  return FindEntity(
+    inst,
+    10,
+    function(guy)
+      return not guy.components.health:IsDead() and guy:IsValid() and guy:GetOwner() == inst
+    end,
+    {"beemutant", "_combat", "_health"}, {"INLIMBO", "lesserminion"}, {"beemutantminion"})
+end
+
+local function findNearbyMinions(inst, num)
+  local x, y, z = inst.Transform:GetWorldPosition()
+  local minions = TheSim:FindEntities(
+    x, y, z,
+    10,
+    {"beemutant", "_combat", "_health"}, {"INLIMBO", "lesserminion"}, {"beemutantminion"})
+
+  local res = {}
+  local cnt = 0
+  for i, e in ipairs(minions) do
+    table.insert(res, e)
+    cnt = cnt + 1
+    if cnt >= num then
+      break
+    end
+  end
+
+  return res
+end
+
+local function calcNumEnrageMinions(inst)
+  local healthpercent = inst.components.health:GetPercentWithPenalty()
+
+  if healthpercent <= 0.33 then
+    return 8
+  elseif healthpercent <= 0.67 then
+    return 6
+  else
+    return 4
+  end
+end
+
+local function enrageMinions(inst)
+  local minions = findNearbyMinions(inst, calcNumEnrageMinions(inst))
+
+  for i, m in ipairs(minions) do
+    m.components.debuffable:AddDebuff("metapis_haste_buff", "metapis_haste_buff")
+    m.components.debuffable:AddDebuff("metapis_rage_buff", "metapis_rage_buff")
+  end
+end
+
 local function OnAttackOther(inst, data)
   if data and data.target and data.target:IsValid() then
     local x, y, z = inst.Transform:GetWorldPosition()
@@ -333,6 +394,12 @@ local function OnAttackOther(inst, data)
     MakePoisonable(data.target)
 
     data.target.components.dotable:Add("stackable_poison", 5, TUNING.MUTANT_BEE_STACK_POISON_TICKS)
+  end
+
+  if inst.components.skilltreeupdater:IsActivated("zeta_metapimancer_shepherd_2") and
+    math.random() <= calcChance(inst, 0.15, 0.3, 0.3)
+  then
+    enrageMinions(inst)
   end
 end
 
@@ -544,58 +611,6 @@ local function OnSkillTreeInitialized(inst)
   OnSkillChange(inst)
 end
 
-local function calcChance(inst, minchance, maxchance, minthreshold)
-  local healthpercent = inst.components.health:GetPercent()
-
-  if healthpercent <= minthreshold then
-    return maxchance
-  end
-
-  return Lerp(minchance, maxchance, (1.0 - healthpercent) / (1.0 - minthreshold))
-end
-
-local function calcNumEnrageMinions(inst)
-  local healthpercent = inst.components.health:GetPercent()
-
-  if healthpercent <= 0.33 then
-    return 8
-  elseif healthpercent <= 0.67 then
-    return 6
-  else
-    return 4
-  end
-end
-
-local function findNearbyMinion(inst)
-  return FindEntity(
-    inst,
-    10,
-    function(guy)
-      return not guy.components.health:IsDead() and guy:IsValid() and guy:GetOwner() == inst
-    end,
-    {"beemutant", "_combat", "_health"}, {"INLIMBO", "lesserminion"}, {"beemutantminion"})
-end
-
-local function findNearbyMinions(inst, num)
-  local x, y, z = inst.Transform:GetWorldPosition()
-  local minions = TheSim:FindEntities(
-    x, y, z,
-    10,
-    {"beemutant", "_combat", "_health"}, {"INLIMBO", "lesserminion"}, {"beemutantminion"})
-
-  local res = {}
-  local cnt = 0
-  for i, e in ipairs(minions) do
-    table.insert(res, e)
-    cnt = cnt + 1
-    if cnt >= num then
-      break
-    end
-  end
-
-  return res
-end
-
 -- This initializes for the server only. Components are added here.
 local master_postinit = function(inst)
   inst.starting_inventory = start_inv[TheNet:GetServerGameMode()] or start_inv.default
@@ -666,12 +681,7 @@ local master_postinit = function(inst)
       end
 
       if skilltreeupdater:IsActivated("zeta_metapimancer_shepherd_2") and math.random() <= calcChance(inst, 0.2, 0.5, 0.3) then
-        local minions = findNearbyMinions(inst, TUNING.OZZY_SHEPHERD_BUFF_MINIONS)
-
-        for i, m in ipairs(minions) do
-          m.components.debuffable:AddDebuff("metapis_haste_buff", "metapis_haste_buff")
-          m.components.debuffable:AddDebuff("metapis_rage_buff", "metapis_rage_buff")
-        end
+        enrageMinions(inst)
       end
     end
 
