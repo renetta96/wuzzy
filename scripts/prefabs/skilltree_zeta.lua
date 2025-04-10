@@ -44,7 +44,7 @@ local function BuildSkillsData(SkillTreeFns)
         },
         zeta_metapimancer_tyrant_1 = {
             title = "Tyrant I",
-            desc = "Halve all Metapises' health and damage. Boost Wuzzy’s stats by 50% and set damage multiplier to 1.5x.",
+            desc = "Halve all Metapises' health and damage. Boost Wuzzy’s stats and set damage multiplier to 1.05x - 1.5x based on Mother Hive upgrades.",
             icon = "zeta_metapimancer_tyrant_1",
             pos = {-214+18, 176},
             group = "metapimancer",
@@ -77,7 +77,7 @@ local function BuildSkillsData(SkillTreeFns)
         },
         zeta_metapimancer_shepherd_1 = {
             title = "Shepherd I",
-            desc = "Reduce Wuzzy's stats by 25%, set damage multipler to 0.6x. Boost all Metapises' health and damage by 25%.",
+            desc = "Reduce Wuzzy's stats, set damage multipler to 0.6x. Boost all Metapises' health and damage by 25%. Metapises are able to attack shadow creatures.",
             icon = "zeta_metapimancer_shepherd_1",
             pos = {-214+18, 176-H_GAP},
             group = "metapimancer",

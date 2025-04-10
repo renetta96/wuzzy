@@ -234,6 +234,20 @@ local function SpawnShadowlings(inst, num_spawn)
     end
 end
 
+local function OnKilledOther(inst, data)
+    if data ~= nil and data.victim then
+        local victim = data.victim
+        if victim:HasTag("shadow") and victim.sanityreward ~= nil then
+            local owner = inst:GetOwner()
+            if owner and owner:HasTag("beemaster") and
+                owner.components.skilltreeupdater:IsActivated("zeta_metapimancer_shepherd_1")
+            then
+                owner.components.sanity:DoDelta(victim.sanityreward * 0.5)
+            end
+        end
+    end
+end
+
 local function OnCommonInit(inst)
     if inst.buffed then
         inst:Buff()
@@ -249,6 +263,11 @@ local function OnCommonInit(inst)
                     end
                 end
             )
+        end
+
+        if owner.components.skilltreeupdater:IsActivated("zeta_metapimancer_shepherd_1") then
+            inst:AddTag("crazy") -- able to attack shadows, this is server-side
+            inst:ListenForEvent("killed", OnKilledOther)
         end
     end
 end

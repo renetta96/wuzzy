@@ -122,7 +122,22 @@ local function CheckHiveUpgrade(inst)
   if not inst._hive then
     inst.components.beesummoner:RemoveStoreModifier_Additive('motherhive')
     inst.components.beesummoner:RemoveStoreModifier_Additive('childhives')
+
+    if inst.components.skilltreeupdater:IsActivated("zeta_metapimancer_tyrant_1") then
+      inst.components.combat.damagemultiplier = TUNING.OZZY_TYRANT_DAMAGE_MULTIPLIER_0
+    end
+
     return
+  end
+
+  if inst.components.skilltreeupdater:IsActivated("zeta_metapimancer_tyrant_1") then
+    if inst._hive._stage.LEVEL == 1 then
+      inst.components.combat.damagemultiplier = TUNING.OZZY_TYRANT_DAMAGE_MULTIPLIER_1
+    elseif inst._hive._stage.LEVEL == 2 then
+      inst.components.combat.damagemultiplier = TUNING.OZZY_TYRANT_DAMAGE_MULTIPLIER_2
+    elseif inst._hive._stage.LEVEL == 3 then
+      inst.components.combat.damagemultiplier = TUNING.OZZY_TYRANT_DAMAGE_MULTIPLIER_3
+    end
   end
 
   inst.components.beesummoner:AddStoreModifier_Additive(
@@ -414,12 +429,8 @@ local function ModifySG(inst)
 end
 
 local function tryModifySG(inst)
-  if inst ~= ThePlayer then
-    print("NOT THE PLAYER")
-    return
-  end
+  ModifySG(inst)
 
-  inst:DoTaskInTime(0, ModifySG)
   if inst._modifysgtask == nil then
     inst._modifysgtask = inst:DoPeriodicTask(1, ModifySG)
   end
@@ -504,14 +515,14 @@ local function OnSkillChange(inst)
 
   -- no changes to current health/hunger/sanity, only affect max values
   if skilltreeupdater:IsActivated("zeta_metapimancer_tyrant_1") then
-    setMaxHealth(inst, math.floor(TUNING.ZETA_HEALTH * 1.5))
-    setMaxHunger(inst, math.floor(TUNING.ZETA_HUNGER * 1.5))
-    setMaxSanity(inst, math.floor(TUNING.ZETA_SANITY * 1.5))
-    inst.components.combat.damagemultiplier = TUNING.OZZY_TYRANT_DAMAGE_MULTIPLIER
+    setMaxHealth(inst, TUNING.ZETA_HEALTH_TYRANT)
+    setMaxHunger(inst, TUNING.ZETA_HUNGER_TYRANT)
+    setMaxSanity(inst, TUNING.ZETA_SANITY_TYRANT)
+    -- tyrant damage multiplier -> CheckHiveUpgrade
   elseif skilltreeupdater:IsActivated("zeta_metapimancer_shepherd_1") then
-    setMaxHealth(inst, math.ceil(TUNING.ZETA_HEALTH * 0.75))
-    setMaxHunger(inst, math.ceil(TUNING.ZETA_HUNGER * 0.75))
-    setMaxSanity(inst, math.ceil(TUNING.ZETA_SANITY * 0.75))
+    setMaxHealth(inst, TUNING.ZETA_HEALTH_SHEPHERD)
+    setMaxHunger(inst, TUNING.ZETA_HUNGER_SHEPHERD)
+    setMaxSanity(inst, TUNING.ZETA_SANITY_SHEPHERD)
     inst.components.combat.damagemultiplier = TUNING.OZZY_SHEPHERD_DAMAGE_MULTIPLIER
   else
     setMaxHealth(inst, TUNING.ZETA_HEALTH)
@@ -624,11 +635,6 @@ local master_postinit = function(inst)
   inst._poisonatk = false
   inst.EnablePoisonAttack = EnablePoisonAttack
   inst:ListenForEvent("onattackother", OnAttackOther)
-
-  inst:DoTaskInTime(0, ModifySG)
-  if inst._modifysgtask == nil then
-    inst._modifysgtask = inst:DoPeriodicTask(1, ModifySG)
-  end
 
   inst:ListenForEvent("onactivateskill_server", OnActivateSkill)
   inst:ListenForEvent("ondeactivateskill_server", OnDeactivateSkill)

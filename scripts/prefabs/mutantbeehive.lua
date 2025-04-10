@@ -604,6 +604,14 @@ local function FindEnemy(inst)
 end
 
 local function WatchEnemy(inst)
+  if inst._owner ~= nil then
+    if inst._owner.components.skilltreeupdater:IsActivated("zeta_metapimancer_shepherd_1") then
+      inst:AddTag("crazy") -- to find shadow enemies
+    else
+      inst:RemoveTag("crazy")
+    end
+  end
+
   local enemy = FindEnemy(inst)
 
   if enemy then
@@ -1142,6 +1150,15 @@ local function onteleportback(inst)
 end
 
 local function WatchEnemyTeleportal(inst)
+  local source = GetSource(inst)
+  if source ~= nil and source._owner ~= nil then
+    if source._owner.components.skilltreeupdater:IsActivated("zeta_metapimancer_shepherd_1") then
+      inst:AddTag("crazy") -- to find shadow enemies
+    else
+      inst:RemoveTag("crazy")
+    end
+  end
+
   local enemy = FindEnemy(inst)
 
   if enemy then
