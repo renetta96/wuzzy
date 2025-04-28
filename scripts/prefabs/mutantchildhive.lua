@@ -1,19 +1,10 @@
 local hive_common = require "hive_common"
+local hive_defs = require "hive_defs"
 
 local prefabs =
 {
   "honeycomb",
   "collapse_small",
-}
-
-local assets =
-{
-  Asset("ANIM", "anim/mutantdefenderhive.zip"),
-  Asset("ANIM", "anim/mutantassassinhive.zip"),
-  Asset("ANIM", "anim/mutantrangerhive.zip"),
-  Asset("ANIM", "anim/mutantshadowhive.zip"),
-  Asset("ANIM", "anim/mutanthealerhive.zip"),
-  Asset("ANIM", "anim/mutantbarrack.zip"),
 }
 
 local function OnSlaveKilled(inst)
@@ -124,30 +115,17 @@ local function commonslavefn(bank, build, tags, mapicon)
   return inst
 end
 
-local function defenderhive()
-  local inst = commonslavefn("mutantdefenderhive", "mutantdefenderhive", {"mutantdefenderhive"}, "mutantdefenderhive.tex")
-  return inst
-end
+local function MakeChildHive(name, tag)
+  local assets = {
+    Asset("ANIM", "anim/".. name .. ".zip"),
+  }
 
-local function rangerhive()
-  local inst = commonslavefn("mutantrangerhive", "mutantrangerhive", {"mutantrangerhive"}, "mutantrangerhive.tex")
-  return inst
-end
+  local function fn()
+    local inst = commonslavefn(name, name, {tag}, name..".tex")
+    return inst
+  end
 
-local function assassinhive()
-  local inst = commonslavefn("mutantassassinhive", "mutantassassinhive", {"mutantassassinhive"}, "mutantassassinhive.tex")
-  return inst
-end
-
-local function shadowhive()
-  local inst = commonslavefn("mutantshadowhive", "mutantshadowhive", {"mutantshadowhive"}, "mutantshadowhive.tex")
-  return inst
-end
-
-local function healerhive()
-  -- TODO: update art
-  local inst = commonslavefn("mutanthealerhive", "mutanthealerhive", {"mutanthealerhive"}, "mutanthealerhive.tex")
-  return inst
+  return Prefab(name, fn, assets, prefabs)
 end
 
 local function barrackhive()
@@ -199,15 +177,21 @@ STRINGS.NAMES.MUTANTBARRACK = "Metapis Barrack"
 STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTBARRACK = "For the swarm."
 STRINGS.RECIPE_DESC.MUTANTBARRACK = "Grows your Metapis swarm."
 
-return Prefab("mutantdefenderhive", defenderhive, assets, prefabs),
-  MakePlacer("mutantdefenderhive_placer", "mutantdefenderhive", "mutantdefenderhive", "idle"),
-  Prefab("mutantrangerhive", rangerhive, assets, prefabs),
-  MakePlacer("mutantrangerhive_placer", "mutantrangerhive", "mutantrangerhive", "idle"),
-  Prefab("mutantassassinhive", assassinhive, assets, prefabs),
-  MakePlacer("mutantassassinhive_placer", "mutantassassinhive", "mutantassassinhive", "idle"),
-  Prefab("mutantshadowhive", shadowhive, assets, prefabs),
-  MakePlacer("mutantshadowhive_placer", "mutantshadowhive", "mutantshadowhive", "idle"),
-  Prefab("mutanthealerhive", healerhive, assets, prefabs),
-  MakePlacer("mutanthealerhive_placer", "mutanthealerhive", "mutanthealerhive", "idle"),
-  Prefab("mutantbarrack", barrackhive, assets, prefabs),
-  MakePlacer("mutantbarrack_placer", "mutantbarrack", "mutantbarrack", "idle")
+local returnPrefabs = {}
+
+for i, def in ipairs(hive_defs.HiveDefs) do
+  table.insert(returnPrefabs, MakeChildHive(def.hive_prefab, def.hive_tag))
+  table.insert(returnPrefabs,
+    MakePlacer(
+      def.hive_prefab.."_placer",
+      def.hive_prefab,
+      def.hive_prefab,
+      "idle"
+    )
+  )
+end
+
+table.insert(returnPrefabs, Prefab("mutantbarrack", barrackhive, {Asset("ANIM", "anim/mutantbarrack.zip")}, prefabs))
+table.insert(returnPrefabs, MakePlacer("mutantbarrack_placer", "mutantbarrack", "mutantbarrack", "idle"))
+
+return unpack(returnPrefabs)

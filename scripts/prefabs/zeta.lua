@@ -3,11 +3,13 @@ local MakePlayerCharacter = require "prefabs/player_common"
 local metapis_common = require "metapis_common"
 local IsPoisonable = metapis_common.IsPoisonable
 local MakePoisonable = metapis_common.MakePoisonable
+local PickChildPrefab = metapis_common.PickChildPrefab
+
+local hive_defs = require "hive_defs"
 
 local assets = {
   Asset("SCRIPT", "scripts/prefabs/player_common.lua"),
   Asset("ANIM", "anim/zeta.zip"),
-
   Asset("SCRIPT", "scripts/prefabs/skilltree_zeta.lua")
 }
 
@@ -23,69 +25,14 @@ end
 
 prefabs = FlattenTree({ prefabs, start_inv }, true)
 
-local function CanSummon(inst, prefab)
-  if not inst._hive then
-    return false
-  end
-
-  return inst._hive:CanSpawn(prefab)
-end
-
 local function GetChildPrefab(inst)
-  local maxchildren = inst.components.beesummoner.maxchildren
-
-  local basechild = "mutantkillerbee"
-  if inst.components.skilltreeupdater:IsActivated("zeta_metapis_mimic_1") then
-    basechild = "mutantmimicbee"
-  end
-
-  local expect = {
-    [basechild] = maxchildren,
-    mutantdefenderbee = 0,
-    mutantrangerbee = 0,
-    mutantassassinbee = 0,
-    mutantshadowbee = 0,
-    mutanthealerbee = 0,
-  }
-
-  local cansummon = {basechild}
-
-  for prefab, v in pairs(expect) do
-    if prefab ~= basechild and CanSummon(inst, prefab) then
-      expect[prefab] = expect[prefab] + 1
-      expect[basechild] = expect[basechild] - 1
-      table.insert(cansummon, prefab)
-    end
-  end
-
-  local prefabcount = {}
-  for k, v in pairs(expect) do
-    prefabcount[k] = 0
-  end
-
-  for i, child in pairs(inst.components.beesummoner.children) do
-    if child ~= nil and child:IsValid() then
-      prefabcount[child.prefab] = prefabcount[child.prefab] + 1
-    end
-  end
-
-  local prefabstopick = {}
-  for prefab, cnt in pairs(prefabcount) do
-    if cnt < expect[prefab] then
-      table.insert(prefabstopick, prefab)
-
-      -- Prioritize defender
-      if prefab == "mutantdefenderbee" then
-        return prefab
-      end
-    end
-  end
-
-  if #prefabstopick == 0 then
-    prefabstopick = cansummon
-  end
-
-  return prefabstopick[math.random(#prefabstopick)]
+  return PickChildPrefab(
+    inst,
+    inst._hive,
+    inst.components.beesummoner.children,
+    inst.components.beesummoner.maxchildren,
+    "mutantdefenderbee"
+  )
 end
 
 local function OnEat(inst, data)
@@ -173,6 +120,21 @@ local function CheckHiveUpgrade(inst)
   )
 end
 
+local hiveTokenRecipes = {}
+for i, def in ipairs(hive_defs.HiveDefs) do
+  hiveTokenRecipes[def.hive_prefab] = def.token_prefab
+end
+
+local function CheckRecipes(inst)
+  for hive, token in pairs(hiveTokenRecipes) do
+    if inst.components.builder:KnowsRecipe(hive, true) and
+      not inst.components.builder:KnowsRecipe(token, true)
+    then
+      inst.components.builder:UnlockRecipe(token)
+    end
+  end
+end
+
 local honeyed_foods = {
   leafymeatsouffle = true,
   sweettea = true,
@@ -182,6 +144,8 @@ local honeyed_foods = {
 local function OnInit(inst)
   OnNumStoreChange(inst)
   inst:DoPeriodicTask(1, CheckHiveUpgrade)
+
+  CheckRecipes(inst)
 
   if inst.components.eater then
     local oldeatfn = inst.components.eater.Eat
@@ -557,11 +521,13 @@ local function setMaxHealth(inst, amount)
     inst.components.health.currenthealth,
     inst.components.health:GetMaxWithPenalty()
   )
+  inst.components.health:ForceUpdateHUD(true)
 end
 
 local function setMaxHunger(inst, amount)
   inst.components.hunger.max = amount
   inst.components.hunger.current = math.min(inst.components.hunger.current, inst.components.hunger.max)
+  inst.components.hunger:DoDelta(0)
 end
 
 local function setMaxSanity(inst, amount)
@@ -570,6 +536,7 @@ local function setMaxSanity(inst, amount)
     inst.components.sanity.current,
     inst.components.sanity:GetMaxWithPenalty()
   )
+  inst.components.sanity:DoDelta(0)
 end
 
 local function OnSkillChange(inst)
@@ -654,6 +621,8 @@ local master_postinit = function(inst)
   inst:ListenForEvent("onactivateskill_server", OnActivateSkill)
   inst:ListenForEvent("ondeactivateskill_server", OnDeactivateSkill)
   inst:ListenForEvent("ms_skilltreeinitialized", OnSkillTreeInitialized)
+
+  inst:ListenForEvent("unlockrecipe", function() CheckRecipes(inst) end)
 
   local oldDoDelta = inst.components.health.DoDelta
   inst.components.health.DoDelta = function(comp, amount, ...)

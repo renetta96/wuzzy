@@ -204,6 +204,9 @@ local function CheckRangerUpgrade(inst, stage)
         inst._shouldcharge = shouldcharge
         inst.components.combat:SetAttackPeriod(0)
         TurnOffLight(inst) -- just in case
+
+        inst:ListenForEvent("death", function() disable_chargefx(inst) end)
+        inst:ListenForEvent("onremove", function() disable_chargefx(inst) end)
     else
         inst:ListenForEvent("newcombattarget", OnStartCombat)
         inst:ListenForEvent("droppedtarget", OnStopCombat)

@@ -1,4 +1,8 @@
 local hive_common = require "hive_common"
+local metapis_common = require "metapis_common"
+local PickChildPrefab = metapis_common.PickChildPrefab
+
+local hive_defs = require "hive_defs"
 
 local prefabs =
 {
@@ -91,31 +95,6 @@ local function GetSource(inst)
   end
 
   return nil
-end
-
-local function gettocheck(inst)
-  if inst.prefab == 'mutantteleportal' then
-    inst = GetSource(inst)
-  end
-
-  local owner = inst._owner
-
-  local basechild = "mutantkillerbee"
-  if owner and owner:HasTag("beemaster") then
-    if owner.components.skilltreeupdater:IsActivated("zeta_metapis_mimic_1") then
-      basechild = "mutantmimicbee"
-    end
-  end
-
-
-  return {
-    mutantdefenderbee = "mutantdefenderhive",
-    mutantrangerbee = "mutantrangerhive",
-    mutantassassinbee = "mutantassassinhive",
-    mutantshadowbee = "mutantshadowhive",
-    [basechild] = true,
-    mutanthealerbee = "mutanthealerhive",
-  }, basechild
 end
 
 local function Say(inst, script)
@@ -441,7 +420,6 @@ end
 local function OnSlave(inst)
   if inst.components.childspawner then
     local slaves = GetSlaves(inst)
-
     inst.components.childspawner.maxemergencychildren =
       TUNING.MUTANT_BEEHIVE_DEFAULT_EMERGENCY_BEES
       + (inst._stage.LEVEL - 1) * TUNING.MUTANT_BEEHIVE_DELTA_BEES
@@ -456,7 +434,6 @@ local function OnSlave(inst)
       end
     end
 
-
     inst._numbarracks = numbarracks
   end
 
@@ -470,94 +447,60 @@ local function OnSlave(inst)
   end
 end
 
-
-local function CanSpawn(inst, prefab)
-  if inst.prefab == 'mutantteleportal' then
-    inst = GetSource(inst)
+local function checkContainerTokens(inst)
+  if not inst.components.container then
+    return
   end
 
-  if not inst then
-    return false
+  local slaves = GetSlaves(inst)
+  local slaveprefabs = {}
+  for i, slave in pairs(slaves) do
+    slaveprefabs[slave.prefab] = true
   end
 
-  local tocheck, basechild = gettocheck(inst)
-
-  if tocheck[prefab] == true then
-    return true
+  local items = inst.components.container:GetAllItems()
+  for i, item in pairs(items) do
+    if not item:HasTag("beemutanttoken") then
+      inst.components.container:DropItem(item)
+    elseif not item.is_base then
+      local def = hive_defs.GetDefByTokenPrefab(item.prefab)
+      if not def then
+        inst.components.container:DropItem(item)
+      elseif not slaveprefabs[def.hive_prefab] then
+        inst.components.container:DropItem(item)
+      end
+    end
   end
+end
 
-  if not tocheck[prefab] then
-    return false
-  end
-
+local function HasSlaveWithTag(inst, tag)
   local hive = FindEntity(inst, TUNING.MUTANT_BEEHIVE_MASTER_SLAVE_DIST,
     function(guy) return IsSlave(inst, guy) end,
     { "_combat", "_health" },
     { "INLIMBO", "player" },
-    { tocheck[prefab] }
+    { tag }
   )
 
-  if hive then
-    return true
-  end
-
-  return false
+  return hive ~= nil
 end
 
-local function PickChildPrefab(inst)
-  local numprefabs = 0
-  local ratio = {}
+local function PickChildPrefab_MotherHive(inst)
+  return PickChildPrefab(
+    inst._owner,
+    inst,
+    inst.components.childspawner.emergencychildrenoutside,
+    inst.components.childspawner.maxemergencychildren)
+end
 
-  local tocheck, basechild = gettocheck(inst)
+local function PickChildPrefab_Teleportal(inst)
+  local motherhive = GetSource(inst)
 
-  for prefab, v in pairs(tocheck) do
-    ratio[prefab] = 0
-    numprefabs = numprefabs + 1
-  end
-
-  ratio[basechild] = numprefabs
-
-  local canspawnprefabs = {basechild}
-
-  for prefab, v in pairs(ratio) do
-    if prefab ~= basechild and CanSpawn(inst, prefab) then
-      ratio[prefab] = 1
-      ratio[basechild] = ratio[basechild] - 1
-      table.insert(canspawnprefabs, prefab)
-    end
-  end
-
-  local currentcount = {}
-  for k,v in pairs(ratio) do
-    currentcount[k] = 0
-  end
-
-  local total = 0
-
-  if inst.components.childspawner then
-    for child, c in pairs(inst.components.childspawner.emergencychildrenoutside) do
-      if child:IsValid() and tocheck[child.prefab] then
-        currentcount[child.prefab] = currentcount[child.prefab] + 1
-        total = total + 1
-      end
-    end
-  end
-
-  local prefabstopick = {}
-
-  if total > 0 then
-    for prefab, cnt in pairs(currentcount) do
-      if cnt / total < ratio[prefab] / numprefabs then
-        table.insert(prefabstopick, prefab)
-      end
-    end
-  end
-
-  if #prefabstopick == 0 then
-    prefabstopick = canspawnprefabs
-  end
-
-  return prefabstopick[math.random(#prefabstopick)]
+  return PickChildPrefab(
+    motherhive and motherhive._owner or nil,
+    motherhive,
+    inst.components.childspawner.emergencychildrenoutside,
+    inst.components.childspawner.maxemergencychildren
+  )
 end
 
 local function SetStage(inst, stage)
@@ -954,29 +897,26 @@ local function OnInit(inst)
   inst:DoPeriodicTask(30, RefreshHoneyArmor)
 
   MakeWatchWalls(inst)
+end
 
-  -- compat with old container component, drop everything
-  if inst.components.container ~= nil then
-    inst.components.container:DropEverything(inst.Transform:GetWorldPosition())
-    inst:DoTaskInTime(0, function() inst:RemoveComponent("container") end)
+local function itemtestfn(inst, item, slot)
+  return item and item:HasTag("beemutanttoken")
+end
+
+local function onopen(inst)
+  if not inst:HasTag("burnt") then
+    inst.SoundEmitter:PlaySound("dontstarve/wilson/chest_open")
   end
 
-  -- compat with old upgradeable component, drop upgrade materials
-  if inst.components.upgradeable ~= nil then
-    local x,y,z = inst.Transform:GetWorldPosition()
+  checkContainerTokens(inst)
+end
 
-    if inst.components.upgradeable.stage == 2 then
-      local honeycomb = SpawnPrefab("honeycomb")
-      honeycomb.components.stackable:SetStackSize(3)
-      honeycomb.Transform:SetPosition(x,y,z)
-    elseif inst.components.upgradeable.stage == 3 then
-      local royal_jelly = SpawnPrefab("royal_jelly")
-      royal_jelly.components.stackable:SetStackSize(3)
-      royal_jelly.Transform:SetPosition(x,y,z)
-    end
-
-    inst:DoTaskInTime(0, function() inst:RemoveComponent("upgradeable") end)
+local function onclose(inst)
+  if not inst:HasTag("burnt") then
+    inst.SoundEmitter:PlaySound("dontstarve/wilson/chest_close")
   end
+
+  checkContainerTokens(inst)
 end
 
 local function MakeMotherHive(name, stage_conf)
@@ -1043,13 +983,13 @@ local function MakeMotherHive(name, stage_conf)
     inst.components.childspawner.SpawnChild = function(comp, target, prefab, ...)
       local newprefab = prefab
       if target ~= nil then
-        newprefab = PickChildPrefab(inst)
+        newprefab = PickChildPrefab_MotherHive(inst)
       end
       return oldSpawnChild(comp, target, newprefab, ...)
     end
 
     inst.components.childspawner.SpawnEmergencyChild = function(comp, target, prefab, ...)
-      local newprefab = PickChildPrefab(inst)
+      local newprefab = PickChildPrefab_MotherHive(inst)
       return oldSpawnEmergencyChild(comp, target, newprefab, ...)
     end
 
@@ -1109,15 +1049,16 @@ local function MakeMotherHive(name, stage_conf)
     inst.components.hauntable:SetOnHauntFn(OnHaunt)
 
     ---------------------
-    inst:AddComponent("container") -- legacy
-    inst:AddComponent("upgradeable") -- legacy
-
-    ---------------------
 
     if stage_conf.LEVEL < 3 then
       inst:AddComponent("constructionsite")
       inst.components.constructionsite:SetConstructionPrefab("construction_container")
       inst.components.constructionsite:SetOnConstructedFn(OnConstructed)
+    else
+      inst:AddComponent("container")
+      inst.components.container:WidgetSetup("mutantbeehive_level3")
+      inst.components.container.onopenfn = onopen
+      inst.components.container.onclosefn = onclose
     end
 
     inst:AddComponent("inspectable")
@@ -1129,8 +1070,8 @@ local function MakeMotherHive(name, stage_conf)
     inst.OnRemoveEntity = OnRemoveEntity
     inst.OnSlave = OnSlave
     inst.InheritOwner = InheritOwner
-    inst.CanSpawn = CanSpawn
     inst.GetSlaves = GetSlaves
+    inst.HasSlaveWithTag = HasSlaveWithTag
     inst._onplayerjoined = function(src, player) OnPlayerJoined(inst, player) end
     inst:ListenForEvent("ms_playerjoined", inst._onplayerjoined, TheWorld)
     inst:ListenForEvent("onbuilt", OnBuilt)
@@ -1229,7 +1170,7 @@ local function teleportal()
       return
     end
 
-    local newprefab = PickChildPrefab(inst)
+    local newprefab = PickChildPrefab_Teleportal(inst)
     local child = oldSpawnEmergencyChild(comp, target, newprefab, ...)
 
     if child ~= nil then
@@ -1314,11 +1255,6 @@ STRINGS.MUTANTTELEPORTAL = "Metapis Teleportal"
 STRINGS.NAMES.MUTANTTELEPORTAL = "Metapis Teleportal"
 STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTTELEPORTAL = "Magical transportation."
 STRINGS.RECIPE_DESC.MUTANTTELEPORTAL = "Summons Metapis from Mother Hive."
-
-STRINGS.MUTANTCONTAINER = "Metapis Container"
-STRINGS.NAMES.MUTANTCONTAINER = "Metapis Container"
-STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTCONTAINER = "The swarm's provisions."
-STRINGS.RECIPE_DESC.MUTANTCONTAINER = "Stores Mother Hive's products."
 
 return MakeMotherHive("mutantbeehive", {
     SIZE_SCALE = 1.45,

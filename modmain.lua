@@ -14,6 +14,7 @@ local PREFAB_SKINS_IDS = GLOBAL.PREFAB_SKINS_IDS
 local SkillTreeDefs = require("prefabs/skilltree_defs")
 local GetClosestInstWithTag = GLOBAL.GetClosestInstWithTag
 local FindClosestEntity = GLOBAL.FindClosestEntity
+local Vector3 = GLOBAL.Vector3
 
 PrefabFiles = {
     "mutantworkerbee",
@@ -42,6 +43,7 @@ PrefabFiles = {
     "icenova_fx",
     "poison_fx",
     "metapis_buffs",
+    "mutantbeetoken",
 }
 
 Assets = {
@@ -115,6 +117,19 @@ Assets = {
 
     Asset("ATLAS", "images/skilltree_zeta_icons.xml"),
     Asset("IMAGE", "images/skilltree_zeta_icons.tex"),
+
+    Asset("ATLAS", "images/inventoryimages/mutantbasebee_token.xml"),
+    Asset("IMAGE", "images/inventoryimages/mutantbasebee_token.tex"),
+    Asset("ATLAS", "images/inventoryimages/mutantdefenderbee_token.xml"),
+    Asset("IMAGE", "images/inventoryimages/mutantdefenderbee_token.tex"),
+    Asset("ATLAS", "images/inventoryimages/mutantrangerbee_token.xml"),
+    Asset("IMAGE", "images/inventoryimages/mutantrangerbee_token.tex"),
+    Asset("ATLAS", "images/inventoryimages/mutantassassinbee_token.xml"),
+    Asset("IMAGE", "images/inventoryimages/mutantassassinbee_token.tex"),
+    Asset("ATLAS", "images/inventoryimages/mutantshadowbee_token.xml"),
+    Asset("IMAGE", "images/inventoryimages/mutantshadowbee_token.tex"),
+    Asset("ATLAS", "images/inventoryimages/mutanthealerbee_token.xml"),
+    Asset("IMAGE", "images/inventoryimages/mutanthealerbee_token.tex"),
 }
 
 RemapSoundEvent("dontstarve/characters/zeta/hurt", "zeta/zeta/hurt")
@@ -675,18 +690,53 @@ end
 
 AddPrefabPostInit("monkeyqueen", MonkeyQueenPostInit)
 
--- Recipes
-local containers = GLOBAL.require("containers")
-local oldwidgetsetup = containers.widgetsetup
-local MyChests = {
-    mutantcontainer = "treasurechest"
-}
 
-containers.widgetsetup = function(container, prefab, data)
-    prefab = MyChests[prefab or container.inst.prefab] or prefab
-    oldwidgetsetup(container, prefab, data)
+local containers = GLOBAL.require("containers")
+local mutantbeehive_level3_container = {
+  widget =
+  {
+    slotpos = {},
+    animbank = "ui_icepack_2x3",
+    animbuild = "ui_icepack_2x3",
+    pos = Vector3(50, 200, 0),
+  },
+  acceptsstacks = false,
+  itemtestfn = function(inst, item, slot) return item and item:HasTag("beemutanttoken") end,
+  type = "chest",
+}
+for y = 0, 2 do
+    table.insert(mutantbeehive_level3_container.widget.slotpos, Vector3(-162, -75 * y + 75, 0))
+    table.insert(mutantbeehive_level3_container.widget.slotpos, Vector3(-162 + 75, -75 * y + 75, 0))
 end
 
+local mutantcontainer_container = {
+    widget =
+    {
+        slotpos = {},
+        animbank = "ui_chest_3x3",
+        animbuild = "ui_chest_3x3",
+        pos = Vector3(0, 200, 0),
+        side_align_tip = 160,
+    },
+    itemtestfn = function(inst, item, slot)
+      return item and item.prefab and (
+        item.prefab == "honey" or
+        item.prefab == "zetapollen" or
+        item.prefab == "armor_honey"
+      )
+    end,
+    type = "chest",
+}
+for y = 2, 0, -1 do
+    for x = 0, 2 do
+        table.insert(mutantcontainer_container.widget.slotpos, Vector3(80 * x - 80 * 2 + 80, 80 * y - 80 * 2 + 80, 0))
+    end
+end
+
+containers.params.mutantbeehive_level3 = mutantbeehive_level3_container
+containers.params.mutantcontainer = mutantcontainer_container
+
+-- Recipes
 AddCharacterRecipe(
     "armor_honey",
     {
@@ -799,22 +849,6 @@ AddCharacterRecipe(
     }
 )
 
--- AddCharacterRecipe(
---     "hermitshop_mutantrangerhive_blueprint",
---     {
---         Ingredient("messagebottleempty", 3)
---     },
---     TECH.HERMITCRABSHOP_FIVE,
---     {
---         builder_tag = "beemaster",
---         image = "blueprint.tex",
---         product = "mutantrangerhive_blueprint"
---     }
--- )
-
--- STRINGS.RECIPE_DESC.MUTANTRANGERHIVE_BLUEPRINT = "Adds Metapis Ranger to Mother Hive."
--- STRINGS.NAMES.MUTANTRANGERHIVE_BLUEPRINT = "Metapis Ranger Hive Blueprint"
-
 AddCharacterRecipe(
     "mutantassassinhive",
     {
@@ -898,6 +932,90 @@ AddCharacterRecipe(
         atlas = "images/inventoryimages/mutantteleportal.xml",
         image = "mutantteleportal.tex",
         placer = "mutantteleportal_placer"
+    }
+)
+
+AddCharacterRecipe(
+    "mutantbasebee_token",
+    {
+        Ingredient("goldnugget", 1),
+        Ingredient("stinger", 1)
+    },
+    TECH.NONE,
+    {
+        builder_tag = "beemaster",
+        atlas = "images/inventoryimages/mutantbasebee_token.xml",
+        image = "mutantbasebee_token.tex"
+    }
+)
+
+AddCharacterRecipe(
+    "mutantdefenderbee_token",
+    {
+        Ingredient("goldnugget", 1),
+        Ingredient("stinger", 1)
+    },
+    TECH.LOST,
+    {
+        builder_tag = "beemaster",
+        atlas = "images/inventoryimages/mutantdefenderbee_token.xml",
+        image = "mutantdefenderbee_token.tex"
+    }
+)
+
+AddCharacterRecipe(
+    "mutantrangerbee_token",
+    {
+        Ingredient("goldnugget", 1),
+        Ingredient("stinger", 1)
+    },
+    TECH.LOST,
+    {
+        builder_tag = "beemaster",
+        atlas = "images/inventoryimages/mutantrangerbee_token.xml",
+        image = "mutantrangerbee_token.tex"
+    }
+)
+
+AddCharacterRecipe(
+    "mutantassassinbee_token",
+    {
+        Ingredient("goldnugget", 1),
+        Ingredient("stinger", 1)
+    },
+    TECH.LOST,
+    {
+        builder_tag = "beemaster",
+        atlas = "images/inventoryimages/mutantassassinbee_token.xml",
+        image = "mutantassassinbee_token.tex"
+    }
+)
+
+AddCharacterRecipe(
+    "mutantshadowbee_token",
+    {
+        Ingredient("goldnugget", 1),
+        Ingredient("stinger", 1)
+    },
+    TECH.LOST,
+    {
+        builder_tag = "beemaster",
+        atlas = "images/inventoryimages/mutantshadowbee_token.xml",
+        image = "mutantshadowbee_token.tex"
+    }
+)
+
+AddCharacterRecipe(
+    "mutanthealerbee_token",
+    {
+        Ingredient("goldnugget", 1),
+        Ingredient("stinger", 1)
+    },
+    TECH.LOST,
+    {
+        builder_tag = "beemaster",
+        atlas = "images/inventoryimages/mutanthealerbee_token.xml",
+        image = "mutanthealerbee_token.tex"
     }
 )
 

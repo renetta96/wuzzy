@@ -38,14 +38,6 @@ local function onchestwork(inst, worker, workleft)
   end
 end
 
-local function itemtestfn(inst, item, slot)
-  return item and item.prefab and (
-    item.prefab == "honey" or
-    item.prefab == "zetapollen" or
-    item.prefab == "armor_honey"
-  )
-end
-
 local function onopen(inst)
   if not inst:HasTag("burnt") then
     inst.SoundEmitter:PlaySound("dontstarve/wilson/chest_open")
@@ -96,7 +88,6 @@ local function chestfn()
   MakeSmallBurnable(inst)
 
   inst:AddComponent("container")
-  inst.components.container.itemtestfn = itemtestfn
   inst.components.container:WidgetSetup("mutantcontainer")
   inst.components.container.onopenfn = onopen
   inst.components.container.onclosefn = onclose
@@ -117,6 +108,11 @@ local function chestfn()
 
   return inst
 end
+
+STRINGS.MUTANTCONTAINER = "Metapis Container"
+STRINGS.NAMES.MUTANTCONTAINER = "Metapis Container"
+STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTCONTAINER = "The swarm's provisions."
+STRINGS.RECIPE_DESC.MUTANTCONTAINER = "Stores Mother Hive's products."
 
 return Prefab("mutantcontainer", chestfn, assets, prefabs),
   MakePlacer("mutantcontainer_placer", "mutantcontainer", "mutantcontainer", "idle")

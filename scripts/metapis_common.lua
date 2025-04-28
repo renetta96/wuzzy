@@ -1,3 +1,5 @@
+local hive_defs = require "hive_defs"
+
 local workersounds = {
     takeoff = "dontstarve/bee/bee_takeoff",
     attack = "dontstarve/bee/bee_attack",
@@ -693,6 +695,174 @@ local function DealPoison(inst, target)
     end
 end
 
+local function debugtable(t)
+    for k, v in pairs(t) do
+        print(k, v)
+    end
+end
+
+local function getChildTokens(inst, basechild, hivetags)
+  if not inst.components.container then
+    return nil
+  end
+
+  local tokens = {}
+  for i, item in ipairs(inst.components.container:GetAllItems()) do
+    if item and item:HasTag("beemutanttoken") then
+        if item.is_base then
+            table.insert(tokens, basechild)
+        elseif inst:HasSlaveWithTag(hivetags[item.minion_prefab]) then
+            table.insert(tokens, item.minion_prefab)
+        end
+    end
+  end
+
+  return tokens, inst.components.container:GetNumSlots()
+end
+
+local function calcExpect(hive, basechild, canspawnprefabs, checkchildtags)
+    -- init expect
+    local expect = {}
+    for prefab, v in pairs(checkchildtags) do
+        expect[prefab] = 0
+    end
+
+    if hive ~= nil and hive.components.container ~= nil then
+        local tokens, numslots = getChildTokens(hive, basechild, checkchildtags)
+
+        local totalexpect = 60 -- LCM of (1,2,3,4,5,6), a nice enough number
+        local expectPerSlot = totalexpect / numslots
+        for i, token in ipairs(tokens) do
+            expect[token] = expect[token] + expectPerSlot
+        end
+
+        local numRandomTokens = (numslots - #tokens) * expectPerSlot
+        for i, prefab in ipairs(canspawnprefabs) do
+            expect[prefab] = expect[prefab] + (numRandomTokens / #canspawnprefabs)
+        end
+
+        return expect, totalexpect
+    end
+
+    local totalexpect = #canspawnprefabs
+    expect[basechild] = totalexpect
+    for i, prefab in ipairs(canspawnprefabs) do
+        if prefab ~= basechild then
+            expect[prefab] = 1
+            expect[basechild] = expect[basechild] - 1
+        end
+    end
+
+    return expect, totalexpect
+end
+
+local function getcheckchildtags(basechild)
+    local res = {
+        [basechild] = true,
+    }
+
+    for i, def in ipairs(hive_defs.HiveDefs) do
+        res[def.minion_prefab] = def.hive_tag
+    end
+
+    return res
+end
+
+local function PickChildPrefab(owner, hive, children, maxchildren, prioritychild)
+    -- owner and hive can be nil
+    children = children or {}
+
+    local basechild = "mutantkillerbee"
+    if owner ~= nil and owner.components.skilltreeupdater:IsActivated("zeta_metapis_mimic_1") then
+        basechild = "mutantmimicbee"
+    end
+
+    local checkchildtags = getcheckchildtags(basechild)
+
+    local canspawnprefabs = {}
+    for prefab, tag in pairs(checkchildtags) do
+        if tag == true or (hive ~= nil and hive:HasSlaveWithTag(tag)) then
+            table.insert(canspawnprefabs, prefab)
+        end
+    end
+
+    local totalexpect = #canspawnprefabs
+
+    -- must spawn
+    local expect, totalexpect = calcExpect(hive, basechild, canspawnprefabs, checkchildtags)
+
+    -- print("EXPECT: ")
+    -- debugtable(expect)
+    -- print("CAN SPAWN: ")
+    -- debugtable(canspawnprefabs)
+
+    local currentcount = {}
+    for i, child in pairs(children) do
+        currentcount[child.prefab] = currentcount[child.prefab] or 0
+
+        if child:IsValid() and checkchildtags[child.prefab] ~= nil then
+            currentcount[child.prefab] = currentcount[child.prefab] + 1
+        end
+    end
+
+    -- print("CURRENT COUNT: ")
+    -- debugtable(currentcount)
+
+    local function expectedCnt(prefab)
+        return math.floor(maxchildren * expect[prefab] / totalexpect)
+    end
+
+    local function expectedDiff(prefab)
+        return math.max(0, expectedCnt(prefab) - (currentcount[prefab] or 0))
+    end
+
+    local topick = {}
+    for i, prefab in ipairs(canspawnprefabs) do
+        local cnt = currentcount[prefab] or 0
+        if cnt < expectedCnt(prefab) then
+            table.insert(topick, prefab)
+        end
+    end
+
+    if #topick == 0 then
+        -- if expect cnt is 0, make sure never pick
+        for prefab, v in pairs(expect) do
+            if v > 0 then
+                table.insert(topick, prefab)
+            end
+        end
+    end
+
+    -- print("TO PICK: ")
+    -- debugtable(topick)
+
+    -- prioritize summon this child if there is none right now
+    if prioritychild ~= nil then
+        for i, prefab in ipairs(topick) do
+            if prefab == prioritychild then
+                if (currentcount[prioritychild] or 0) == 0 then
+                    return prioritychild
+                end
+            end
+        end
+    end
+
+    topick = shuffleArray(topick)
+
+    local chosen = topick[1]
+    -- diff between expected count vs current count, cap to 0 to handle negative diff
+    local maxdiff = expectedDiff(chosen)
+    for i, prefab in ipairs(topick) do
+        local diff = expectedDiff(prefab)
+        if diff > maxdiff then
+            maxdiff = diff
+            chosen = prefab
+        end
+    end
+
+    return chosen
+end
+
 return {
     CommonInit = CommonInit,
     CommonMasterInit = CommonMasterInit,
@@ -706,4 +876,5 @@ return {
     SpawnShadowlings = SpawnShadowlings,
     DoAreaDamage = DoAreaDamage,
     DealPoison = DealPoison,
+    PickChildPrefab = PickChildPrefab,
 }
