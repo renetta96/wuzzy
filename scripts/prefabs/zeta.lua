@@ -517,65 +517,81 @@ end
 
 local function setMaxHealth(inst, amount)
   inst.components.health.maxhealth = amount
-  inst.components.health.currenthealth = math.min(
-    inst.components.health.currenthealth,
-    inst.components.health:GetMaxWithPenalty()
-  )
   inst.components.health:ForceUpdateHUD(true)
 end
 
 local function setMaxHunger(inst, amount)
   inst.components.hunger.max = amount
-  inst.components.hunger.current = math.min(inst.components.hunger.current, inst.components.hunger.max)
   inst.components.hunger:DoDelta(0)
 end
 
 local function setMaxSanity(inst, amount)
   inst.components.sanity.max = amount
-  inst.components.sanity.current = math.min(
-    inst.components.sanity.current,
-    inst.components.sanity:GetMaxWithPenalty()
-  )
   inst.components.sanity:DoDelta(0)
 end
 
-local function OnSkillChange(inst)
-  -- print("ON SKILL CHANGE")
+local function setTyrantStats(inst)
+  setMaxHealth(inst, TUNING.ZETA_HEALTH_TYRANT)
+  setMaxHunger(inst, TUNING.ZETA_HUNGER_TYRANT)
+  setMaxSanity(inst, TUNING.ZETA_SANITY_TYRANT)
+  -- tyrant damage multiplier -> CheckHiveUpgrade
+end
+
+local function setShepherdStats(inst)
+  setMaxHealth(inst, TUNING.ZETA_HEALTH_SHEPHERD)
+  setMaxHunger(inst, TUNING.ZETA_HUNGER_SHEPHERD)
+  setMaxSanity(inst, TUNING.ZETA_SANITY_SHEPHERD)
+  inst.components.combat.damagemultiplier = TUNING.OZZY_SHEPHERD_DAMAGE_MULTIPLIER
+end
+
+local function setDefaultStats(inst)
+  setMaxHealth(inst, TUNING.ZETA_HEALTH)
+  setMaxHunger(inst, TUNING.ZETA_HUNGER)
+  setMaxSanity(inst, TUNING.ZETA_SANITY)
+  inst.components.combat.damagemultiplier = TUNING.OZZY_DEFAULT_DAMAGE_MULTIPLIER
+end
+
+local function OnActivateSkill(inst, data)
+  -- print("ON ACTIVATE", data.skill, GetTime())
+  if data and data.skill then
+    if data.skill == "zeta_metapimancer_tyrant_1" then
+      setTyrantStats(inst)
+    end
+
+    if data.skill == "zeta_metapimancer_shepherd_1" then
+      setShepherdStats(inst)
+    end
+  end
+end
+
+local function OnDeactivateSkill(inst, data)
+  -- print("ON DEACTIVATE", data.skill, GetTime())
+  if data and data.skill then
+    if data.skill == "zeta_metapimancer_tyrant_1" then
+      setDefaultStats(inst)
+    end
+
+    if data.skill == "zeta_metapimancer_shepherd_1" then
+      setDefaultStats(inst)
+    end
+  end
+end
+
+local function OnSkillTreeInitialized(inst)
+  -- print("ON SKILL TREE INIT", GetTime())
 
   local skilltreeupdater = inst.components.skilltreeupdater
   if not skilltreeupdater then
     return
   end
 
-  -- no changes to current health/hunger/sanity, only affect max values
   if skilltreeupdater:IsActivated("zeta_metapimancer_tyrant_1") then
-    setMaxHealth(inst, TUNING.ZETA_HEALTH_TYRANT)
-    setMaxHunger(inst, TUNING.ZETA_HUNGER_TYRANT)
-    setMaxSanity(inst, TUNING.ZETA_SANITY_TYRANT)
-    -- tyrant damage multiplier -> CheckHiveUpgrade
+    setTyrantStats(inst)
   elseif skilltreeupdater:IsActivated("zeta_metapimancer_shepherd_1") then
-    setMaxHealth(inst, TUNING.ZETA_HEALTH_SHEPHERD)
-    setMaxHunger(inst, TUNING.ZETA_HUNGER_SHEPHERD)
-    setMaxSanity(inst, TUNING.ZETA_SANITY_SHEPHERD)
-    inst.components.combat.damagemultiplier = TUNING.OZZY_SHEPHERD_DAMAGE_MULTIPLIER
+    setShepherdStats(inst)
   else
-    setMaxHealth(inst, TUNING.ZETA_HEALTH)
-    setMaxHunger(inst, TUNING.ZETA_HUNGER)
-    setMaxSanity(inst, TUNING.ZETA_SANITY)
-    inst.components.combat.damagemultiplier = TUNING.OZZY_DEFAULT_DAMAGE_MULTIPLIER
+    setDefaultStats(inst)
   end
-end
-
-local function OnActivateSkill(inst, data)
-  OnSkillChange(inst)
-end
-
-local function OnDeactivateSkill(inst, data)
-  OnSkillChange(inst)
-end
-
-local function OnSkillTreeInitialized(inst)
-  OnSkillChange(inst)
 end
 
 -- This initializes for the server only. Components are added here.
