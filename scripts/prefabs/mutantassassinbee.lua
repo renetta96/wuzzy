@@ -8,6 +8,7 @@ local DealPoison = metapis_common.DealPoison
 
 local assets = {
     Asset("ANIM", "anim/mutantassassinbee.zip"),
+    Asset("ANIM", "anim/mutantbee_teleport.zip"),
     Asset("SOUND", "sound/bee.fsb")
 }
 
@@ -104,7 +105,14 @@ local function assassinbee()
     local inst = metapis_common.CommonInit(
     	"bee", "mutantassassinbee",
     	{"killer", "assassin", "scarytoprey"},
-        {buff = AssassinBuff, sounds = "killer", basedamagefn = calcBaseDamage},
+        {
+            buff = AssassinBuff,
+            sounds = "killer",
+            basedamagefn = calcBaseDamage,
+            atkperiodfn = function() return TUNING.MUTANT_BEE_ASSASSIN_ATTACK_PERIOD end,
+            rage_fx_scale_fn = function() return 2.5 end,
+            frenzy_fx_offset = {x=-3, y=38, z=0}
+        },
     	CheckAssassinUpgrade)
 
     if not TheWorld.ismastersim then

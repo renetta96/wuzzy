@@ -49,11 +49,15 @@ function AssassinBeeBrain:OnStart()
 		{
 			WhileNode( function() return self.inst.components.hauntable and self.inst.components.hauntable.panic end, "PanicHaunted", Panic(self.inst)),
 			WhileNode( function() return self.inst.components.health.takingfiredamage end, "OnFire", Panic(self.inst)),
-
+			beecommon.FrenzyNode(self.inst),
 			beecommon.AvoidEpicAtkNode(self.inst),
 
 			WhileNode(
 				function()
+					if self.inst.frenzy_buff then
+						return false
+					end
+
 					return GetClosestDefender(self.inst) and beecommon.IsBeingChased(self.inst)
 				end,
 				"LookForHelp",
@@ -62,6 +66,10 @@ function AssassinBeeBrain:OnStart()
 			),
 			WhileNode(
 				function()
+					if self.inst.frenzy_buff then
+						return false
+					end
+
 					return self.inst.components.combat.target and self.inst.components.combat:InCooldown()
 				end,
 				"Dodge",
@@ -73,6 +81,10 @@ function AssassinBeeBrain:OnStart()
 			),
 			WhileNode(
 				function()
+					if self.inst.frenzy_buff then
+						return false
+					end
+
 					if beecommon.IsEpicAttackComing(self.inst) then
 						return false
 					end

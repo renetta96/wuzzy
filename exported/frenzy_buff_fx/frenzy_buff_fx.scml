@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<spriter_data scml_version="1.0" generator="BrashMonkey Spriter" generator_version="r11">
+    <folder id="0" name="fx">
+        <file id="0" name="fx/fx-0.png" width="64" height="64" pivot_x="0.515625" pivot_y="0.53125"/>
+    </folder>
+    <entity id="0" name="frenzy_buff_fx">
+        <animation id="0" name="idle" length="450" interval="100">
+            <mainline>
+                <key id="0" curve_type="cubic" c1="0.995025" c2="0">
+                    <object_ref id="0" timeline="0" key="0" z_index="0"/>
+                </key>
+                <key id="1" time="450" curve_type="cubic" c1="0.995025" c2="0.995025">
+                    <object_ref id="0" timeline="0" key="1" z_index="0"/>
+                </key>
+            </mainline>
+            <timeline id="0" name="fx-0">
+                <key id="0" spin="0">
+                    <object folder="0" file="0" x="0.053662" y="0.015228" angle="0" scale_x="0.85" scale_y="0.85"/>
+                </key>
+                <key id="1" time="450" spin="0">
+                    <object folder="0" file="0" x="0.053662" y="0.015228" angle="0" scale_x="1.5" scale_y="1.5"/>
+                </key>
+            </timeline>
+        </animation>
+    </entity>
+</spriter_data>

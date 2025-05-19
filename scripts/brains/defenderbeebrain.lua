@@ -43,10 +43,17 @@ function DefenderBeeBrain:OnStart()
 		{
 			WhileNode( function() return self.inst.components.hauntable and self.inst.components.hauntable.panic end, "PanicHaunted", Panic(self.inst)),
 			WhileNode( function() return self.inst.components.health.takingfiredamage end, "OnFire", Panic(self.inst)),
-
+			beecommon.FrenzyNode(self.inst),
 			beecommon.AvoidEpicAtkNode_Defender(self.inst),
 
-			WhileNode( function() return self.inst.components.combat:HasTarget() end,
+			WhileNode(
+				function()
+					if self.inst.frenzy_buff then
+						return false
+					end
+
+					return self.inst.components.combat:HasTarget()
+				end,
 				"Attack",
 				ChaseAndAttack(self.inst, MAX_CHASE_TIME, MAX_CHASE_DIST)
 			),

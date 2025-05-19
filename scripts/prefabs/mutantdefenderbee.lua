@@ -211,7 +211,10 @@ local function CheckDefenderUpgrade(inst, stage)
 
     if stage >= 2 then
         if not protectaura then
-            inst.components.health:SetAbsorptionAmount(TUNING.MUTANT_BEE_DEFENDER_ABSORPTION)
+            inst.components.health.externalabsorbmodifiers:SetModifier(
+                "motherhive_stage2",
+                TUNING.MUTANT_BEE_DEFENDER_ABSORPTION
+            )
         end
 
         inst._protectaura = protectaura
@@ -293,7 +296,10 @@ local function defenderbee()
     {
         notburnable = true, notfreezable = true, notprotectable = true,
         buff = GuardianBuff, hitsymbol = "mane",
-        basedamagefn = function() return TUNING.MUTANT_BEE_DEFENDER_DAMAGE end
+        basedamagefn = function() return TUNING.MUTANT_BEE_DEFENDER_DAMAGE end,
+        atkperiodfn = function() return TUNING.MUTANT_BEE_DEFENDER_ATTACK_PERIOD end,
+        rage_fx_scale_fn = function() return 5.5 end,
+        frenzy_fx_offset = {x=-3, y=52, z=0}
     }, CheckDefenderUpgrade)
     inst.components.locomotor.walkspeed = 3
     inst.components.locomotor.pathcaps = {allowocean = true}

@@ -185,6 +185,10 @@ end
 local function AvoidEpicAtkNode(inst, dist)
 	return WhileNode(
 		function()
+			if inst.frenzy_buff then
+				return false -- if in frenzy buff, do not avoid
+			end
+
 			local iscoming = IsEpicAttackComing(inst, dist)
 			-- print("IS EPIC COMING ", iscoming)
 			return iscoming
@@ -201,6 +205,10 @@ end
 local function AvoidEpicAtkNode_Defender(inst)
 	return WhileNode(
 		function()
+			if inst.frenzy_buff then
+				return false
+			end
+
 			return IsEpicAttackComing_Defender(inst)
 		end,
 		"AvoidEpicAttack",
@@ -209,6 +217,16 @@ local function AvoidEpicAtkNode_Defender(inst)
 			function() return FindEpicEnemy(inst) end,
 			AVOID_EPIC_DIST, STOP_AVOID_EPIC_DIST
 		)
+	)
+end
+
+local function FrenzyNode(inst)
+	return WhileNode(
+		function()
+			return inst.frenzy_buff == true
+		end,
+		"FrenzyAttack",
+		ChaseAndAttack(inst, 30, 10)
 	)
 end
 
@@ -230,21 +248,6 @@ local function IsBeingChased(inst, dist)
 	end
 
 	return false
-end
-
-local IfElseNode = Class(BehaviourNode, function(self, condition, if_node, else_node)
-  BehaviourNode._ctor(self, "If-Else")
-  self.condition = condition
-  self.if_node = if_node
-  self.else_node = else_node
-end)
-
-function IfElseNode:Visit()
-  if self.condition() then
-    return self.if_node:Visit()
-  else
-    return self.else_node:Visit()
-  end
 end
 
 local CircleAroundTarget = Class(BehaviourNode, function(self, inst, radius, avoid_radius, thetaincrement, max_time)
@@ -348,8 +351,8 @@ return {
 	IsEpicAttackComing = IsEpicAttackComing,
   AvoidEpicAtkNode = AvoidEpicAtkNode,
   AvoidEpicAtkNode_Defender = AvoidEpicAtkNode_Defender,
-  IfElseNode = IfElseNode,
   CircleAroundTarget = CircleAroundTarget,
+  FrenzyNode = FrenzyNode,
 
 	MAX_WANDER_DIST = MAX_WANDER_DIST,
 }

@@ -60,14 +60,22 @@ local events = {
         "doattack",
         function(inst)
             if not (inst.sg:HasStateTag("busy") or inst.components.health:IsDead()) then
-                inst.sg:GoToState("attack")
+                if inst.frenzy_buff then
+                    inst.sg:GoToState("attack_fast")
+                else
+                    inst.sg:GoToState("attack")
+                end
             end
         end
     ),
     EventHandler(
         "death",
         function(inst)
-            inst.sg:GoToState("death")
+            if inst.frenzy_buff and inst._frenzy_explode then
+                inst.sg:GoToState("death_explode")
+            else
+                inst.sg:GoToState("death")
+            end
         end
     ),
     CommonHandlers.OnSleepEx(),
@@ -104,6 +112,26 @@ local states = {
             inst.AnimState:PlayAnimation("death")
             inst.Physics:Stop()
             RemovePhysicsColliders(inst)
+            if inst.components.lootdropper ~= nil then
+                inst.components.lootdropper:DropLoot(inst:GetPosition())
+            end
+        end,
+        timeline = {
+            TimeEvent(12 * FRAMES, LandFlyingCreature)
+        }
+    },
+    State {
+        name = "death_explode",
+        tags = {"busy"},
+        onenter = function(inst)
+            StopBuzz(inst)
+
+            inst.AnimState:PlayAnimation("explode")
+            inst.Physics:Stop()
+            RemovePhysicsColliders(inst)
+
+            inst:Explode()
+
             if inst.components.lootdropper ~= nil then
                 inst.components.lootdropper:DropLoot(inst:GetPosition())
             end
@@ -356,6 +384,37 @@ local states = {
             ),
             TimeEvent(
                 15 * FRAMES,
+                function(inst)
+                    inst.components.combat:DoAttack()
+                end
+            )
+        },
+        events = {
+            EventHandler(
+                "animover",
+                function(inst)
+                    inst.sg:GoToState("idle")
+                end
+            )
+        }
+    },
+    State {
+        name = "attack_fast",
+        tags = {"attack"},
+        onenter = function(inst, cb)
+            inst.Physics:Stop()
+            inst.components.combat:StartAttack()
+            inst.AnimState:PlayAnimation("atk_fast")
+        end,
+        timeline = {
+            TimeEvent(
+                3 * FRAMES,
+                function(inst)
+                    inst.SoundEmitter:PlaySound(inst.sounds.attack)
+                end
+            ),
+            TimeEvent(
+                8 * FRAMES,
                 function(inst)
                     inst.components.combat:DoAttack()
                 end

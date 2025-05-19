@@ -192,7 +192,11 @@ local function shadowbee()
         {"shadowbee", "killer", "scarytoprey"},
         {
             notburnable = true, notfreezable = true, notsleep = true,
-            buff = ShadowBuff, sounds = "killer", basedamagefn = calcBaseDamage
+            buff = ShadowBuff, sounds = "killer",
+            basedamagefn = calcBaseDamage,
+            atkperiodfn = function() return TUNING.MUTANT_BEE_SHADOW_ATK_PERIOD end,
+            rage_fx_scale_fn = function() return 2.5 end,
+            frenzy_fx_offset = {x=-3, y=40, z=0}
         },
         CheckShadowUpgrade
     )
@@ -239,7 +243,13 @@ local function lessershadowfn()
         {"lessershadowbee", "killer", "scarytoprey"},
         {
             notburnable = true, notfreezable = true, notsleep = true, notprotectable = true,
-            sounds = "killer", basedamagefn = function() return TUNING.MUTANT_SHADOWLING_DAMAGE end
+            sounds = "killer",
+
+            -- not used
+            basedamagefn = function() return TUNING.MUTANT_SHADOWLING_DAMAGE end,
+            atkperiodfn = function() return TUNING.MUTANT_BEE_ATTACK_PERIOD end,
+            rage_fx_scale_fn = function() return 1 end,
+            frenzy_fx_offset = {x=0, y=0, z=0}
         }
     )
 

@@ -7,6 +7,7 @@ local FindTarget = metapis_common.FindTarget
 
 local assets = {
     Asset("ANIM", "anim/mutantrangerbee.zip"),
+    Asset("ANIM", "anim/mutantbee_teleport.zip"),
     Asset("SOUND", "sound/bee.fsb")
 }
 
@@ -17,8 +18,16 @@ local prefabs = {
     "blowdart_pipe"
 }
 
+local function calcAtkPeriod(inst)
+    if inst.buffed then
+        return TUNING.MUTANT_BEE_RANGED_ATK_PERIOD - 1
+    end
+
+    return TUNING.MUTANT_BEE_RANGED_ATK_PERIOD
+end
+
 local function RangerBuff(inst)
-    inst.components.combat:SetAttackPeriod(TUNING.MUTANT_BEE_RANGED_ATK_PERIOD - 1)
+    inst:RefreshAtkPeriod()
 end
 
 
@@ -176,6 +185,14 @@ local function OnAttack(inst, data)
     end
 end
 
+local function doCircleAtk(inst)
+    inst._circleAtkTask = nil
+
+    LightningStrike(inst)
+
+    inst._circleAtkTask = inst:DoTaskInTime(inst.components.combat.min_attack_period, doCircleAtk)
+end
+
 local brains = require("brains/rangedkillerbeebrain")
 local function CheckRangerUpgrade(inst, stage)
     local owner = inst:GetOwner()
@@ -196,13 +213,20 @@ local function CheckRangerUpgrade(inst, stage)
         inst._shouldcircleatk = shouldcircleatk
         inst._leader_dist = 20
         inst:SetBrain(brains.circle_brain)
-        inst:DoPeriodicTask(TUNING.MUTANT_BEE_RANGED_ATK_PERIOD, LightningStrike)
         inst.components.locomotor.groundspeedmultiplier = 1.75
+
+        -- make sure one task at a time
+        if inst._circleAtkTask ~= nil then
+            inst._circleAtkTask:Cancel()
+            inst._circleAtkTask = nil
+        end
+
+        inst._circleAtkTask = inst:DoTaskInTime(inst.components.combat.min_attack_period, doCircleAtk)
     end
 
     if shouldcharge then
         inst._shouldcharge = shouldcharge
-        inst.components.combat:SetAttackPeriod(0)
+        -- inst.components.combat:SetAttackPeriod(0)
         TurnOffLight(inst) -- just in case
 
         inst:ListenForEvent("death", function() disable_chargefx(inst) end)
@@ -234,12 +258,26 @@ local function RangedRetarget(inst)
     return FindTarget(inst, TUNING.MUTANT_BEE_RANGED_TARGET_DIST)
 end
 
+local function onweaponattack(inst, attacker, target)
+    --target could be killed or removed in combat damage phase
+    if target:IsValid() then
+        SpawnPrefab("electrichitsparks"):AlignToTarget(target, inst)
+    end
+end
+
 local function rangerbee()
     local inst = metapis_common.CommonInit(
     	"bee",
     	"mutantrangerbee",
     	{"killer", "ranger", "scarytoprey"},
-    	{buff = RangerBuff, sounds = "killer", basedamagefn = function() return TUNING.MUTANT_BEE_RANGED_DAMAGE end},
+    	{
+            buff = RangerBuff,
+            sounds = "killer",
+            basedamagefn = function() return TUNING.MUTANT_BEE_RANGED_DAMAGE end,
+            atkperiodfn = calcAtkPeriod,
+            rage_fx_scale_fn = function() return 2.5 end,
+            frenzy_fx_offset = {x=-5, y=45, z=0}
+        },
     	CheckRangerUpgrade)
 
     inst.entity:AddLight()
@@ -274,6 +312,7 @@ local function rangerbee()
         weapon.components.weapon:SetRange(TUNING.MUTANT_BEE_WEAPON_ATK_RANGE)
         weapon.components.weapon:SetProjectile("electric_bubble")
         weapon.components.weapon:SetElectric()
+        weapon.components.weapon:SetOnAttack(onweaponattack)
 
         weapon:AddComponent("inventoryitem")
         weapon.persists = false

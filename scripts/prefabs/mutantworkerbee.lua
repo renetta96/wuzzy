@@ -2,6 +2,7 @@ local metapis_common = require "metapis_common"
 
 local assets = {
     Asset("ANIM", "anim/mutantworkerbee.zip"),
+    Asset("ANIM", "anim/mutantbee_teleport.zip"),
     Asset("SOUND", "sound/bee.fsb")
 }
 
@@ -25,7 +26,13 @@ local function workerbee()
     	"bee",
     	"mutantworkerbee",
     	{"worker", "pollinator"},
-    	{ sounds = "worker", basedamagefn = function() return TUNING.MUTANT_BEE_DAMAGE end },
+    	{
+            sounds = "worker",
+            basedamagefn = function() return TUNING.MUTANT_BEE_DAMAGE end,
+            atkperiodfn = function() return TUNING.MUTANT_BEE_ATTACK_PERIOD end,
+            rage_fx_scale_fn = function() return 2.5 end,
+            frenzy_fx_offset = {x=-3, y=42, z=0}
+        },
     	CheckWorkerUpgrade
     )
 

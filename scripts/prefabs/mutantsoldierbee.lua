@@ -6,6 +6,7 @@ local FindTarget = metapis_common.FindTarget
 
 local assets = {
     Asset("ANIM", "anim/mutantsoldierbee.zip"),
+    Asset("ANIM", "anim/mutantbee_teleport.zip"),
     Asset("SOUND", "sound/bee.fsb")
 }
 
@@ -23,7 +24,10 @@ end
 
 local function CheckSoldierUpgrade(inst, stage)
     if stage >= 2 then
-        inst.components.health:SetAbsorptionAmount(TUNING.MUTANT_BEE_SOLDIER_ABSORPTION)
+        inst.components.health.externalabsorbmodifiers:SetModifier(
+            "motherhive_stage2",
+            TUNING.MUTANT_BEE_SOLDIER_ABSORPTION
+        )
     end
 
     if stage >= 3 then
@@ -36,8 +40,16 @@ local function CheckSoldierUpgrade(inst, stage)
     return true
 end
 
+local function calcAtkPeriod(inst)
+    if inst.buffed then
+        return TUNING.MUTANT_BEE_ATTACK_PERIOD - 0.5
+    end
+
+    return TUNING.MUTANT_BEE_ATTACK_PERIOD
+end
+
 local function SoldierBuff(inst)
-    inst.components.combat:SetAttackPeriod(TUNING.MUTANT_BEE_ATTACK_PERIOD - 0.5)
+    inst:RefreshAtkPeriod()
 end
 
 local function retargetfn(inst)
@@ -50,7 +62,14 @@ local function killerbee()
     	"bee",
     	"mutantsoldierbee",
     	{"soldier", "killer", "scarytoprey"},
-    	{buff = SoldierBuff, sounds = "killer", basedamagefn = function() return TUNING.MUTANT_BEE_DAMAGE end},
+    	{
+            buff = SoldierBuff,
+            sounds = "killer",
+            basedamagefn = function() return TUNING.MUTANT_BEE_DAMAGE end,
+            atkperiodfn = calcAtkPeriod,
+            rage_fx_scale_fn = function() return 2.5 end,
+            frenzy_fx_offset = {x=-3, y=42, z=0}
+        },
     	CheckSoldierUpgrade)
 
     if not TheWorld.ismastersim then

@@ -59,16 +59,16 @@ Assets = {
     Asset("ATLAS", "images/map_icons/zeta.xml"),
     Asset("IMAGE", "images/map_icons/mutantbeehive.tex"),
     Asset("ATLAS", "images/map_icons/mutantbeehive.xml"),
-    Asset("IMAGE", "images/map_icons/mutantdefenderhive.tex"),
-    Asset("ATLAS", "images/map_icons/mutantdefenderhive.xml"),
-    Asset("IMAGE", "images/map_icons/mutantrangerhive.tex"),
-    Asset("ATLAS", "images/map_icons/mutantrangerhive.xml"),
-    Asset("IMAGE", "images/map_icons/mutantassassinhive.tex"),
-    Asset("ATLAS", "images/map_icons/mutantassassinhive.xml"),
-    Asset("IMAGE", "images/map_icons/mutantshadowhive.tex"),
-    Asset("ATLAS", "images/map_icons/mutantshadowhive.xml"),
-    Asset("IMAGE", "images/map_icons/mutanthealerhive.tex"),
-    Asset("ATLAS", "images/map_icons/mutanthealerhive.xml"),
+    -- Asset("IMAGE", "images/map_icons/mutantdefenderhive.tex"),
+    -- Asset("ATLAS", "images/map_icons/mutantdefenderhive.xml"),
+    -- Asset("IMAGE", "images/map_icons/mutantrangerhive.tex"),
+    -- Asset("ATLAS", "images/map_icons/mutantrangerhive.xml"),
+    -- Asset("IMAGE", "images/map_icons/mutantassassinhive.tex"),
+    -- Asset("ATLAS", "images/map_icons/mutantassassinhive.xml"),
+    -- Asset("IMAGE", "images/map_icons/mutantshadowhive.tex"),
+    -- Asset("ATLAS", "images/map_icons/mutantshadowhive.xml"),
+    -- Asset("IMAGE", "images/map_icons/mutanthealerhive.tex"),
+    -- Asset("ATLAS", "images/map_icons/mutanthealerhive.xml"),
     Asset("IMAGE", "images/map_icons/mutantteleportal.tex"),
     Asset("ATLAS", "images/map_icons/mutantteleportal.xml"),
     Asset("IMAGE", "images/avatars/avatar_zeta.tex"),
@@ -241,6 +241,7 @@ TUNING.MUTANT_BEE_HEALER_MAX_HEAL_ORB_MIN_DISTANCE = 2
 TUNING.MUTANT_BEE_HEALER_MAX_HEAL_ORB_MAX_DISTANCE = 5
 
 TUNING.MUTANT_BEE_RAGED_DAMAGE_BUFF = 1.25
+TUNING.MUTANT_BEE_FRENZY_ATK_SPEED_BUFF = 0.5
 
 -- Mutant beehive stats
 TUNING.MUTANT_BEEHIVE_DEFAULT_EMERGENCY_BEES = 0
@@ -274,8 +275,10 @@ TUNING.ARMORHONEY_MULT_REGEN_TICK = 2 / 3
 
 -- Melissa
 TUNING.MELISSA_DAMAGE = 40
-TUNING.MELISSA_USES = 200
+TUNING.MELISSA_DAMAGE_2 = 52
+TUNING.MELISSA_USES = 150
 TUNING.MELISSA_SWAP_USES = 20
+TUNING.MELISSA_SLAM_DAMAGE_MULT = 3
 
 -- Sting trap
 TUNING.STING_TRAP_USES = 250
@@ -300,12 +303,13 @@ STRINGS.CHARACTERS.ZETA = require "speech_zeta"
 STRINGS.NAMES.ZETA = "Wuzzy"
 
 AddMinimapAtlas("images/map_icons/zeta.xml")
-AddMinimapAtlas("images/map_icons/mutantbeecocoon.xml")
+-- AddMinimapAtlas("images/map_icons/mutantbeecocoon.xml")
 AddMinimapAtlas("images/map_icons/mutantbeehive.xml")
-AddMinimapAtlas("images/map_icons/mutantdefenderhive.xml")
-AddMinimapAtlas("images/map_icons/mutantrangerhive.xml")
-AddMinimapAtlas("images/map_icons/mutantassassinhive.xml")
-AddMinimapAtlas("images/map_icons/mutantshadowhive.xml")
+-- AddMinimapAtlas("images/map_icons/mutantdefenderhive.xml")
+-- AddMinimapAtlas("images/map_icons/mutantrangerhive.xml")
+-- AddMinimapAtlas("images/map_icons/mutantassassinhive.xml")
+-- AddMinimapAtlas("images/map_icons/mutantshadowhive.xml")
+-- AddMinimapAtlas("images/map_icons/mutanthealerhive.xml")
 AddMinimapAtlas("images/map_icons/mutantteleportal.xml")
 
 
@@ -333,12 +337,15 @@ RegisterSkilltreeIconsAtlas("images/skilltree_zeta_icons.xml", "zeta_metapis_def
 RegisterSkilltreeIconsAtlas("images/skilltree_zeta_icons.xml", "zeta_metapis_ranger_1.tex")
 RegisterSkilltreeIconsAtlas("images/skilltree_zeta_icons.xml", "zeta_metapis_ranger_2.tex")
 RegisterSkilltreeIconsAtlas("images/skilltree_zeta_icons.xml", "zeta_metapis_mimic_1.tex")
+RegisterSkilltreeIconsAtlas("images/skilltree_zeta_icons.xml", "zeta_metapis_healer_1.tex")
+RegisterSkilltreeIconsAtlas("images/skilltree_zeta_icons.xml", "zeta_metapis_healer_2.tex")
 RegisterSkilltreeIconsAtlas("images/skilltree_zeta_icons.xml", "zeta_metapimancer_tyrant_1.tex")
 RegisterSkilltreeIconsAtlas("images/skilltree_zeta_icons.xml", "zeta_metapimancer_tyrant_2.tex")
 RegisterSkilltreeIconsAtlas("images/skilltree_zeta_icons.xml", "zeta_metapimancer_shepherd_1.tex")
 RegisterSkilltreeIconsAtlas("images/skilltree_zeta_icons.xml", "zeta_metapimancer_shepherd_2.tex")
 RegisterSkilltreeIconsAtlas("images/skilltree_zeta_icons.xml", "zeta_honeysmith_melissa_1.tex")
 RegisterSkilltreeIconsAtlas("images/skilltree_zeta_icons.xml", "zeta_honeysmith_melissa_2.tex")
+
 
 CreateSkillTree()
 
@@ -1056,23 +1063,23 @@ AddCharacterRecipe(
     }
 )
 
-AddCharacterRecipe(
-    "honey_sting_ball",
-    {
-        Ingredient("honey", 5),
-        Ingredient("stinger", 5),
-        Ingredient("cutgrass", 2)
-    },
-    TECH.SCIENCE_ONE,
-    {
-        builder_tag = "beemaster",
-        atlas = "images/inventoryimages/honey_sting_ball.xml",
-        image = "honey_sting_ball.tex"
-    },
-    {
-        "WEAPONS"
-    }
-)
+-- AddCharacterRecipe(
+--     "honey_sting_ball",
+--     {
+--         Ingredient("honey", 5),
+--         Ingredient("stinger", 5),
+--         Ingredient("cutgrass", 2)
+--     },
+--     TECH.SCIENCE_ONE,
+--     {
+--         builder_tag = "beemaster",
+--         atlas = "images/inventoryimages/honey_sting_ball.xml",
+--         image = "honey_sting_ball.tex"
+--     },
+--     {
+--         "WEAPONS"
+--     }
+-- )
 
 GLOBAL.CONSTRUCTION_PLANS["mutantbeehive"] = {
     Ingredient("honeycomb", 3),
@@ -1385,7 +1392,7 @@ AddStategraphState("wilson", State{
             spawn_land_fx(inst, target)
 
             local damagemultiplier = inst.components.combat.damagemultiplier
-            inst.components.combat.damagemultiplier = (damagemultiplier or 1) * 2.0
+            inst.components.combat.damagemultiplier = (damagemultiplier or 1) * TUNING.MELISSA_SLAM_DAMAGE_MULT
             inst:PerformBufferedAction()
             inst.components.combat.damagemultiplier = damagemultiplier
             inst.sg:RemoveStateTag("abouttoattack")

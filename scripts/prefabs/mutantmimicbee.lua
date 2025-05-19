@@ -7,6 +7,8 @@ local DealPoison = metapis_common.DealPoison
 
 local assets = {
     Asset("ANIM", "anim/mutantmimicbee.zip"),
+    Asset("ANIM", "anim/mutantbee_teleport.zip"),
+
     Asset("ANIM", "anim/mutantmimicbee_defender.zip"),
     Asset("ANIM", "anim/mutantmimicbee_ranger.zip"),
     Asset("ANIM", "anim/mutantmimicbee_shadow.zip"),
@@ -286,7 +288,7 @@ local function TryMimic(inst)
                     and guy:GetOwner() == inst:GetOwner()
             end,
             {"_combat", "_health"},
-            {"INLIMBO", "player"},
+            {"INLIMBO", "player", "lesserminion"},
             {"beemutantminion"}
         )
         if entity ~= nil then
@@ -331,7 +333,10 @@ end
 
 local function CheckMimicUpgrade(inst, stage)
     if stage >= 2 then
-        inst.components.health:SetAbsorptionAmount(TUNING.MUTANT_BEE_SOLDIER_ABSORPTION)
+        inst.components.health.externalabsorbmodifiers:SetModifier(
+            "motherhive_stage2",
+            TUNING.MUTANT_BEE_SOLDIER_ABSORPTION
+        )
     end
 
     if stage >= 3 then
@@ -346,8 +351,16 @@ local function CheckMimicUpgrade(inst, stage)
     return true
 end
 
+local function calcAtkPeriod(inst)
+    if inst.buffed then
+        return TUNING.MUTANT_BEE_ATTACK_PERIOD - 0.5
+    end
+
+    return TUNING.MUTANT_BEE_ATTACK_PERIOD
+end
+
 local function MimicBuff(inst)
-    inst.components.combat:SetAttackPeriod(TUNING.MUTANT_BEE_ATTACK_PERIOD - 0.5)
+    inst:RefreshAtkPeriod()
 end
 
 local function retargetfn(inst)
@@ -360,7 +373,14 @@ local function mimicbee()
     	"bee",
     	"mutantmimicbee",
     	{"mimic", "killer", "scarytoprey"},
-    	{buff = MimicBuff, sounds = "killer", basedamagefn = function() return TUNING.MUTANT_BEE_DAMAGE end},
+    	{
+            buff = MimicBuff,
+            sounds = "killer",
+            basedamagefn = function() return TUNING.MUTANT_BEE_DAMAGE end,
+            atkperiodfn = calcAtkPeriod,
+            rage_fx_scale_fn = function() return 2.5 end,
+            frenzy_fx_offset = {x=-5, y=40, z=0}
+        },
     	CheckMimicUpgrade)
 
     inst.Transform:SetScale(1.0, 1.0, 1.0)

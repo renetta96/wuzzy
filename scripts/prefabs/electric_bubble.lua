@@ -7,6 +7,11 @@ local assets = {
 
 local function OnHit(inst, owner, target)
     SpawnPrefab("electric_bubble_hit").Transform:SetPosition(inst.Transform:GetWorldPosition())
+
+    if target:IsValid() then
+        SpawnPrefab("electrichitsparks"):AlignToTarget(target, owner:IsValid() and owner or inst, true)
+    end
+
     inst:Remove()
 end
 
@@ -118,23 +123,30 @@ local function Attach(inst, target)
     end
 end
 
-local function charge_fx()
-    local inst = CreateEntity()
-
-    inst.entity:AddTransform()
+local function playChargeFX(inst)
     inst.entity:AddAnimState()
-    inst.entity:AddNetwork()
-
-    inst.Transform:SetFourFaced()
-    inst.Transform:SetScale(0.8, 0.8, 0.8)
-
     inst.AnimState:SetBank("electric_bubble")
     inst.AnimState:SetBuild("electric_bubble")
     inst.AnimState:PlayAnimation("charge_loop", true)
     inst.AnimState:SetBloomEffectHandle("shaders/anim.ksh")
     inst.AnimState:SetLightOverride(0.3)
+end
+
+local function charge_fx()
+    local inst = CreateEntity()
+
+    inst.entity:AddTransform()
+    inst.entity:AddNetwork()
+
+    inst.Transform:SetFourFaced()
+    inst.Transform:SetScale(0.8, 0.8, 0.8)
 
     inst:AddTag("FX")
+
+    -- Dedicated server does not need to play the local fx anim
+    if not TheNet:IsDedicated() then
+      inst:DoTaskInTime(0, playChargeFX)
+    end
 
     inst.entity:SetPristine()
 
@@ -142,6 +154,7 @@ local function charge_fx()
         return inst
     end
 
+    inst.entity:SetCanSleep(false)
     inst.persists = false
     inst.Attach = Attach
 

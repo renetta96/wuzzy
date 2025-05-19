@@ -30,6 +30,9 @@ function BlinkSwap:SetOnBlinkDoerFn(onblinkfn)
 	self.blinkstaff_doer.components.blinkstaff.onblinkfn = onblinkfn
 end
 
+function BlinkSwap:SetOnBlinkTargetFn(onblinkfn)
+	self.blinkstaff_target.components.blinkstaff.onblinkfn = onblinkfn
+end
 
 function BlinkSwap:Swap(doer, target)
 	local targetPos = target:GetPosition()

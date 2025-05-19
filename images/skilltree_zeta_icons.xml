@@ -2,21 +2,22 @@
 <Atlas>
 	<Texture filename="skilltree_zeta_icons.tex" />
 	<Elements>
-		<Element name="zeta_honeysmith_melissa_1.tex" u1="0.001" u2="0.249" v2="0.999" v1="0.751" variant="" />
-		<Element name="zeta_honeysmith_melissa_2.tex" u1="0.251" u2="0.499" v2="0.999" v1="0.751" variant="" />
-		<Element name="zeta_metapimancer_shepherd_1.tex" u1="0.001" u2="0.249" v2="0.749" v1="0.501" variant="" />
-		<Element name="zeta_metapimancer_shepherd_2.tex" u1="0.251" u2="0.499" v2="0.749" v1="0.501" variant="" />
-		<Element name="zeta_metapimancer_tyrant_1.tex" u1="0.501" u2="0.749" v2="0.999" v1="0.751" variant="" />
-		<Element name="zeta_metapimancer_tyrant_2.tex" u1="0.501" u2="0.749" v2="0.749" v1="0.501" variant="" />
-		<Element name="zeta_metapis_assassin_1.tex" u1="0.751" u2="0.999" v2="0.999" v1="0.751" variant="" />
-		<Element name="zeta_metapis_assassin_2.tex" u1="0.751" u2="0.999" v2="0.749" v1="0.501" variant="" />
-		<Element name="zeta_metapis_defender_1.tex" u1="0.001" u2="0.249" v2="0.499" v1="0.251" variant="" />
-		<Element name="zeta_metapis_defender_2.tex" u1="0.001" u2="0.249" v2="0.249" v1="0.001" variant="" />
-		<Element name="zeta_metapis_mimic_1.tex" u1="0.251" u2="0.499" v2="0.499" v1="0.251" variant="" />
-		<Element name="zeta_metapis_ranger_1.tex" u1="0.501" u2="0.749" v2="0.499" v1="0.251" variant="" />
-		<Element name="zeta_metapis_ranger_2.tex" u1="0.251" u2="0.499" v2="0.249" v1="0.001" variant="" />
-		<Element name="zeta_metapis_shadow_1.tex" u1="0.501" u2="0.749" v2="0.249" v1="0.001" variant="" />
-		<Element name="zeta_metapis_shadow_2.tex" u1="0.751" u2="0.999" v2="0.499" v1="0.251" variant="" />
-		<Element name="zeta_metapis_shadow_3.tex" u1="0.751" u2="0.999" v2="0.249" v1="0.001" variant="" />
+		<Element name="zeta_honeysmith_melissa_1.tex" u1="0.001" u2="0.124" v2="0.999" v1="0.751" variant="" />
+		<Element name="zeta_honeysmith_melissa_2.tex" u1="0.126" u2="0.249" v2="0.999" v1="0.751" variant="" />
+		<Element name="zeta_metapimancer_shepherd_1.tex" u1="0.001" u2="0.124" v2="0.749" v1="0.501" variant="" />
+		<Element name="zeta_metapimancer_shepherd_2.tex" u1="0.126" u2="0.249" v2="0.749" v1="0.501" variant="" />
+		<Element name="zeta_metapimancer_tyrant_1.tex" u1="0.251" u2="0.374" v2="0.999" v1="0.751" variant="" />
+		<Element name="zeta_metapimancer_tyrant_2.tex" u1="0.251" u2="0.374" v2="0.749" v1="0.501" variant="" />
+		<Element name="zeta_metapis_assassin_1.tex" u1="0.376" u2="0.499" v2="0.999" v1="0.751" variant="" />
+		<Element name="zeta_metapis_assassin_2.tex" u1="0.376" u2="0.499" v2="0.749" v1="0.501" variant="" />
+		<Element name="zeta_metapis_defender_1.tex" u1="0.001" u2="0.124" v2="0.499" v1="0.251" variant="" />
+		<Element name="zeta_metapis_defender_2.tex" u1="0.001" u2="0.124" v2="0.249" v1="0.001" variant="" />
+		<Element name="zeta_metapis_healer_1.tex" u1="0.126" u2="0.249" v2="0.499" v1="0.251" variant="" />
+		<Element name="zeta_metapis_healer_2.tex" u1="0.251" u2="0.374" v2="0.499" v1="0.251" variant="" />
+		<Element name="zeta_metapis_mimic_1.tex" u1="0.126" u2="0.249" v2="0.249" v1="0.001" variant="" />
+		<Element name="zeta_metapis_ranger_1.tex" u1="0.251" u2="0.374" v2="0.249" v1="0.001" variant="" />
+		<Element name="zeta_metapis_ranger_2.tex" u1="0.376" u2="0.499" v2="0.499" v1="0.251" variant="" />
+		<Element name="zeta_metapis_shadow_1.tex" u1="0.376" u2="0.499" v2="0.249" v1="0.001" variant="" />
+		<Element name="zeta_metapis_shadow_2.tex" u1="0.501" u2="0.624" v2="0.999" v1="0.751" variant="" />
 	</Elements>
 </Atlas>

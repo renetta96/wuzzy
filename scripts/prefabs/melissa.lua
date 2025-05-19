@@ -74,6 +74,14 @@ local function checkmaxuses(inst)
   end
 end
 
+local function checkdamage(inst)
+  if inst._canblink then -- upgraded with melissa II
+    inst.components.weapon:SetDamage(TUNING.MELISSA_DAMAGE_2)
+  else
+    inst.components.weapon:SetDamage(TUNING.MELISSA_DAMAGE)
+  end
+end
+
 local function initBlinkSwap(inst)
   if inst._canblink then
     if inst.components.blinkswap == nil then
@@ -82,6 +90,14 @@ local function initBlinkSwap(inst)
 
     inst.components.blinkswap:SetOnBlinkDoerFn(function()
       inst.components.finiteuses:Use(TUNING.MELISSA_SWAP_USES)
+    end)
+
+    inst.components.blinkswap:SetOnBlinkTargetFn(function(staff, pt, caster)
+      if caster:IsValid() and caster.components.debuffable then
+        caster.components.debuffable:AddDebuff("metapis_frenzy_buff", "metapis_frenzy_buff")
+        caster.components.debuffable:AddDebuff("metapis_haste_buff", "metapis_haste_buff")
+        caster.components.debuffable:AddDebuff("metapis_rage_buff", "metapis_rage_buff")
+      end
     end)
   end
 end
@@ -94,6 +110,7 @@ local function OnLoad(inst, data)
 
   checkmaxuses(inst)
   initBlinkSwap(inst)
+  checkdamage(inst)
 end
 
 local function OnBuiltFn(inst, builder)
@@ -107,6 +124,7 @@ local function OnBuiltFn(inst, builder)
     if builder.components.skilltreeupdater:IsActivated("zeta_honeysmith_melissa_2") then
       inst._canblink = true
       initBlinkSwap(inst)
+      checkdamage(inst)
     end
   end
 end

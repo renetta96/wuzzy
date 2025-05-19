@@ -7,6 +7,7 @@ local FindTarget = metapis_common.FindTarget
 
 local assets = {
   Asset("ANIM", "anim/mutanthealerbee.zip"),
+  Asset("ANIM", "anim/mutantbee_teleport.zip"),
   Asset("SOUND", "sound/bee.fsb")
 }
 
@@ -17,7 +18,24 @@ local prefabs = {
   "heal_projectile"
 }
 
+
+local HEAL_MUST_TAGS = {"_combat", "_health"}
+local HEAL_MUST_NOT_TAGS = {"player", "INLIMBO", "lesserminion"}
+local HEAL_MUST_ONE_OF_TAGS = {"beemutantminion"}
+
 local function CheckHealerUpgrade(inst, stage)
+  local owner = inst:GetOwner()
+
+  if owner and owner:HasTag("beemaster") then
+    if owner.components.skilltreeupdater:IsActivated("zeta_metapis_healer_1") then
+      inst._numfrenzybuffs = 3
+
+      if not inst.components.timer:TimerExists("frenzy_buff") then
+        inst.components.timer:StartTimer("frenzy_buff", GetRandomWithVariance(20, 5))
+      end
+    end
+  end
+
   if stage >= 2 then
     inst._bounceheal = true
     inst._numbounce = 2
@@ -41,8 +59,16 @@ local function CheckHealerUpgrade(inst, stage)
   return true
 end
 
+local function calcAtkPeriod(inst)
+  if inst.buffed then
+    return TUNING.MUTANT_BEE_ATTACK_PERIOD - 0.5
+  end
+
+  return TUNING.MUTANT_BEE_ATTACK_PERIOD
+end
+
 local function HealerBuff(inst)
-  inst.components.combat:SetAttackPeriod(TUNING.MUTANT_BEE_ATTACK_PERIOD - 0.5)
+  inst:RefreshAtkPeriod()
 end
 
 local function HealOrb(inst)
@@ -71,6 +97,33 @@ local function HealOrb(inst)
   end
 end
 
+local function FrenzyBuff(inst)
+  local x, y, z = inst.Transform:GetWorldPosition()
+  local allies = TheSim:FindEntities(
+    x, y, z,
+    8,
+    HEAL_MUST_TAGS, HEAL_MUST_NOT_TAGS, HEAL_MUST_ONE_OF_TAGS
+  )
+
+  allies = shuffleArray(allies)
+  local numleft = inst._numfrenzybuffs
+
+  for i, guy in pairs(allies) do
+    if guy and guy:IsValid() and guy ~= inst and guy:GetOwner() == inst:GetOwner() then
+      guy.components.debuffable:AddDebuff("metapis_frenzy_buff", "metapis_frenzy_buff")
+
+      numleft = numleft - 1
+      if numleft <= 0 then
+        break
+      end
+    end
+  end
+
+  if not inst.components.timer:TimerExists("frenzy_buff") then
+    inst.components.timer:StartTimer("frenzy_buff", GetRandomWithVariance(20, 5))
+  end
+end
+
 local function OnTimerDone(inst, data)
   if data.name == "heal_cooldown" then
     inst._canheal = true
@@ -78,6 +131,10 @@ local function OnTimerDone(inst, data)
 
   if data.name == "heal_orb_cooldown" then
     HealOrb(inst)
+  end
+
+  if data.name == "frenzy_buff" then
+    FrenzyBuff(inst)
   end
 end
 
@@ -87,9 +144,6 @@ local function ishealable(inst, guy)
     and inst:GetOwner() == guy:GetOwner() -- nil owner will heal nil owner
 end
 
-local HEAL_MUST_TAGS = {"_combat", "_health"}
-local HEAL_MUST_NOT_TAGS = {"player", "INLIMBO"}
-local HEAL_MUST_ONE_OF_TAGS = {"beemutantminion"}
 
 local function FindHealingTarget(inst, origin)
   if not origin then
@@ -164,7 +218,14 @@ local function healerbee()
     "bee",
     "mutanthealerbee",
     {"healer", "killer", "scarytoprey"},
-    {buff = HealerBuff, sounds = "killer", basedamagefn = function() return TUNING.MUTANT_BEE_HEALER_DAMAGE end},
+    {
+      buff = HealerBuff,
+      sounds = "killer",
+      basedamagefn = function() return TUNING.MUTANT_BEE_HEALER_DAMAGE end,
+      atkperiodfn = calcAtkPeriod,
+      rage_fx_scale_fn = function() return 2.0 end,
+      frenzy_fx_offset = {x=-4, y=67, z=0}
+    },
     CheckHealerUpgrade
   )
 
@@ -195,6 +256,7 @@ local function healerbee()
 
   inst._healorbamount = TUNING.MUTANT_BEE_HEALER_HEAL_ORB_AMOUNT
   inst._healorbcooldown = TUNING.MUTANT_BEE_HEALER_HEAL_ORB_COOLDOWN
+  inst._numfrenzybuffs = 0
 
   inst.Heal = Heal
   inst.FindHealingTarget = FindHealingTarget

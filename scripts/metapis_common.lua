@@ -271,6 +271,10 @@ local function OnCommonInit(inst)
             inst:AddTag("crazy") -- able to attack shadows, this is server-side
             inst:ListenForEvent("killed", OnKilledOther)
         end
+
+        if owner.components.skilltreeupdater:IsActivated("zeta_metapis_healer_2") then
+            inst._frenzy_explode = true
+        end
     end
 end
 
@@ -380,12 +384,12 @@ end
 -- get owner, prefer player, otherwise hive
 local function GetOwner(inst)
     -- wuzzy summoned bees
-    if inst.components.follower and inst.components.follower.leader ~= nil then
+    if inst.components.follower and inst.components.follower.leader ~= nil and inst.components.follower.leader:IsValid() then
         return inst.components.follower.leader
     end
 
     -- mother hive or teleportal
-    if inst.components.homeseeker and inst.components.homeseeker.home then
+    if inst.components.homeseeker and inst.components.homeseeker.home ~= nil and inst.components.homeseeker.home:IsValid() then
         -- mother hive
         if inst.components.homeseeker.home._owner then
             return inst.components.homeseeker.home._owner
@@ -458,7 +462,7 @@ local function BarrackModifier(inst, v)
     return v * (1.0 + TUNING.MUTANT_BEEHIVE_BARRACK_MODIFIER * barrack_modifier) * leader_modifier
 end
 
-local function CalcBaseDamage(inst)
+local function calcBaseDamage(inst)
     local basedamage = inst._basedamagefn(inst)
 
     if inst.raged_buff ~= nil and inst.raged_buff then
@@ -469,13 +473,71 @@ local function CalcBaseDamage(inst)
 end
 
 local function RefreshBaseDamage(inst)
-    local basedamage = CalcBaseDamage(inst)
+    if inst:IsValid() and inst.components.combat then
+        local basedamage = calcBaseDamage(inst)
 
-    inst.components.combat:SetDefaultDamage(BarrackModifier(inst, basedamage))
+        inst.components.combat:SetDefaultDamage(BarrackModifier(inst, basedamage))
 
-    -- ranged bee
-    if inst.weapon ~= nil then
-        inst.weapon.components.weapon:SetDamage(BarrackModifier(inst, basedamage))
+        -- ranged bee
+        if inst.weapon ~= nil then
+            inst.weapon.components.weapon:SetDamage(BarrackModifier(inst, basedamage))
+        end
+    end
+end
+
+local function RefreshAtkPeriod(inst)
+    if inst:IsValid() and inst.components.combat then
+        if inst.frenzy_buff then
+            if inst.prefab == "mutantrangerbee" and inst._shouldcircleatk then
+                inst.components.combat:SetAttackPeriod(0.5)
+            else
+                inst.components.combat:SetAttackPeriod(0.1)
+            end
+
+            return
+        end
+
+        inst.components.combat:SetAttackPeriod(inst._atkperiodfn(inst))
+    end
+end
+
+local function EnableRageFX(inst)
+    local fx = SpawnPrefab("metapis_rage_fx")
+    if fx then
+        local scale = inst._rage_fx_scale_fn(inst)
+
+        fx.Transform:SetScale(scale, scale, scale)
+        fx:Attach(inst)
+    end
+
+    return fx
+end
+
+local function EnableFrenzyFx(inst)
+    local fx = SpawnPrefab("metapis_frenzy_fx")
+    if fx then
+        fx:Attach(
+            inst,
+            "stinger",
+            inst._frenzy_fx_offset.x,
+            inst._frenzy_fx_offset.y,
+            inst._frenzy_fx_offset.z
+        )
+    end
+
+    return fx
+end
+
+local function Explode(inst)
+    local explode_fx = SpawnPrefab("explode_small")
+    if explode_fx ~= nil then
+        local x, y, z = inst.Transform:GetWorldPosition()
+        explode_fx.Transform:SetPosition(x, 0.5, z)
+    end
+
+    local enemies = FindEnemies(inst, 3)
+    for i, target in ipairs(enemies) do
+        inst.components.combat:DoAttack(target, nil, nil, "frenzy_explode", 2)
     end
 end
 
@@ -523,8 +585,17 @@ local function CommonMasterInit(inst, options, checkupgradefn)
         inst.components.sleeper:SetWakeTest(ShouldWakeUp)
     end
 
-    assert(options ~= nil and options.basedamagefn ~= nil) -- required
+    -- required
+    assert(options ~= nil)
+    assert(options.basedamagefn ~= nil)
+    assert(options.atkperiodfn ~= nil)
+    assert(options.rage_fx_scale_fn ~= nil)
+    assert(options.frenzy_fx_offset ~= nil)
+
     inst._basedamagefn = options.basedamagefn
+    inst._atkperiodfn = options.atkperiodfn
+    inst._rage_fx_scale_fn = options.rage_fx_scale_fn
+    inst._frenzy_fx_offset = options.frenzy_fx_offset
 
     inst:ListenForEvent("attacked", OnAttacked)
     TrackLastCombatTime(inst)
@@ -544,6 +615,10 @@ local function CommonMasterInit(inst, options, checkupgradefn)
     end
     inst.GetOwner = GetOwner
     inst.RefreshBaseDamage = RefreshBaseDamage
+    inst.RefreshAtkPeriod = RefreshAtkPeriod
+    inst.EnableRageFX = EnableRageFX
+    inst.EnableFrenzyFx = EnableFrenzyFx
+    inst.Explode = Explode
 
     inst:DoTaskInTime(0, OnCommonInit)
 

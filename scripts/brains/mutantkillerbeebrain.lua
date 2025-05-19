@@ -41,12 +41,15 @@ function KillerBeeBrain:OnStart()
 		{
 			WhileNode( function() return self.inst.components.hauntable and self.inst.components.hauntable.panic end, "PanicHaunted", Panic(self.inst)),
 			WhileNode( function() return self.inst.components.health.takingfiredamage end, "OnFire", Panic(self.inst)),
-
+			beecommon.FrenzyNode(self.inst),
 			beecommon.AvoidEpicAtkNode(self.inst),
-
 
 			WhileNode(
 				function()
+					if self.inst.frenzy_buff then
+						return false
+					end
+
 					if beecommon.IsEpicAttackComing(self.inst) then
 						return false
 					end
@@ -56,7 +59,17 @@ function KillerBeeBrain:OnStart()
 				"AttackMomentarily",
 				ChaseAndAttack(self.inst, SpringCombatMod(MAX_CHASE_TIME), SpringCombatMod(MAX_CHASE_DIST))
 			),
-			WhileNode( function() return self.inst.components.combat.target and self.inst.components.combat:InCooldown() end, "Dodge", RunAway(self.inst, function() return self.inst.components.combat.target end, RUN_AWAY_DIST, STOP_RUN_AWAY_DIST) ),
+			WhileNode(
+				function()
+					if self.inst.frenzy_buff then
+						return false
+					end
+
+					return self.inst.components.combat.target and self.inst.components.combat:InCooldown()
+				end,
+				"Dodge",
+				RunAway(self.inst, function() return self.inst.components.combat.target end, RUN_AWAY_DIST, STOP_RUN_AWAY_DIST)
+			),
 
 			IfNode(function() return beecommon.ShouldDespawn(self.inst) end, "TryDespawn",
 				DoAction(self.inst, function() return beecommon.DespawnAction(self.inst) end, "Despawn", true)

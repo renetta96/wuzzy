@@ -55,12 +55,18 @@ function HealerBeeBrain:OnStart()
           return self.inst._canheal
         end,
         "TryHealAlly",
-      DoAction(self.inst, function() return HealAction(self.inst) end, "HealAlly", true)),
+        DoAction(self.inst, function() return HealAction(self.inst) end, "HealAlly", true)
+      ),
 
+      beecommon.FrenzyNode(self.inst),
       beecommon.AvoidEpicAtkNode(self.inst),
 
       WhileNode(
         function()
+          if self.inst.frenzy_buff then
+            return false
+          end
+
           if beecommon.IsEpicAttackComing(self.inst) then
             return false
           end
@@ -68,12 +74,15 @@ function HealerBeeBrain:OnStart()
           return self.inst.components.combat.target == nil or not self.inst.components.combat:InCooldown()
         end,
         "AttackMomentarily",
-      ChaseAndAttack(self.inst, SpringCombatMod(MAX_CHASE_TIME), SpringCombatMod(MAX_CHASE_DIST))),
+        ChaseAndAttack(self.inst, SpringCombatMod(MAX_CHASE_TIME), SpringCombatMod(MAX_CHASE_DIST))),
 
-      IfNode(function()
-        return self.inst.components.combat.target
-        and self.inst.components.combat:InCooldown()
-      end, "Dodge", RunAway(self.inst, function() return self.inst.components.combat.target end, RUN_AWAY_DIST, STOP_RUN_AWAY_DIST)),
+      IfNode(
+        function()
+          return self.inst.components.combat.target and self.inst.components.combat:InCooldown()
+        end,
+        "Dodge",
+        RunAway(self.inst, function() return self.inst.components.combat.target end, RUN_AWAY_DIST, STOP_RUN_AWAY_DIST)
+      ),
 
       IfNode(function() return beecommon.ShouldDespawn(self.inst) end, "TryDespawn",
       DoAction(self.inst, function() return beecommon.DespawnAction(self.inst) end, "Despawn", true)),
@@ -82,7 +91,8 @@ function HealerBeeBrain:OnStart()
       FaceEntity(self.inst, GetFaceTargetFn, KeepFaceTargetFn)),
       IfNode(function() return beecommon.ShouldGoBackHome(self.inst) end, "TryGoHome",
       DoAction(self.inst, function() return beecommon.GoHomeAction(self.inst) end, "GoHome", true)),
-    Wander(self.inst, function() return self.inst.components.knownlocations:GetLocation("home") end, beecommon.MAX_WANDER_DIST)}, 0.5)
+      Wander(self.inst, function() return self.inst.components.knownlocations:GetLocation("home") end, beecommon.MAX_WANDER_DIST)
+    }, 1)
 
     self.bt = BT(self.inst, root)
   end

@@ -31,9 +31,15 @@ Metapis (only unlock at most 3)
 - mimic
 	. I ??: if no other types around => what to copy? maybe do nothing => weaker 
 	. II ??: swarm - deal more damage as more mimics around, any other minion die => % to spawn a lesser mimic
+	. can rotate mimics based on built hives, not nearby.
+	. can keep many powers as once.
 - alchemist
 	. I ??
 	. II ??
+	. pain killer / tolerance: delay damage, or direct damage -> overtime damage, combo with tyrant sacrifiie
+	. frenzy: very low attack cooldown, no running away, shorter animation
+	. level2: frenzied minions on death would explode, causing massive damage.
+	. honey puddle: aoe slow + more damage taken by bees / aoe heal
 
 Honeysmith (9p)
 - melissa

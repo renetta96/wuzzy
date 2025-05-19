@@ -9,13 +9,23 @@ local actionhandlers =
 local events =
 {
     CommonHandlers.OnLocomote(false, true),
-    CommonHandlers.OnDeath(),
+    EventHandler("death", function(inst)
+        if inst.frenzy_buff and inst._frenzy_explode then
+            inst.sg:GoToState("death_explode")
+        else
+            inst.sg:GoToState("death")
+        end
+    end),
     CommonHandlers.OnFreeze(),
     CommonHandlers.OnSleepEx(),
     CommonHandlers.OnWakeEx(),
     EventHandler("doattack", function(inst)
         if not (inst.sg:HasStateTag("busy") or inst.components.health:IsDead()) then
-            inst.sg:GoToState("attack")
+            if inst.frenzy_buff then
+                inst.sg:GoToState("attack_fast")
+            else
+                inst.sg:GoToState("attack")
+            end
         end
     end),
     EventHandler("attacked", function(inst)
@@ -284,6 +294,27 @@ local states =
     },
 
     State{
+        name = "death_explode",
+        tags = { "busy" },
+
+        onenter = function(inst)
+            StopBuzz(inst)
+            inst.components.locomotor:StopMoving()
+            inst.AnimState:PlayAnimation("explode")
+            inst:Explode()
+            inst.components.lootdropper:DropLoot(inst:GetPosition())
+        end,
+
+        timeline =
+        {
+            TimeEvent(13 * FRAMES, function(inst)
+                RemovePhysicsColliders(inst)
+                LandFlyingCreature(inst)
+            end),
+        },
+    },
+
+    State{
         name = "attack",
         tags = { "attack", "busy", "caninterrupt" },
 
@@ -303,6 +334,38 @@ local states =
                 inst.components.combat:DoAttack(inst.sg.statemem.target)
             end),
             TimeEvent(21 * FRAMES, function(inst)
+                inst.sg:RemoveStateTag("busy")
+            end),
+        },
+
+        events =
+        {
+            EventHandler("animover", function(inst)
+                inst.sg:GoToState("idle")
+            end),
+        },
+    },
+
+    State{
+        name = "attack_fast",
+        tags = { "attack", "busy", "caninterrupt" },
+
+        onenter = function(inst)
+            inst.components.locomotor:StopMoving()
+            inst.AnimState:PlayAnimation("atk_fast")
+            inst.components.combat:StartAttack()
+            inst.sg.statemem.target = inst.components.combat.target
+        end,
+
+        timeline =
+        {
+            TimeEvent(5 * FRAMES, function(inst)
+                inst.SoundEmitter:PlaySound(inst.sounds.attack)
+            end),
+            TimeEvent(8 * FRAMES, function(inst)
+                inst.components.combat:DoAttack(inst.sg.statemem.target)
+            end),
+            TimeEvent(10 * FRAMES, function(inst)
                 inst.sg:RemoveStateTag("busy")
             end),
         },

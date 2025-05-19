@@ -1,9 +1,5 @@
 -- learnt from spider_buffs.lua
 
-local assets = {
-    Asset("ANIM", "anim/enrage_buff_fx.zip")
-}
-
 local function OnExtended(inst, target)
   if inst.decaytimer ~= nil then
     inst.decaytimer:Cancel()
@@ -60,12 +56,17 @@ local function haste_fn()
 
   inst.extendedfn = function(buff, target)
     target.hasted_buff = true
-    target.components.locomotor:SetExternalSpeedMultiplier(inst, "hasted_buff", 1.25)
+    if target:IsValid() and target.components.locomotor then
+      target.components.locomotor:SetExternalSpeedMultiplier(inst, "hasted_buff", 1.25)
+    end
   end
 
   inst.detachfn = function(buff, target)
     target.hasted_buff = false
-    target.components.locomotor:RemoveExternalSpeedMultiplier(inst, "hasted_buff")
+
+    if target:IsValid() and target.components.locomotor then
+      target.components.locomotor:RemoveExternalSpeedMultiplier(inst, "hasted_buff")
+    end
   end
 
   inst:AddComponent("debuff")
@@ -100,19 +101,9 @@ local function rage_fn()
   inst.attachfn = function(buff, target, followsymbol)
     -- print("RAGE ATTACH SPAWN FX")
 
-    local fx = nil
-    if target.prefab == "mutantdefenderbee" then
-      fx = SpawnPrefab("metapis_rage_fx_big")
-    else
-      fx = SpawnPrefab("metapis_rage_fx_small")
-    end
-
+    local fx = target:EnableRageFX()
     if fx ~= nil then
       inst._fx = fx
-      fx.entity:AddFollower():FollowSymbol(target.GUID, followsymbol, 0, 0, 0)
-
-      fx:ListenForEvent("death", function() fx:Remove() end, target)
-      fx:ListenForEvent("onremove", function() fx:Remove() end, target)
     end
   end
 
@@ -141,7 +132,73 @@ local function rage_fn()
   return inst
 end
 
-local function MakeRageFX(scale)
+local function frenzy_fn()
+  local inst = CreateEntity()
+
+  if not TheWorld.ismastersim then
+    --Not meant for client!
+    inst:DoTaskInTime(0, inst.Remove)
+
+    return inst
+  end
+
+  inst.entity:AddTransform()
+
+  --[[Non-networked entity]]
+  --inst.entity:SetCanSleep(false)
+  inst.entity:Hide()
+  inst.persists = false
+
+  inst:AddTag("CLASSIFIED")
+
+  inst.duration = GetRandomWithVariance(7, 3)
+
+  inst.attachfn = function(buff, target, followsymbol)
+    -- print("FRENZY ATTACHED")
+
+    local fx = target:EnableFrenzyFx()
+    if fx ~= nil then
+      inst._fx = fx
+    end
+  end
+
+  inst.extendedfn = function(buff, target)
+    -- print("FRENZY EXTENDED")
+    target.frenzy_buff = true
+    target:RefreshAtkPeriod()
+
+    if target:IsValid() and target.components.health then
+      target.components.health.externalabsorbmodifiers:SetModifier(inst, -1.0 + math.random() * 0.5)
+    end
+  end
+
+  inst.detachfn = function(buff, target)
+    -- print("FRENZY DETACHED")
+    target.frenzy_buff = false
+    target:RefreshAtkPeriod()
+
+    if inst._fx ~= nil then
+      inst._fx:Remove()
+    end
+
+    if target:IsValid() and target.components.health then
+      target.components.health.externalabsorbmodifiers:RemoveModifier(inst)
+    end
+  end
+
+  inst:AddComponent("debuff")
+  inst.components.debuff:SetAttachedFn(OnAttached)
+  inst.components.debuff:SetDetachedFn(OnDetached)
+  inst.components.debuff:SetExtendedFn(OnExtended)
+
+  return inst
+end
+
+local enrage_assets = {
+  Asset("ANIM", "anim/enrage_buff_fx.zip")
+}
+
+local function rage_fx()
   local function playAnim(inst)
     inst.entity:AddAnimState()
     inst.AnimState:SetBank("enrage_buff_fx")
@@ -152,41 +209,108 @@ local function MakeRageFX(scale)
     inst.AnimState:SetLightOverride(0.01)
     inst.AnimState:SetSortOrder(3)
 
-    inst.Transform:SetScale(scale, scale, scale)
-
     inst.entity:SetCanSleep(false)
     inst.persists = false
   end
 
-  local function fn()
-    local inst = CreateEntity()
+  local function attach(inst, target)
+    if target.components.debuffable then
+      local followoffset = target.components.debuffable.followoffset
+      local followsymbol = target.components.debuffable.followsymbol
 
-    inst.entity:AddTransform()
-    inst.entity:AddNetwork()
+      inst.entity:AddFollower():FollowSymbol(
+        target.GUID,
+        followsymbol,
+        followoffset.x, followoffset.y, followoffset.z
+      )
 
-    inst:AddTag("FX")
-
-    -- Dedicated server does not need to play the local fx anim
-    if not TheNet:IsDedicated() then
-      inst:DoTaskInTime(0, playAnim)
+      inst:ListenForEvent("death", function() inst:Remove() end, target)
+      inst:ListenForEvent("onremove", function() inst:Remove() end, target)
     end
+  end
 
-    inst.entity:SetPristine()
+  local inst = CreateEntity()
 
-    if not TheWorld.ismastersim then
-      return inst
-    end
+  inst.entity:AddTransform()
+  inst.entity:AddNetwork()
 
-    inst.entity:SetCanSleep(false)
-    inst.persists = false
+  inst:AddTag("FX")
 
+  -- Dedicated server does not need to play the local fx anim
+  if not TheNet:IsDedicated() then
+    inst:DoTaskInTime(0, playAnim)
+  end
+
+  inst.entity:SetPristine()
+
+  if not TheWorld.ismastersim then
     return inst
   end
 
-  return fn
+  inst.entity:SetCanSleep(false)
+  inst.persists = false
+
+  inst.Attach = attach
+
+  return inst
+end
+
+local frenzy_assets = {
+  Asset("ANIM", "anim/frenzy_buff_fx.zip")
+}
+
+local function frenzy_fx()
+  local function playAnim(inst)
+    inst.entity:AddAnimState()
+    inst.AnimState:SetBank("frenzy_buff_fx")
+    inst.AnimState:SetBuild("frenzy_buff_fx")
+    inst.AnimState:PlayAnimation("idle", true)
+    inst.AnimState:SetMultColour(1.0, 1.0, 1.0, 0.3)
+    inst.AnimState:SetBloomEffectHandle("shaders/anim.ksh")
+    inst.AnimState:SetLightOverride(0.75)
+    inst.AnimState:SetSortOrder(3)
+
+    inst.entity:SetCanSleep(false)
+  end
+
+  local function attach(inst, target, symbol, offset_x, offset_y, offset_z)
+    inst.entity:AddFollower():FollowSymbol(
+      target.GUID,
+      symbol,
+      offset_x, offset_y, offset_z
+    )
+
+    inst:ListenForEvent("death", function() inst:Remove() end, target)
+    inst:ListenForEvent("onremove", function() inst:Remove() end, target)
+  end
+
+  local inst = CreateEntity()
+
+  inst.entity:AddTransform()
+  inst.entity:AddNetwork()
+
+  inst:AddTag("FX")
+
+  if not TheNet:IsDedicated() then
+    inst:DoTaskInTime(0, playAnim)
+  end
+
+  inst.entity:SetPristine()
+
+  if not TheWorld.ismastersim then
+    return inst
+  end
+
+  inst.entity:SetCanSleep(false)
+  inst.persists = false
+
+  inst.Attach = attach
+
+  return inst
 end
 
 return Prefab("metapis_haste_buff", haste_fn),
 	Prefab("metapis_rage_buff", rage_fn),
-  Prefab("metapis_rage_fx_small", MakeRageFX(2.5), assets),
-  Prefab("metapis_rage_fx_big", MakeRageFX(5.5), assets)
+  Prefab("metapis_frenzy_buff", frenzy_fn),
+  Prefab("metapis_rage_fx", rage_fx, enrage_assets),
+  Prefab("metapis_frenzy_fx", frenzy_fx, frenzy_assets)

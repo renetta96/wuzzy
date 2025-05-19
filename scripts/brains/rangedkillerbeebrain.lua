@@ -7,7 +7,6 @@ require "behaviours/follow"
 require "behaviours/faceentity"
 
 local beecommon = require "brains/mutantbeecommon"
-local IfElseNode = beecommon.IfElseNode
 local CircleAroundTarget = beecommon.CircleAroundTarget
 
 local RUN_START_DIST = 8
@@ -68,11 +67,31 @@ function RangedKillerBeeBrain:OnStart()
     {
         WhileNode(function() return self.inst.components.hauntable and self.inst.components.hauntable.panic end, "PanicHaunted", Panic(self.inst)),
         WhileNode(function() return self.inst.components.health.takingfiredamage end, "OnFire", Panic(self.inst)),
-
+        beecommon.FrenzyNode(self.inst),
         beecommon.AvoidEpicAtkNode(self.inst),
 
-        WhileNode(function() return beecommon.IsBeingChased(self.inst, 5) end, "Dodge", RunAway(self.inst, ShouldRunAway, RUN_START_DIST, RUN_STOP_DIST)),
-        WhileNode(function() return CanAttackNow(self.inst) end, "AttackMomentarily", ChaseAndAttack(self.inst, MAX_CHASE_TIME, MAX_CHASE_DIST)),
+        WhileNode(
+            function()
+                if self.inst.frenzy_buff then
+                    return false
+                end
+
+                return beecommon.IsBeingChased(self.inst, 5)
+            end,
+            "Dodge",
+            RunAway(self.inst, ShouldRunAway, RUN_START_DIST, RUN_STOP_DIST)
+        ),
+        WhileNode(
+            function()
+                if self.inst.frenzy_buff then
+                    return false
+                end
+
+                return CanAttackNow(self.inst)
+            end,
+            "AttackMomentarily",
+            ChaseAndAttack(self.inst, MAX_CHASE_TIME, MAX_CHASE_DIST)
+        ),
         IfNode(function() return beecommon.ShouldDespawn(self.inst) end, "TryDespawn",
             DoAction(self.inst, function() return beecommon.DespawnAction(self.inst) end, "Despawn", true)
         ),
@@ -103,6 +122,7 @@ function RangedKillerBeeCircleBrain:OnStart()
     {
         WhileNode(function() return self.inst.components.hauntable and self.inst.components.hauntable.panic end, "PanicHaunted", Panic(self.inst)),
         WhileNode(function() return self.inst.components.health.takingfiredamage end, "OnFire", Panic(self.inst)),
+
         beecommon.AvoidEpicAtkNode(self.inst, 7),
 
         WhileNode(function() return self.inst.components.combat:HasTarget() end, "Circle",

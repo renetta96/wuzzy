@@ -50,12 +50,12 @@ local function commonslavefn(bank, build, tags, mapicon)
   inst.entity:AddTransform()
   inst.entity:AddAnimState()
   inst.entity:AddSoundEmitter()
-  inst.entity:AddMiniMapEntity()
   inst.entity:AddNetwork()
 
   MakeObstaclePhysics(inst, 1)
 
   if mapicon then
+    inst.entity:AddMiniMapEntity()
     inst.MiniMapEntity:SetIcon(mapicon)
   end
 
@@ -121,7 +121,9 @@ local function MakeChildHive(name, tag)
   }
 
   local function fn()
-    local inst = commonslavefn(name, name, {tag}, name..".tex")
+    -- local inst = commonslavefn(name, name, {tag}, name..".tex")
+
+    local inst = commonslavefn(name, name, {tag}, nil)
     return inst
   end
 

@@ -46,11 +46,26 @@ function ShadowBeeBrain:OnStart()
 	local root =
 		PriorityNode(
 		{
+			beecommon.FrenzyNode(self.inst),
 			beecommon.AvoidEpicAtkNode(self.inst),
 
-			WhileNode( function() return beecommon.IsBeingChased(self.inst, 4) end, "Dodge", RunAway(self.inst, ShouldRunAway, RUN_AWAY_DIST, STOP_RUN_AWAY_DIST) ),
 			WhileNode(
 				function()
+					if self.inst.frenzy_buff then
+						return false
+					end
+
+					return beecommon.IsBeingChased(self.inst, 4)
+				end,
+				"Dodge",
+				RunAway(self.inst, ShouldRunAway, RUN_AWAY_DIST, STOP_RUN_AWAY_DIST)
+			),
+			WhileNode(
+				function()
+					if self.inst.frenzy_buff then
+						return false
+					end
+
 					return (not beecommon.IsBeingChased(self.inst, 4)) and
 						self.inst.components.combat.target == nil or
 						not self.inst.components.combat:InCooldown()
