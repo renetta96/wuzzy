@@ -9,7 +9,13 @@ local function OnExtended(inst, target)
     inst.extendedfn(inst, target)
   end
 
-  inst.decaytimer = inst:DoTaskInTime(inst.duration, function() inst.components.debuff:Stop() end)
+  inst.decaytimer =
+    inst:DoTaskInTime(
+    inst.duration,
+    function()
+      inst.components.debuff:Stop()
+    end
+  )
 end
 
 local function OnAttached(inst, target, followsymbol)
@@ -27,14 +33,14 @@ local function OnDetached(inst, target)
   end
 
   if inst.detachfn ~= nil then
-		inst.detachfn(inst, target)
+    inst.detachfn(inst, target)
   end
 
   inst:Remove()
 end
 
 local function haste_fn()
-	local inst = CreateEntity()
+  local inst = CreateEntity()
 
   if not TheWorld.ismastersim then
     --Not meant for client!
@@ -78,7 +84,7 @@ local function haste_fn()
 end
 
 local function rage_fn()
-	local inst = CreateEntity()
+  local inst = CreateEntity()
 
   if not TheWorld.ismastersim then
     --Not meant for client!
@@ -218,14 +224,22 @@ local function rage_fx()
       local followoffset = target.components.debuffable.followoffset
       local followsymbol = target.components.debuffable.followsymbol
 
-      inst.entity:AddFollower():FollowSymbol(
-        target.GUID,
-        followsymbol,
-        followoffset.x, followoffset.y, followoffset.z
-      )
+      inst.entity:AddFollower():FollowSymbol(target.GUID, followsymbol, followoffset.x, followoffset.y, followoffset.z)
 
-      inst:ListenForEvent("death", function() inst:Remove() end, target)
-      inst:ListenForEvent("onremove", function() inst:Remove() end, target)
+      inst:ListenForEvent(
+        "death",
+        function()
+          inst:Remove()
+        end,
+        target
+      )
+      inst:ListenForEvent(
+        "onremove",
+        function()
+          inst:Remove()
+        end,
+        target
+      )
     end
   end
 
@@ -274,14 +288,22 @@ local function frenzy_fx()
   end
 
   local function attach(inst, target, symbol, offset_x, offset_y, offset_z)
-    inst.entity:AddFollower():FollowSymbol(
-      target.GUID,
-      symbol,
-      offset_x, offset_y, offset_z
-    )
+    inst.entity:AddFollower():FollowSymbol(target.GUID, symbol, offset_x, offset_y, offset_z)
 
-    inst:ListenForEvent("death", function() inst:Remove() end, target)
-    inst:ListenForEvent("onremove", function() inst:Remove() end, target)
+    inst:ListenForEvent(
+      "death",
+      function()
+        inst:Remove()
+      end,
+      target
+    )
+    inst:ListenForEvent(
+      "onremove",
+      function()
+        inst:Remove()
+      end,
+      target
+    )
   end
 
   local inst = CreateEntity()
@@ -309,8 +331,7 @@ local function frenzy_fx()
   return inst
 end
 
-return Prefab("metapis_haste_buff", haste_fn),
-	Prefab("metapis_rage_buff", rage_fn),
-  Prefab("metapis_frenzy_buff", frenzy_fn),
-  Prefab("metapis_rage_fx", rage_fx, enrage_assets),
-  Prefab("metapis_frenzy_fx", frenzy_fx, frenzy_assets)
+return Prefab("metapis_haste_buff", haste_fn), Prefab("metapis_rage_buff", rage_fn), Prefab(
+  "metapis_frenzy_buff",
+  frenzy_fn
+), Prefab("metapis_rage_fx", rage_fx, enrage_assets), Prefab("metapis_frenzy_fx", frenzy_fx, frenzy_assets)

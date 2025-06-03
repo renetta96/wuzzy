@@ -39,28 +39,48 @@ local function HealAction(inst)
   end
 end
 
-local HealerBeeBrain = Class(Brain, function(self, inst)
-  Brain._ctor(self, inst)
-end)
+local HealerBeeBrain =
+  Class(
+  Brain,
+  function(self, inst)
+    Brain._ctor(self, inst)
+  end
+)
 
 function HealerBeeBrain:OnStart()
   local root =
-  PriorityNode(
+    PriorityNode(
     {
-      WhileNode(function() return self.inst.components.hauntable and self.inst.components.hauntable.panic end, "PanicHaunted", Panic(self.inst)),
-      WhileNode(function() return self.inst.components.health.takingfiredamage end, "OnFire", Panic(self.inst)),
-
+      WhileNode(
+        function()
+          return self.inst.components.hauntable and self.inst.components.hauntable.panic
+        end,
+        "PanicHaunted",
+        Panic(self.inst)
+      ),
+      WhileNode(
+        function()
+          return self.inst.components.health.takingfiredamage
+        end,
+        "OnFire",
+        Panic(self.inst)
+      ),
       IfNode(
         function()
           return self.inst._canheal
         end,
         "TryHealAlly",
-        DoAction(self.inst, function() return HealAction(self.inst) end, "HealAlly", true)
+        DoAction(
+          self.inst,
+          function()
+            return HealAction(self.inst)
+          end,
+          "HealAlly",
+          true
+        )
       ),
-
       beecommon.FrenzyNode(self.inst),
       beecommon.AvoidEpicAtkNode(self.inst),
-
       WhileNode(
         function()
           if self.inst.frenzy_buff then
@@ -74,32 +94,82 @@ function HealerBeeBrain:OnStart()
           return self.inst.components.combat.target == nil or not self.inst.components.combat:InCooldown()
         end,
         "AttackMomentarily",
-        ChaseAndAttack(self.inst, SpringCombatMod(MAX_CHASE_TIME), SpringCombatMod(MAX_CHASE_DIST))),
-
+        ChaseAndAttack(self.inst, SpringCombatMod(MAX_CHASE_TIME), SpringCombatMod(MAX_CHASE_DIST))
+      ),
       IfNode(
         function()
           return self.inst.components.combat.target and self.inst.components.combat:InCooldown()
         end,
         "Dodge",
-        RunAway(self.inst, function() return self.inst.components.combat.target end, RUN_AWAY_DIST, STOP_RUN_AWAY_DIST)
+        RunAway(
+          self.inst,
+          function()
+            return self.inst.components.combat.target
+          end,
+          RUN_AWAY_DIST,
+          STOP_RUN_AWAY_DIST
+        )
       ),
+      IfNode(
+        function()
+          return beecommon.ShouldDespawn(self.inst)
+        end,
+        "TryDespawn",
+        DoAction(
+          self.inst,
+          function()
+            return beecommon.DespawnAction(self.inst)
+          end,
+          "Despawn",
+          true
+        )
+      ),
+      Follow(
+        self.inst,
+        function()
+          return GetLeader(self.inst)
+        end,
+        MIN_FOLLOW_DIST,
+        TARGET_FOLLOW_DIST,
+        MAX_FOLLOW_DIST
+      ),
+      IfNode(
+        function()
+          return GetLeader(self.inst) ~= nil
+        end,
+        "HasLeader",
+        FaceEntity(self.inst, GetFaceTargetFn, KeepFaceTargetFn)
+      ),
+      IfNode(
+        function()
+          return beecommon.ShouldGoBackHome(self.inst)
+        end,
+        "TryGoHome",
+        DoAction(
+          self.inst,
+          function()
+            return beecommon.GoHomeAction(self.inst)
+          end,
+          "GoHome",
+          true
+        )
+      ),
+      Wander(
+        self.inst,
+        function()
+          return self.inst.components.knownlocations:GetLocation("home")
+        end,
+        beecommon.MAX_WANDER_DIST
+      )
+    },
+    1
+  )
 
-      IfNode(function() return beecommon.ShouldDespawn(self.inst) end, "TryDespawn",
-      DoAction(self.inst, function() return beecommon.DespawnAction(self.inst) end, "Despawn", true)),
-      Follow(self.inst, function() return GetLeader(self.inst) end, MIN_FOLLOW_DIST, TARGET_FOLLOW_DIST, MAX_FOLLOW_DIST),
-      IfNode(function() return GetLeader(self.inst) ~= nil end, "HasLeader",
-      FaceEntity(self.inst, GetFaceTargetFn, KeepFaceTargetFn)),
-      IfNode(function() return beecommon.ShouldGoBackHome(self.inst) end, "TryGoHome",
-      DoAction(self.inst, function() return beecommon.GoHomeAction(self.inst) end, "GoHome", true)),
-      Wander(self.inst, function() return self.inst.components.knownlocations:GetLocation("home") end, beecommon.MAX_WANDER_DIST)
-    }, 1)
+  self.bt = BT(self.inst, root)
+end
 
-    self.bt = BT(self.inst, root)
-  end
+function HealerBeeBrain:OnInitializationComplete()
+  self.inst.components.knownlocations:RememberLocation("home", Point(self.inst.Transform:GetWorldPosition()))
+end
 
-  function HealerBeeBrain:OnInitializationComplete()
-    self.inst.components.knownlocations:RememberLocation("home", Point(self.inst.Transform:GetWorldPosition()))
-  end
-
-  return HealerBeeBrain
-
+return HealerBeeBrain

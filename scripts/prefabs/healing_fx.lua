@@ -1,7 +1,7 @@
 local easing = require("easing")
 
 local assets = {
-    Asset("ANIM", "anim/heal_projectile.zip")
+  Asset("ANIM", "anim/heal_projectile.zip")
 }
 
 local function OnHit(inst, owner, target)
@@ -11,7 +11,6 @@ local function OnHit(inst, owner, target)
 
   inst:Remove()
 end
-
 
 local function Launch(inst, attacker, pos, speed)
   local x, y, z = attacker.Transform:GetWorldPosition()
@@ -50,7 +49,7 @@ local function fn()
   inst.entity:SetPristine()
 
   if not TheWorld.ismastersim then
-      return inst
+    return inst
   end
 
   inst.persists = false
@@ -88,9 +87,10 @@ local function CheckPlayer(inst)
 
   local closest = nil
   for i, v in ipairs(AllPlayers) do
-    if not (v.components.health:IsDead() or v:HasTag("playerghost"))
-      and v.entity:IsVisible() and v:IsValid() and v:HasTag("beemaster") then
-
+    if
+      not (v.components.health:IsDead() or v:HasTag("playerghost")) and v.entity:IsVisible() and v:IsValid() and
+        v:HasTag("beemaster")
+     then
       local distsq = v:GetDistanceSqToPoint(x, y, z)
       if distsq < rangesq then
         rangesq = distsq
@@ -128,7 +128,7 @@ local function orb_fn()
   inst.entity:SetPristine()
 
   if not TheWorld.ismastersim then
-      return inst
+    return inst
   end
 
   inst._healamount = TUNING.MUTANT_BEE_HEALER_HEAL_ORB_AMOUNT -- default
@@ -191,13 +191,13 @@ local function makefx(scale)
 
     -- Dedicated server does not need to spawn the local fx
     if not TheNet:IsDedicated() then
-        inst:DoTaskInTime(0, PlayAnim)
+      inst:DoTaskInTime(0, PlayAnim)
     end
 
     inst.entity:SetPristine()
 
     if not TheWorld.ismastersim then
-        return inst
+      return inst
     end
 
     inst.Attach = Attach
@@ -208,7 +208,8 @@ local function makefx(scale)
   end
 end
 
-return Prefab("heal_projectile", fn, assets),
-  Prefab("heal_orb", orb_fn, assets),
-  Prefab("heal_fx", makefx(), assets),
-  Prefab("player_heal_fx", makefx(1.5), assets)
+return Prefab("heal_projectile", fn, assets), Prefab("heal_orb", orb_fn, assets), Prefab("heal_fx", makefx(), assets), Prefab(
+  "player_heal_fx",
+  makefx(1.5),
+  assets
+)

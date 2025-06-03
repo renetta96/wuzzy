@@ -1,20 +1,19 @@
 local zeta_utils = require "zeta_utils"
 
-local assets =
-{
+local assets = {
   Asset("ANIM", "anim/zetapollen.zip"),
   Asset("ATLAS", "images/inventoryimages/zetapollen.xml"),
   Asset("IMAGE", "images/inventoryimages/zetapollen.tex")
 }
 
 local function checkiswet(inst)
-	if inst.components.perishable then
-	  if inst:GetIsWet() then
-	    inst.components.perishable:SetLocalMultiplier(5)
-	  else
-	    inst.components.perishable:SetLocalMultiplier(1)
-	  end
-	end
+  if inst.components.perishable then
+    if inst:GetIsWet() then
+      inst.components.perishable:SetLocalMultiplier(5)
+    else
+      inst.components.perishable:SetLocalMultiplier(1)
+    end
+  end
 end
 
 local function onperish(inst)
@@ -35,10 +34,10 @@ local function fn()
   inst.AnimState:PlayAnimation("idle")
 
   inst.entity:SetPristine()
-  inst:AddTag('honeyed')
+  inst:AddTag("honeyed")
 
   if not TheWorld.ismastersim then
-      return inst
+    return inst
   end
 
   -----------------

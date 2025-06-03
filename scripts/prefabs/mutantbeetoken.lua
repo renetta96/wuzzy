@@ -1,5 +1,4 @@
-local assets =
-{
+local assets = {
   Asset("ANIM", "anim/mutantbasebee_token.zip"),
   Asset("ANIM", "anim/mutantdefenderbee_token.zip"),
   Asset("ANIM", "anim/mutantrangerbee_token.zip"),
@@ -8,10 +7,7 @@ local assets =
   Asset("ANIM", "anim/mutanthealerbee_token.zip")
 }
 
-local prefabs =
-{
-
-}
+local prefabs = {}
 
 local function MakeToken(name, minion_prefab, is_base)
   local function fn()
@@ -33,14 +29,14 @@ local function MakeToken(name, minion_prefab, is_base)
     inst.entity:SetPristine()
 
     if not TheWorld.ismastersim then
-        return inst
+      return inst
     end
 
     inst:AddComponent("inspectable")
 
     inst:AddComponent("inventoryitem")
     inst.components.inventoryitem.imagename = name
-    inst.components.inventoryitem.atlasname = "images/inventoryimages/"..name..".xml"
+    inst.components.inventoryitem.atlasname = "images/inventoryimages/" .. name .. ".xml"
 
     inst:AddComponent("stackable")
     inst.components.stackable.maxsize = TUNING.STACK_SIZE_LARGEITEM
@@ -89,7 +85,7 @@ STRINGS.RECIPE_DESC.MUTANTHEALERBEE_TOKEN = "Controls number of summoned Metapis
 
 local hive_defs = require "hive_defs"
 local returnPrefabs = {
-  MakeToken("mutantbasebee_token", nil, true), -- special case for base child (soldier or mimic)
+  MakeToken("mutantbasebee_token", nil, true) -- special case for base child (soldier or mimic)
 }
 
 for i, def in ipairs(hive_defs.HiveDefs) do

@@ -1,12 +1,9 @@
-local assets =
-{
+local assets = {
   Asset("ANIM", "anim/melissa.zip"),
   Asset("ANIM", "anim/swap_melissa.zip"),
-
   Asset("ANIM", "anim/floating_items.zip"),
-
   Asset("ATLAS", "images/inventoryimages/melissa.xml"),
-  Asset("IMAGE", "images/inventoryimages/melissa.tex"),
+  Asset("IMAGE", "images/inventoryimages/melissa.tex")
 }
 
 local function OnSummonChild(inst, data)
@@ -88,17 +85,21 @@ local function initBlinkSwap(inst)
       inst:AddComponent("blinkswap")
     end
 
-    inst.components.blinkswap:SetOnBlinkDoerFn(function()
-      inst.components.finiteuses:Use(TUNING.MELISSA_SWAP_USES)
-    end)
-
-    inst.components.blinkswap:SetOnBlinkTargetFn(function(staff, pt, caster)
-      if caster:IsValid() and caster.components.debuffable then
-        caster.components.debuffable:AddDebuff("metapis_frenzy_buff", "metapis_frenzy_buff")
-        caster.components.debuffable:AddDebuff("metapis_haste_buff", "metapis_haste_buff")
-        caster.components.debuffable:AddDebuff("metapis_rage_buff", "metapis_rage_buff")
+    inst.components.blinkswap:SetOnBlinkDoerFn(
+      function()
+        inst.components.finiteuses:Use(TUNING.MELISSA_SWAP_USES)
       end
-    end)
+    )
+
+    inst.components.blinkswap:SetOnBlinkTargetFn(
+      function(staff, pt, caster)
+        if caster:IsValid() and caster.components.debuffable then
+          caster.components.debuffable:AddDebuff("metapis_frenzy_buff", "metapis_frenzy_buff")
+          caster.components.debuffable:AddDebuff("metapis_haste_buff", "metapis_haste_buff")
+          caster.components.debuffable:AddDebuff("metapis_rage_buff", "metapis_rage_buff")
+        end
+      end
+    )
   end
 end
 

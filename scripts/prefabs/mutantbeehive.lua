@@ -4,8 +4,7 @@ local PickChildPrefab = metapis_common.PickChildPrefab
 
 local hive_defs = require "hive_defs"
 
-local prefabs =
-{
+local prefabs = {
   "mutantbee",
   "mutantkillerbee",
   "mutantdefenderbee",
@@ -14,25 +13,20 @@ local prefabs =
   "mutantshadowbee",
   "mutanthealerbee",
   "mutantmimicbee",
-
-
   "honey",
   "honeycomb",
   "collapse_big",
   "collapse_small",
-  "mutantbeehive_lamp",
+  "mutantbeehive_lamp"
 }
 
-
-local assets =
-{
+local assets = {
   Asset("ANIM", "anim/mutantbeehive.zip"),
   Asset("ANIM", "anim/mutantteleportal.zip"),
-  Asset("SOUND", "sound/bee.fsb"),
+  Asset("SOUND", "sound/bee.fsb")
 }
 
-local SPEECH =
-{
+local SPEECH = {
   ATTACK = {
     "SLAY 'EM ALL!!!",
     "ATTACC!!!",
@@ -89,7 +83,7 @@ local function GetSource(inst)
   end
 
   for i, player in ipairs(AllPlayers) do
-    if player:HasTag('player') and player.userid == inst._ownerid then
+    if player:HasTag("player") and player.userid == inst._ownerid then
       return player._hive
     end
   end
@@ -159,8 +153,10 @@ local function OnRemoveEntity(inst)
 end
 
 local function StartSpawning(inst)
-  if inst.components.childspawner ~= nil
-    and not (inst.components.freezable ~= nil and inst.components.freezable:IsFrozen()) then
+  if
+    inst.components.childspawner ~= nil and
+      not (inst.components.freezable ~= nil and inst.components.freezable:IsFrozen())
+   then
     inst:Say(SPEECH.SPAWN)
     inst.components.childspawner:StartSpawning()
   end
@@ -173,10 +169,7 @@ local function StopSpawning(inst)
 end
 
 local function RefreshLight(inst)
-  if inst._stage.LEVEL == 3 and
-    (not inst.components.freezable:IsFrozen()) and
-    (not TheWorld.state.iscaveday)
-  then
+  if inst._stage.LEVEL == 3 and (not inst.components.freezable:IsFrozen()) and (not TheWorld.state.iscaveday) then
     inst._lamp.AnimState:SetBloomEffectHandle("shaders/anim.ksh")
     inst._lamp.AnimState:SetLightOverride(0.8)
     inst._lamp.Light:Enable(true)
@@ -297,9 +290,8 @@ local function IsValidOwner(inst, owner)
   end
 
   if inst._ownerid then
-    return owner.userid and owner.userid == inst._ownerid
-      and owner.prefab == 'zeta'
-      and not (owner._hive and owner._hive ~= inst)
+    return owner.userid and owner.userid == inst._ownerid and owner.prefab == "zeta" and
+      not (owner._hive and owner._hive ~= inst)
   end
 
   return false
@@ -341,7 +333,7 @@ end
 
 local function GetSlaves(inst, moremusttags)
   local x, y, z = inst.Transform:GetWorldPosition()
-  local musttags = { "mutantslavehive" }
+  local musttags = {"mutantslavehive"}
 
   if moremusttags ~= nil and type(moremusttags) == "table" then
     for i, tag in ipairs(moremusttags) do
@@ -349,10 +341,14 @@ local function GetSlaves(inst, moremusttags)
     end
   end
 
-  local entities = TheSim:FindEntities(x, y, z,
+  local entities =
+    TheSim:FindEntities(
+    x,
+    y,
+    z,
     TUNING.MUTANT_BEEHIVE_MASTER_SLAVE_DIST,
-    { "_combat", "_health" },
-    { "INLIMBO", "player" },
+    {"_combat", "_health"},
+    {"INLIMBO", "player"},
     musttags
   )
 
@@ -371,12 +367,8 @@ end
 local function GetUtils(inst)
   local x, y, z = inst.Transform:GetWorldPosition()
 
-  local entities = TheSim:FindEntities(x, y, z,
-    TUNING.MUTANT_BEEHIVE_MASTER_SLAVE_DIST,
-    {},
-    { "INLIMBO", "player" },
-    { "mutantutil" }
-  )
+  local entities =
+    TheSim:FindEntities(x, y, z, TUNING.MUTANT_BEEHIVE_MASTER_SLAVE_DIST, {}, {"INLIMBO", "player"}, {"mutantutil"})
 
   local utils = {}
 
@@ -390,7 +382,7 @@ local function GetUtils(inst)
 end
 
 local function GetNumChildrenRegen(inst)
-  local barracks = GetSlaves(inst, { "mutantbarrack" })
+  local barracks = GetSlaves(inst, {"mutantbarrack"})
   local numbarracks = #barracks
 
   if numbarracks < 1 then
@@ -421,16 +413,15 @@ local function OnSlave(inst)
   if inst.components.childspawner then
     local slaves = GetSlaves(inst)
     inst.components.childspawner.maxemergencychildren =
-      TUNING.MUTANT_BEEHIVE_DEFAULT_EMERGENCY_BEES
-      + (inst._stage.LEVEL - 1) * TUNING.MUTANT_BEEHIVE_DELTA_BEES
-      + GetNumChildrenFromSlaves(slaves)
+      TUNING.MUTANT_BEEHIVE_DEFAULT_EMERGENCY_BEES + (inst._stage.LEVEL - 1) * TUNING.MUTANT_BEEHIVE_DELTA_BEES +
+      GetNumChildrenFromSlaves(slaves)
     inst.components.childspawner:TryStopUpdate()
     inst.components.childspawner:StartUpdate()
 
     local numbarracks = 0
     for i, slave in ipairs(slaves) do
       if slave.prefab == "mutantbarrack" then
-          numbarracks = numbarracks + 1
+        numbarracks = numbarracks + 1
       end
     end
 
@@ -474,11 +465,16 @@ local function checkContainerTokens(inst)
 end
 
 local function HasSlaveWithTag(inst, tag)
-  local hive = FindEntity(inst, TUNING.MUTANT_BEEHIVE_MASTER_SLAVE_DIST,
-    function(guy) return IsSlave(inst, guy) end,
-    { "_combat", "_health" },
-    { "INLIMBO", "player" },
-    { tag }
+  local hive =
+    FindEntity(
+    inst,
+    TUNING.MUTANT_BEEHIVE_MASTER_SLAVE_DIST,
+    function(guy)
+      return IsSlave(inst, guy)
+    end,
+    {"_combat", "_health"},
+    {"INLIMBO", "player"},
+    {tag}
   )
 
   return hive ~= nil
@@ -489,7 +485,8 @@ local function PickChildPrefab_MotherHive(inst)
     inst._owner,
     inst,
     inst.components.childspawner.emergencychildrenoutside,
-    inst.components.childspawner.maxemergencychildren)
+    inst.components.childspawner.maxemergencychildren
+  )
 end
 
 local function PickChildPrefab_Teleportal(inst)
@@ -504,7 +501,7 @@ local function PickChildPrefab_Teleportal(inst)
 end
 
 local function SetStage(inst, stage)
-	if stage > 1 then
+  if stage > 1 then
     Shake(inst)
   end
 
@@ -512,9 +509,15 @@ local function SetStage(inst, stage)
   inst.Transform:SetScale(scale, scale, scale)
   inst.components.health:SetMaxHealth(inst._stage.HEALTH)
 
-  inst.components.childspawner:SetRegenPeriod(TUNING.MUTANT_BEEHIVE_DEFAULT_REGEN_TIME - (stage - 1) * TUNING.MUTANT_BEEHIVE_DELTA_REGEN_TIME)
-  inst.components.childspawner:SetSpawnPeriod(TUNING.MUTANT_BEEHIVE_DEFAULT_RELEASE_TIME - (stage - 1) * TUNING.MUTANT_BEEHIVE_DELTA_RELEASE_TIME)
-  inst.components.childspawner:SetMaxEmergencyChildren(TUNING.MUTANT_BEEHIVE_DEFAULT_EMERGENCY_BEES + (stage - 1) * TUNING.MUTANT_BEEHIVE_DELTA_BEES)
+  inst.components.childspawner:SetRegenPeriod(
+    TUNING.MUTANT_BEEHIVE_DEFAULT_REGEN_TIME - (stage - 1) * TUNING.MUTANT_BEEHIVE_DELTA_REGEN_TIME
+  )
+  inst.components.childspawner:SetSpawnPeriod(
+    TUNING.MUTANT_BEEHIVE_DEFAULT_RELEASE_TIME - (stage - 1) * TUNING.MUTANT_BEEHIVE_DELTA_RELEASE_TIME
+  )
+  inst.components.childspawner:SetMaxEmergencyChildren(
+    TUNING.MUTANT_BEEHIVE_DEFAULT_EMERGENCY_BEES + (stage - 1) * TUNING.MUTANT_BEEHIVE_DELTA_BEES
+  )
 
   local loots = {}
   local numhoneycombs = TUNING.MUTANT_BEEHIVE_UPGRADES_PER_STAGE * (math.min(stage, 2) - 1)
@@ -533,17 +536,17 @@ local function SetStage(inst, stage)
 end
 
 local function FindEnemy(inst)
-  return FindEntity(inst, TUNING.MUTANT_BEEHIVE_WATCH_DIST,
-      function(guy)
-        return inst.components.combat:CanTarget(guy)
-          and guy.components.combat and guy.components.combat.target
-          and (guy.components.combat.target:HasTag("beemaster")
-            or guy.components.combat.target:HasTag("beemutant"))
-      end,
-      { "_combat", "_health" },
-      { "beemutant", "INLIMBO", "player" },
-      { "monster", "insect", "animal", "character" }
-    )
+  return FindEntity(
+    inst,
+    TUNING.MUTANT_BEEHIVE_WATCH_DIST,
+    function(guy)
+      return inst.components.combat:CanTarget(guy) and guy.components.combat and guy.components.combat.target and
+        (guy.components.combat.target:HasTag("beemaster") or guy.components.combat.target:HasTag("beemutant"))
+    end,
+    {"_combat", "_health"},
+    {"beemutant", "INLIMBO", "player"},
+    {"monster", "insect", "animal", "character"}
+  )
 end
 
 local function WatchEnemy(inst)
@@ -577,8 +580,10 @@ local function onwallattacked(inst, wall, data)
     return
   end
 
-  if not(attacker:HasTag("monster") or attacker:HasTag("animal")
-    or attacker:HasTag("insect") or attacker:HasTag("character")) then
+  if
+    not (attacker:HasTag("monster") or attacker:HasTag("animal") or attacker:HasTag("insect") or
+      attacker:HasTag("character"))
+   then
     return
   end
 
@@ -598,11 +603,8 @@ end
 
 local function WatchWalls(inst)
   local x, y, z = inst.Transform:GetWorldPosition()
-  local walls = TheSim:FindEntities(x, y, z, TUNING.MUTANT_BEEHIVE_WATCH_DIST,
-    { "_combat", "_health" },
-    { "INLIMBO" },
-    { "wall" }
-  )
+  local walls =
+    TheSim:FindEntities(x, y, z, TUNING.MUTANT_BEEHIVE_WATCH_DIST, {"_combat", "_health"}, {"INLIMBO"}, {"wall"})
 
   for i, wall in ipairs(walls) do
     if not inst._watched_walls[wall] then
@@ -625,14 +627,14 @@ local function MakeWatchWalls(inst)
 
   inst._watched_walls = {}
 
-
   inst:DoPeriodicTask(10, WatchWalls)
 end
 
 local function SelfRepair(inst)
   if inst and inst.components.childspawner and inst.components.health then
     if not inst.components.health:IsDead() then
-      local numfixers = inst.components.childspawner.childreninside + inst.components.childspawner.emergencychildreninside
+      local numfixers =
+        inst.components.childspawner.childreninside + inst.components.childspawner.emergencychildreninside
       local recover = TUNING.MUTANT_BEEHIVE_RECOVER_PER_CHILD * numfixers
       inst.components.health:DoDelta(recover, true, "self_repair")
 
@@ -647,21 +649,23 @@ local function SelfRepair(inst)
 end
 
 local function OnHaunt(inst)
-  if inst.components.childspawner == nil or
-    not inst.components.childspawner:CanSpawn() or
-    math.random() > TUNING.HAUNT_CHANCE_HALF then
+  if
+    inst.components.childspawner == nil or not inst.components.childspawner:CanSpawn() or
+      math.random() > TUNING.HAUNT_CHANCE_HALF
+   then
     return false
   end
 
-  local target = FindEntity(
+  local target =
+    FindEntity(
     inst,
     25,
     function(guy)
       return inst.components.combat:CanTarget(guy)
     end,
-    { "_combat" }, --See entityreplica.lua (re: "_combat" tag)
-    { "insect", "playerghost", "INLIMBO" },
-    { "character", "animal", "monster" }
+    {"_combat"}, --See entityreplica.lua (re: "_combat" tag)
+    {"insect", "playerghost", "INLIMBO"},
+    {"character", "animal", "monster"}
   )
 
   if target ~= nil then
@@ -708,13 +712,16 @@ local function OnPlayerJoined(inst, player)
   if not linksuccess then
     -- if the player is the owner, and is not a seamless character (like Wonkey), which means the player despawned and joined using another character
     -- then destroy the mother hive
-    if inst._ownerid and player.userid and player.userid == inst._ownerid and (not table.contains(SEAMLESSSWAP_CHARACTERLIST, player.prefab)) then
+    if
+      inst._ownerid and player.userid and player.userid == inst._ownerid and
+        (not table.contains(SEAMLESSSWAP_CHARACTERLIST, player.prefab))
+     then
       print("SAME PLAYER, DIFFERENT CHARACTER, NOT SEAMLESS")
-      -- inst:DoTaskInTime(0,
-      --   function(inst)
-      --     inst.components.lootdropper:DropLoot(inst:GetPosition())
-      --     inst:Remove()
-      --   end)
+    -- inst:DoTaskInTime(0,
+    --   function(inst)
+    --     inst.components.lootdropper:DropLoot(inst:GetPosition())
+    --     inst:Remove()
+    --   end)
     end
   end
 end
@@ -739,10 +746,9 @@ local function ConvertPollenToHoney(inst)
 
   local maxhoneys = TUNING.MUTANT_BEEHIVE_MAX_HONEYS_PER_CYCLE
 
-  for i=1,maxhoneys do
-    local numpollens = math.random(
-      TUNING.MUTANT_BEEHIVE_NUM_POLLENS_PER_HONEY,
-      TUNING.MUTANT_BEEHIVE_NUM_POLLENS_PER_HONEY + 2)
+  for i = 1, maxhoneys do
+    local numpollens =
+      math.random(TUNING.MUTANT_BEEHIVE_NUM_POLLENS_PER_HONEY, TUNING.MUTANT_BEEHIVE_NUM_POLLENS_PER_HONEY + 2)
     local has, numfound = inst._container.components.container:Has("zetapollen", numpollens)
     if not has then
       break
@@ -758,8 +764,11 @@ local function RefreshHoneyArmor(inst)
     return
   end
 
-  local armors = inst._container.components.container:FindItems(
-    function(item) return item.prefab and item.prefab == "armor_honey" and item:IsValid() end
+  local armors =
+    inst._container.components.container:FindItems(
+    function(item)
+      return item.prefab and item.prefab == "armor_honey" and item:IsValid()
+    end
   )
 
   local chunk = 0.2
@@ -810,7 +819,7 @@ local function DoGather(inst)
   inst._gathertick = inst._gathertick or 0
 
   local x, y, z = inst.Transform:GetWorldPosition()
-  local entities = TheSim:FindEntities(x, y, z, TUNING.MUTANT_BEEHIVE_WATCH_DIST, { "flower" })
+  local entities = TheSim:FindEntities(x, y, z, TUNING.MUTANT_BEEHIVE_WATCH_DIST, {"flower"})
   local numflowers = #entities
 
   if numflowers >= 5 - (inst._stage.LEVEL - 1) then
@@ -858,10 +867,10 @@ local function OnConstructed(inst, doer)
   end
 
   if concluded then
-    local x,y,z = inst.Transform:GetWorldPosition()
+    local x, y, z = inst.Transform:GetWorldPosition()
     local new_hive = SpawnPrefab(inst._stage.CONSTRUCT_PRODUCT)
     InheritOwner(new_hive, inst)
-    new_hive.Transform:SetPosition(x,y,z)
+    new_hive.Transform:SetPosition(x, y, z)
     inst:Remove()
   end
 end
@@ -889,7 +898,8 @@ local function OnInit(inst)
   OnSlave(inst)
 
   -- On init, emergencychildreninside always start at 0, so fill half the pool for quickstart
-  inst.components.childspawner.emergencychildreninside = math.floor(inst.components.childspawner.maxemergencychildren / 2)
+  inst.components.childspawner.emergencychildreninside =
+    math.floor(inst.components.childspawner.maxemergencychildren / 2)
 
   inst:DoPeriodicTask(3, SelfRepair)
   inst:DoPeriodicTask(30, ConvertPollenToHoney)
@@ -1072,7 +1082,9 @@ local function MakeMotherHive(name, stage_conf)
     inst.InheritOwner = InheritOwner
     inst.GetSlaves = GetSlaves
     inst.HasSlaveWithTag = HasSlaveWithTag
-    inst._onplayerjoined = function(src, player) OnPlayerJoined(inst, player) end
+    inst._onplayerjoined = function(src, player)
+      OnPlayerJoined(inst, player)
+    end
     inst:ListenForEvent("ms_playerjoined", inst._onplayerjoined, TheWorld)
     inst:ListenForEvent("onbuilt", OnBuilt)
 
@@ -1174,7 +1186,8 @@ local function teleportal()
     local child = oldSpawnEmergencyChild(comp, target, newprefab, ...)
 
     if child ~= nil then
-      source.components.childspawner.emergencychildreninside = source.components.childspawner.emergencychildreninside - 1
+      source.components.childspawner.emergencychildreninside =
+        source.components.childspawner.emergencychildreninside - 1
     end
 
     return child
@@ -1184,10 +1197,11 @@ local function teleportal()
   inst.components.childspawner.CanEmergencySpawn = function(comp)
     local source = GetSource(inst)
 
-    if source and source:IsValid() and
-      source.components.childspawner and
-      source.components.childspawner.emergencychildreninside > 0 then
-        return oldCanEmergencySpawn(comp)
+    if
+      source and source:IsValid() and source.components.childspawner and
+        source.components.childspawner.emergencychildreninside > 0
+     then
+      return oldCanEmergencySpawn(comp)
     end
 
     return false
@@ -1229,34 +1243,32 @@ local function teleportal()
   return inst
 end
 
-
-
 STRINGS.MUTANTBEEHIVE = "Metapis Mother Hive"
 STRINGS.NAMES.MUTANTBEEHIVE = "Metapis Mother Hive"
-STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTBEEHIVE = "\"Apis\" is \"bee\" in Latin."
+STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTBEEHIVE = '"Apis" is "bee" in Latin.'
 STRINGS.RECIPE_DESC.MUTANTBEEHIVE = "Starts building your Metapis army."
 
 STRINGS.MUTANTBEEHIVE_LEVEL2 = "Metapis Mother Hive"
 STRINGS.NAMES.MUTANTBEEHIVE_LEVEL2 = "Metapis Mother Hive"
-STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTBEEHIVE_LEVEL2 = "\"Apis\" is \"bee\" in Latin."
+STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTBEEHIVE_LEVEL2 = '"Apis" is "bee" in Latin.'
 
 STRINGS.MUTANTBEEHIVE_LEVEL3 = "Metapis Mother Hive"
 STRINGS.NAMES.MUTANTBEEHIVE_LEVEL3 = "Metapis Mother Hive"
-STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTBEEHIVE_LEVEL3 = "\"Apis\" is \"bee\" in Latin."
-
-
-STRINGS.MUTANTTELEPORTAL = "Metapis Teleportal"
-STRINGS.NAMES.MUTANTTELEPORTAL = "Metapis Teleportal"
-STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTTELEPORTAL = "Magical transportation."
-STRINGS.RECIPE_DESC.MUTANTTELEPORTAL = "Summons Metapis from Mother Hive."
-
+STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTBEEHIVE_LEVEL3 = '"Apis" is "bee" in Latin.'
 
 STRINGS.MUTANTTELEPORTAL = "Metapis Teleportal"
 STRINGS.NAMES.MUTANTTELEPORTAL = "Metapis Teleportal"
 STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTTELEPORTAL = "Magical transportation."
 STRINGS.RECIPE_DESC.MUTANTTELEPORTAL = "Summons Metapis from Mother Hive."
 
-return MakeMotherHive("mutantbeehive", {
+STRINGS.MUTANTTELEPORTAL = "Metapis Teleportal"
+STRINGS.NAMES.MUTANTTELEPORTAL = "Metapis Teleportal"
+STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTTELEPORTAL = "Magical transportation."
+STRINGS.RECIPE_DESC.MUTANTTELEPORTAL = "Summons Metapis from Mother Hive."
+
+return MakeMotherHive(
+  "mutantbeehive",
+  {
     SIZE_SCALE = 1.45,
     HEALTH = 700,
     IDLE_ANIM = "cocoon_tiny",
@@ -1266,8 +1278,10 @@ return MakeMotherHive("mutantbeehive", {
     FROZEN_LOOP_ANIM = "frozen_tiny_loop_pst",
     LEVEL = 1,
     CONSTRUCT_PRODUCT = "mutantbeehive_level2"
-  }),
-  MakeMotherHive("mutantbeehive_level2", {
+  }
+), MakeMotherHive(
+  "mutantbeehive_level2",
+  {
     SIZE_SCALE = 1.35,
     HEALTH = 1100,
     IDLE_ANIM = "cocoon_medium",
@@ -1277,8 +1291,10 @@ return MakeMotherHive("mutantbeehive", {
     FROZEN_LOOP_ANIM = "frozen_medium_loop_pst",
     LEVEL = 2,
     CONSTRUCT_PRODUCT = "mutantbeehive_level3"
-  }),
-  MakeMotherHive("mutantbeehive_level3", {
+  }
+), MakeMotherHive(
+  "mutantbeehive_level3",
+  {
     SIZE_SCALE = 1.45,
     HEALTH = 1500,
     IDLE_ANIM = "cocoon_big",
@@ -1287,7 +1303,14 @@ return MakeMotherHive("mutantbeehive", {
     FROZEN_ANIM = "frozen_big",
     FROZEN_LOOP_ANIM = "frozen_big_loop_pst",
     LEVEL = 3
-  }),
-  Prefab("mutantteleportal", teleportal, assets, prefabs),
-  MakePlacer("mutantbeehive_placer", "mutantbeehive", "mutantbeehive", "cocoon_tiny", nil, nil, nil, 1.45),
-  MakePlacer("mutantteleportal_placer", "mutantteleportal", "mutantteleportal", "idle")
+  }
+), Prefab("mutantteleportal", teleportal, assets, prefabs), MakePlacer(
+  "mutantbeehive_placer",
+  "mutantbeehive",
+  "mutantbeehive",
+  "cocoon_tiny",
+  nil,
+  nil,
+  nil,
+  1.45
+), MakePlacer("mutantteleportal_placer", "mutantteleportal", "mutantteleportal", "idle")

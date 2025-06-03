@@ -1,43 +1,41 @@
-local assets =
-{
-  Asset("ANIM", "anim/honey_sting_trap.zip"),
+local assets = {
+  Asset("ANIM", "anim/honey_sting_trap.zip")
 }
 
-local prefabs =
-{
-    "spoiled_food",
-    "honey_sting_spike_0",
-    "honey_sting_spike_1"
+local prefabs = {
+  "spoiled_food",
+  "honey_sting_spike_0",
+  "honey_sting_spike_1"
 }
 
 local watch_slow_radius = 8
 local radius = 3
-local should_tags = { "monster", "insect", "animal", "character" }
-local must_tags = { "_combat", "_health"}
-local must_not_tags = { "beemutant", "INLIMBO", "player", "notraptrigger", "flying", "ghost", "playerghost", "spawnprotection" }
+local should_tags = {"monster", "insect", "animal", "character"}
+local must_tags = {"_combat", "_health"}
+local must_not_tags = {
+  "beemutant",
+  "INLIMBO",
+  "player",
+  "notraptrigger",
+  "flying",
+  "ghost",
+  "playerghost",
+  "spawnprotection"
+}
 
 local function isenemy(guy)
   if not guy:IsValid() then
     return false
   end
 
-  return guy:HasTag("monster") or (
-    guy.components.combat and guy.components.combat.target
-    and (
-      guy.components.combat.target:HasTag("player")
-      or guy.components.combat.target:HasTag("beemutant")
-    )
-  )
+  return guy:HasTag("monster") or
+    (guy.components.combat and guy.components.combat.target and
+      (guy.components.combat.target:HasTag("player") or guy.components.combat.target:HasTag("beemutant")))
 end
 
 local function DoDamage(inst)
   local x, y, z = inst.Transform:GetWorldPosition()
-  local enemies = TheSim:FindEntities(x, y, z,
-    radius,
-    must_tags,
-    must_not_tags,
-    should_tags
-  )
+  local enemies = TheSim:FindEntities(x, y, z, radius, must_tags, must_not_tags, should_tags)
 
   local foundenemy = false
 
@@ -74,12 +72,7 @@ end
 
 local function DoSlow(inst)
   local x, y, z = inst.Transform:GetWorldPosition()
-  local enemies = TheSim:FindEntities(x, y, z,
-    radius,
-    must_tags,
-    must_not_tags,
-    should_tags
-  )
+  local enemies = TheSim:FindEntities(x, y, z, radius, must_tags, must_not_tags, should_tags)
 
   for i, e in ipairs(enemies) do
     if e.components.locomotor and isenemy(e) then
@@ -106,14 +99,7 @@ local function StopSlow(inst)
 end
 
 local function TryFindSlow(inst)
-  local enemy = FindEntity(
-    inst,
-    watch_slow_radius,
-    isenemy,
-    must_tags,
-    must_not_tags,
-    should_tags
-  )
+  local enemy = FindEntity(inst, watch_slow_radius, isenemy, must_tags, must_not_tags, should_tags)
 
   if enemy then
     StartSlow(inst)
@@ -160,8 +146,20 @@ local function CreateSpike(parent, offset)
     inst.Transform:SetPosition(offset:Get())
   end
 
-  inst:ListenForEvent("_attack", function() inst:OnAttack() end, parent)
-  inst:ListenForEvent("_trapfinished", function() inst:OnFinished() end, parent)
+  inst:ListenForEvent(
+    "_attack",
+    function()
+      inst:OnAttack()
+    end,
+    parent
+  )
+  inst:ListenForEvent(
+    "_trapfinished",
+    function()
+      inst:OnFinished()
+    end,
+    parent
+  )
 end
 
 local function CreateSpikes(inst)
@@ -177,12 +175,11 @@ local function CreateSpikes(inst)
     local rx = math.random() * 0.5 + 0.8
     local ry = math.random() * 0.5 + 0.8
 
-    CreateSpike(inst, Vector3(rx * math.sin(acc*DEGREES), 0, ry * math.cos(acc*DEGREES)))
+    CreateSpike(inst, Vector3(rx * math.sin(acc * DEGREES), 0, ry * math.cos(acc * DEGREES)))
 
     acc = acc + math.random(50, 70)
   end
 end
-
 
 local function OnInit(inst)
   StartDoingDamage(inst)
@@ -194,7 +191,6 @@ end
 local function OnRemoveEntity(inst)
   StopDoingDamage(inst)
 end
-
 
 local function fn()
   local inst = CreateEntity()
@@ -258,7 +254,7 @@ local function ball_fn()
   inst.entity:SetPristine()
 
   if not TheWorld.ismastersim then
-      return inst
+    return inst
   end
 
   inst:AddComponent("inspectable")
@@ -291,6 +287,10 @@ STRINGS.NAMES.HONEY_STING_BALL = "Sting Trap"
 STRINGS.CHARACTERS.GENERIC.DESCRIBE.HONEY_STING_BALL = "Sticky and deadly."
 STRINGS.RECIPE_DESC.HONEY_STING_BALL = "A sweet and stingy trap."
 
-return Prefab("honey_sting_trap", fn, assets),
-  Prefab("honey_sting_ball", ball_fn, assets, prefabs),
-  MakePlacer("honey_sting_ball_placer", "honey_sting_trap", "honey_sting_trap", "idle", true)
+return Prefab("honey_sting_trap", fn, assets), Prefab("honey_sting_ball", ball_fn, assets, prefabs), MakePlacer(
+  "honey_sting_ball_placer",
+  "honey_sting_trap",
+  "honey_sting_trap",
+  "idle",
+  true
+)

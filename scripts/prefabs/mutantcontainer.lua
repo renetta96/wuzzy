@@ -1,21 +1,18 @@
 local hive_common = require "hive_common"
 
-local prefabs =
-{
-  "collapse_small",
+local prefabs = {
+  "collapse_small"
 }
 
-local assets =
-{
+local assets = {
   Asset("ANIM", "anim/ui_chest_3x2.zip"),
-  Asset("ANIM", "anim/mutantcontainer.zip"),
+  Asset("ANIM", "anim/mutantcontainer.zip")
 }
-
 
 local function onchesthammered(inst, worker)
   if inst.components.burnable ~= nil and inst.components.burnable:IsBurning() then
-        inst.components.burnable:Extinguish()
-    end
+    inst.components.burnable:Extinguish()
+  end
 
   if inst.components.container ~= nil then
     inst.components.container:DropEverything()
@@ -114,5 +111,9 @@ STRINGS.NAMES.MUTANTCONTAINER = "Metapis Container"
 STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTCONTAINER = "The swarm's provisions."
 STRINGS.RECIPE_DESC.MUTANTCONTAINER = "Stores Mother Hive's products."
 
-return Prefab("mutantcontainer", chestfn, assets, prefabs),
-  MakePlacer("mutantcontainer_placer", "mutantcontainer", "mutantcontainer", "idle")
+return Prefab("mutantcontainer", chestfn, assets, prefabs), MakePlacer(
+  "mutantcontainer_placer",
+  "mutantcontainer",
+  "mutantcontainer",
+  "idle"
+)
