@@ -4,6 +4,7 @@ local BarrackModifier = metapis_common.BarrackModifier
 local FindTarget = metapis_common.FindTarget
 local FindEnemies = metapis_common.FindEnemies
 local DealPoison = metapis_common.DealPoison
+local FindHealingTarget = metapis_common.FindHealingTarget
 
 local assets = {
   Asset("ANIM", "anim/mutantmimicbee.zip"),
@@ -12,6 +13,7 @@ local assets = {
   Asset("ANIM", "anim/mutantmimicbee_ranger.zip"),
   Asset("ANIM", "anim/mutantmimicbee_shadow.zip"),
   Asset("ANIM", "anim/mutantmimicbee_assassin.zip"),
+  Asset("ANIM", "anim/mutantmimicbee_healer.zip"),
   Asset("SOUND", "sound/bee.fsb")
 }
 
@@ -65,11 +67,9 @@ local function MorphDefender(inst)
 end
 
 local function MimicDefender(inst)
-  inst:ListenForEvent("onattackother", OnAttackOtherDefender)
 end
 
 local function UnmimicDefender(inst)
-  inst:RemoveEventCallback("onattackother", OnAttackOtherDefender)
 end
 
 local function OnAttackOtherRanger(inst, data)
@@ -99,7 +99,6 @@ local function OnAttackOtherRanger(inst, data)
     )
 
     if ranger ~= nil then
-      -- print("LIGHTNING ROD")
       ranger.components.combat:DoAttack(target)
     end
   end
@@ -113,22 +112,26 @@ local function MorphRanger(inst)
 end
 
 local function MimicRanger(inst)
-  if inst.components.electricattacks == nil then
+  if not inst.components.electricattacks then
     inst:AddComponent("electricattacks")
   end
-
-  inst:ListenForEvent("onattackother", OnAttackOtherRanger)
 end
 
 local function UnmimicRanger(inst)
   inst.AnimState:ClearBloomEffectHandle()
   inst.AnimState:SetLightOverride(0)
 
-  inst:RemoveEventCallback("onattackother", OnAttackOtherRanger)
-
   if inst.components.electricattacks then
     inst:RemoveComponent("electricattacks")
   end
+end
+
+local function shredTarget(target)
+  if not target.components.debuffable then
+    target:AddComponent("debuffable")
+  end
+
+  target.components.debuffable:AddDebuff("metapis_shred_buff", "metapis_shred_buff")
 end
 
 local function OnAttackOtherShadow(inst, data)
@@ -161,6 +164,7 @@ local function OnAttackOtherShadow(inst, data)
         end
 
         inst.components.combat:DoAttack(target, nil, nil, "spikeattack")
+        shredTarget(target)
       end
     end
   )
@@ -175,18 +179,16 @@ local function OnAttackOtherShadow(inst, data)
         end
 
         inst.components.combat:DoAttack(target, nil, nil, "spikeattack")
+        shredTarget(target)
       end
     end
   )
 end
 
 local function MimicShadow(inst)
-  inst:ListenForEvent("onattackother", OnAttackOtherShadow)
 end
 
 local function UnmimicShadow(inst)
-  inst:RemoveEventCallback("onattackother", OnAttackOtherShadow)
-
   local r, g, b = inst.AnimState:GetMultColour()
   inst.AnimState:SetMultColour(r, g, b, 1.0)
 end
@@ -205,23 +207,18 @@ local function OnAttackOtherAssassin(inst, data)
     return
   end
 
-  -- print("ASSASSIN ATTACK")
-
   DealPoison(inst, target)
 
   target._crit_poison_end_time = GetTime() + 5
 end
 
 local function MimicAssassin(inst)
-  inst:ListenForEvent("onattackother", OnAttackOtherAssassin)
+  inst.components.locomotor.groundspeedmultiplier = 1.5
 end
 
 local function UnmimicAssassin(inst)
-  inst:RemoveEventCallback("onattackother", OnAttackOtherAssassin)
-
   local r, g, b = inst.AnimState:GetMultColour()
   inst.AnimState:SetMultColour(r, g, b, 1.0)
-
   inst.components.locomotor.groundspeedmultiplier = 1.0
 end
 
@@ -231,59 +228,113 @@ local function MorphAssassin(inst)
 
   inst.AnimState:OverrideSymbol("body", "mutantmimicbee_assassin", "body")
   inst.AnimState:OverrideSymbol("stinger", "mutantmimicbee_assassin", "stinger")
-
-  inst.components.locomotor.groundspeedmultiplier = 1.5
 end
 
+local function MimicHealer(inst)
+end
+
+local function UnmimicHealer(inst)
+end
+
+local function MorphHealer(inst)
+  inst.AnimState:OverrideSymbol("body", "mutantmimicbee_healer", "body")
+  inst.AnimState:OverrideSymbol("stinger", "mutantmimicbee_healer", "stinger")
+end
+
+local function OnAttackOtherHealer(inst, data)
+  local target = data.target
+  if not target then
+    return
+  end
+
+  if math.random() > 0.3 then
+    return
+  end
+
+  local ally = FindHealingTarget(inst)
+  if ally then
+    -- print("ATTACK HEALER", ally)
+    ally.components.health:DoDelta(BarrackModifier(inst, 5), nil, "mutantmimic_heal", nil, inst)
+
+    SpawnPrefab("heal_fx"):Attach(ally)
+  end
+end
+
+-- mimicfn: setup functionalities, like components
+-- morphfn: setup appearance, like AnimState:OverrrideSymbol, light, colors, etc
+-- unmimicfn: cleanup both mimicfn and morphfn
+-- onattackfn: for onattackother event
 local canmimic = {
   mutantdefenderbee = {
     mimicfn = MimicDefender,
     unmimicfn = UnmimicDefender,
-    morphfn = MorphDefender
+    morphfn = MorphDefender,
+    onattackfn = OnAttackOtherDefender
   },
   mutantrangerbee = {
     mimicfn = MimicRanger,
     unmimicfn = UnmimicRanger,
-    morphfn = MorphRanger
+    morphfn = MorphRanger,
+    onattackfn = OnAttackOtherRanger
   },
   mutantshadowbee = {
     mimicfn = MimicShadow,
     unmimicfn = UnmimicShadow,
-    morphfn = MorphShadow
+    morphfn = MorphShadow,
+    onattackfn = OnAttackOtherShadow
   },
   mutantassassinbee = {
     mimicfn = MimicAssassin,
     unmimicfn = UnmimicAssassin,
-    morphfn = MorphAssassin
+    morphfn = MorphAssassin,
+    onattackfn = OnAttackOtherAssassin
+  },
+  mutanthealerbee = {
+    mimicfn = MimicHealer,
+    unmimicfn = UnmimicHealer,
+    morphfn = MorphHealer,
+    onattackfn = OnAttackOtherHealer
   }
-  -- "mutanthealerbee",
 }
 
 local function Unmimic(inst)
   -- print("UNMIMIC")
-  if inst._currentmimic ~= nil then
-    canmimic[inst._currentmimic].unmimicfn(inst)
-  end
 
-  inst._currentmimic = nil
-  inst._morphfn = MorphDefault
+  if #inst._mimics > 0 then
+    inst._mimics[1].unmimicfn(inst)
+    table.remove(inst._mimics, 1)
+  end
 end
 
 local function Mimic(inst, prefab)
-  Unmimic(inst)
-
-  -- print("MIMIC", prefab)
-
-  if canmimic[prefab] ~= nil then
-    inst._currentmimic = prefab
-    canmimic[prefab].mimicfn(inst)
-    inst._morphfn = canmimic[prefab].morphfn
+  local mimic = canmimic[prefab]
+  if not mimic then
+    return
   end
 
+  table.insert(inst._mimics, mimic)
+  mimic.mimicfn(inst)
+
+  local maxmimics = inst._maxmimics
+  if math.random() < 0.25 then
+    maxmimics = maxmimics + 1
+  end
+
+  while #inst._mimics > maxmimics do
+    Unmimic(inst)
+  end
+
+  -- print("MIMIC", prefab, #inst._mimics)
   inst:PushEvent("mimic")
 end
 
 local function TryMimic(inst)
+  -- if busy, try again in much shorter time
+  if inst.sg:HasStateTag("busy") then
+    inst:DoTaskInTime(1, TryMimic)
+    return
+  end
+
   local canmorph = {}
 
   for prefab, v in pairs(canmimic) do
@@ -307,31 +358,23 @@ local function TryMimic(inst)
   if #canmorph > 0 then
     Mimic(inst, canmorph[math.random(#canmorph)])
   else
-    local current = inst._currentmimic
+    local currentsize = #inst._mimics
     Unmimic(inst)
 
-    if current ~= nil then
+    -- no unmimic animation, unless unmimic back to 0
+    if currentsize > 0 and #inst._mimics == 0 then
       inst:PushEvent("mimic")
     end
   end
-end
 
-local function MakeMimic(inst)
-  inst._currentmimic = nil
-  inst._morphfn = MorphDefault
-
-  inst:DoTaskInTime(
-    GetRandomWithVariance(5, 2),
-    function(inst)
-      TryMimic(inst)
-      inst:DoPeriodicTask(GetRandomWithVariance(20, 5), TryMimic)
-    end
-  )
+  inst:DoTaskInTime(GetRandomWithVariance(15, 5), TryMimic)
 end
 
 local function Morph(inst)
-  if inst._morphfn ~= nil then
-    inst._morphfn(inst)
+  if #inst._mimics > 0 then
+    inst._mimics[#inst._mimics].morphfn(inst)
+  else
+    MorphDefault(inst)
   end
 end
 
@@ -341,7 +384,20 @@ local function CounterAttack(inst)
   end
 end
 
+local function OnAttackOther(inst, data)
+  for i, mimic in pairs(inst._mimics) do
+    mimic.onattackfn(inst, data)
+  end
+end
+
 local function CheckMimicUpgrade(inst, stage)
+  local owner = inst:GetOwner()
+  if owner and owner:HasTag("beemaster") then
+    if owner.components.skilltreeupdater:IsActivated("zeta_metapis_mimic_2") then
+      inst._maxmimics = 2
+    end
+  end
+
   if stage >= 2 then
     inst.components.health.externalabsorbmodifiers:SetModifier(
       "motherhive_stage2",
@@ -356,7 +412,9 @@ local function CheckMimicUpgrade(inst, stage)
   inst.components.health:SetMaxHealth(BarrackModifier(inst, TUNING.MUTANT_BEE_SOLDIER_HEALTH))
   inst:RefreshBaseDamage()
 
-  MakeMimic(inst)
+  inst:DoTaskInTime(GetRandomWithVariance(5, 2), TryMimic)
+
+  inst:ListenForEvent("onattackother", OnAttackOther)
 
   return true
 end
@@ -419,6 +477,8 @@ local function mimicbee()
   inst.Mimic = Mimic
   inst.Unmimic = Unmimic
   inst.Morph = Morph
+  inst._mimics = {}
+  inst._maxmimics = 1
 
   return inst
 end

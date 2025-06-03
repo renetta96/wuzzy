@@ -197,8 +197,6 @@ TUNING.MUTANT_BEE_DEFENDER_ATTACK_RANGE = 1.5
 TUNING.MUTANT_BEE_DEFENDER_ABSORPTION = 0.5
 TUNING.MUTANT_BEE_DEFENDER_TAUNT_DIST = 10
 TUNING.MUTANT_BEE_DEFENDER_COLDNESS = 0.75
-TUNING.MUTANT_BEE_FROSTBITE_SPEED_PENALTY = 0.5
-TUNING.MUTANT_BEE_FROSTBITE_ATK_PERIOD_PENALTY = 1.25
 TUNING.MUTANT_BEE_DEFENDER_MIN_ABSORPTION = 0.3
 TUNING.MUTANT_BEE_DEFENDER_MAX_ABSORPTION = 0.8
 TUNING.MUTANT_BEE_DEFENDER_MAX_ABSORPTION_THRESHOLD = 0.3
@@ -333,6 +331,7 @@ RegisterSkilltreeIconsAtlas("images/skilltree_zeta_icons.xml", "zeta_metapis_def
 RegisterSkilltreeIconsAtlas("images/skilltree_zeta_icons.xml", "zeta_metapis_ranger_1.tex")
 RegisterSkilltreeIconsAtlas("images/skilltree_zeta_icons.xml", "zeta_metapis_ranger_2.tex")
 RegisterSkilltreeIconsAtlas("images/skilltree_zeta_icons.xml", "zeta_metapis_mimic_1.tex")
+RegisterSkilltreeIconsAtlas("images/skilltree_zeta_icons.xml", "zeta_metapis_mimic_2.tex")
 RegisterSkilltreeIconsAtlas("images/skilltree_zeta_icons.xml", "zeta_metapis_healer_1.tex")
 RegisterSkilltreeIconsAtlas("images/skilltree_zeta_icons.xml", "zeta_metapis_healer_2.tex")
 RegisterSkilltreeIconsAtlas("images/skilltree_zeta_icons.xml", "zeta_metapimancer_tyrant_1.tex")

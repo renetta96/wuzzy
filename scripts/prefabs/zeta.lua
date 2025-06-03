@@ -263,6 +263,10 @@ local function OnConsumeHealOrb(inst)
       end
     )
   end
+
+  if inst.components.skilltreeupdater:IsActivated("zeta_metapis_healer_1") then
+    inst.components.debuffable:AddDebuff("heal_orb_haste_buff", "metapis_stack_haste_buff")
+  end
 end
 
 local function EnablePoisonAttack(inst)
@@ -364,6 +368,7 @@ local function OnAttackOther(inst, data)
     MakePoisonable(data.target)
 
     data.target.components.dotable:Add("stackable_poison", 5, TUNING.MUTANT_BEE_STACK_POISON_TICKS)
+    data.target._crit_poison_end_time = GetTime() + 5
   end
 
   if

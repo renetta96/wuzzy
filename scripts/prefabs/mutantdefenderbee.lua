@@ -62,78 +62,17 @@ local function OnDefenderStopCombat(inst)
   end
 end
 
-local function penalizeAtkPeriod(inst)
-  if inst.components.combat and not inst._currentattackperiod then
-    inst._currentattackperiod = inst.components.combat.min_attack_period
-    inst.components.combat:SetAttackPeriod(inst._currentattackperiod * TUNING.MUTANT_BEE_FROSTBITE_ATK_PERIOD_PENALTY)
-  end
-end
-
-local function resetAtkPeriod(inst)
-  if inst.components.combat and inst._currentattackperiod then
-    inst.components.combat:SetAttackPeriod(inst._currentattackperiod)
-    inst._currentattackperiod = nil
-  end
-end
-
-local function setFrostBiteExpireTask(inst, fn)
-  -- cancel current task to save memory
-  if inst._frostbite_task ~= nil then
-    inst._frostbite_task:Cancel()
-    inst._frostbite_task = nil
-  end
-
-  inst._frostbite_task = inst:DoTaskInTime(10, fn)
-end
-
 local function CauseFrostBite(inst)
-  inst._frostbite_expire = GetTime() + 9.75
-
-  penalizeAtkPeriod(inst)
-
-  if inst.components.locomotor.enablegroundspeedmultiplier then
-    inst.components.locomotor:SetExternalSpeedMultiplier(
-      inst,
-      "mutant_frostbite",
-      TUNING.MUTANT_BEE_FROSTBITE_SPEED_PENALTY
-    )
-
-    setFrostBiteExpireTask(
-      inst,
-      function(inst)
-        if GetTime() >= inst._frostbite_expire then
-          inst.components.locomotor:RemoveExternalSpeedMultiplier(inst, "mutant_frostbite")
-          resetAtkPeriod(inst)
-        end
-      end
-    )
-
-    return
+  if not inst.components.debuffable then
+    inst:AddComponent("debuffable")
   end
 
-  if not inst._currentspeed then
-    inst._currentspeed = inst.components.locomotor.groundspeedmultiplier
-  end
-  inst.components.locomotor.groundspeedmultiplier = TUNING.MUTANT_BEE_FROSTBITE_SPEED_PENALTY
-
-  setFrostBiteExpireTask(
-    inst,
-    function(inst)
-      if GetTime() >= inst._frostbite_expire then
-        if inst._currentspeed then
-          inst.components.locomotor.groundspeedmultiplier = inst._currentspeed
-          inst._currentspeed = nil
-        end
-
-        resetAtkPeriod(inst)
-      end
-    end
-  )
+  inst.components.debuffable:AddDebuff("metapis_frostbite_buff", "metapis_frostbite_buff")
 end
 
-local function AddColdness(inst)
+local function AddColdness(inst, mult)
   if inst.components.freezable ~= nil then
-    inst.components.freezable:AddColdness(TUNING.MUTANT_BEE_DEFENDER_COLDNESS)
+    inst.components.freezable:AddColdness(TUNING.MUTANT_BEE_DEFENDER_COLDNESS * (mult or 1.0))
     inst.components.freezable:SpawnShatterFX()
   end
 end
@@ -147,7 +86,7 @@ local function IceNova(inst)
 
   for i, e in ipairs(enemies) do
     -- print("RETALIATE", e)
-    AddColdness(e)
+    AddColdness(e, 2)
     inst.components.combat:DoAttack(e)
   end
 
@@ -172,14 +111,11 @@ end
 local function OnDefenderAttacked(inst, data)
   local attacker = data and data.attacker
 
-  if
-    not (attacker and attacker.components.locomotor and attacker.components.health and
-      not attacker.components.health:IsDead())
-   then
+  if not attacker or not attacker:IsValid() or (attacker.components.health and attacker.components.health:IsDead()) then
     return
   end
 
-  if attacker:HasTag("player") then
+  if attacker:HasTag("beemaster") then
     return
   end
 

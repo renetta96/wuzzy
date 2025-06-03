@@ -71,7 +71,7 @@ local function haste_fn()
     target.hasted_buff = false
 
     if target:IsValid() and target.components.locomotor then
-      target.components.locomotor:RemoveExternalSpeedMultiplier(inst, "hasted_buff")
+      target.components.locomotor:RemoveExternalSpeedMultiplier(inst)
     end
   end
 
@@ -331,7 +331,167 @@ local function frenzy_fx()
   return inst
 end
 
+local function shred_fn()
+  local inst = CreateEntity()
+
+  if not TheWorld.ismastersim then
+    --Not meant for client!
+    inst:DoTaskInTime(0, inst.Remove)
+
+    return inst
+  end
+
+  inst.entity:AddTransform()
+
+  --[[Non-networked entity]]
+  --inst.entity:SetCanSleep(false)
+  inst.entity:Hide()
+  inst.persists = false
+
+  inst:AddTag("CLASSIFIED")
+
+  inst.duration = 5
+  inst._stacks = 0
+
+  inst.attachfn = function(buff, target, followsymbol)
+    -- print("SHRED ATTACHED")
+  end
+
+  inst.extendedfn = function(buff, target)
+    -- print("SHRED EXTENDED")
+    inst._stacks = math.min(inst._stacks + 1, 20)
+
+    if target:IsValid() and target.components.health then
+      target.components.health.externalabsorbmodifiers:SetModifier(inst, -0.01 * inst._stacks)
+    -- print("SHRED ", target.components.health.externalabsorbmodifiers:Get())
+    end
+  end
+
+  inst.detachfn = function(buff, target)
+    -- print("SHRED DETACHED")
+
+    if target:IsValid() and target.components.health then
+      target.components.health.externalabsorbmodifiers:RemoveModifier(inst)
+    end
+  end
+
+  inst:AddComponent("debuff")
+  inst.components.debuff:SetAttachedFn(OnAttached)
+  inst.components.debuff:SetDetachedFn(OnDetached)
+  inst.components.debuff:SetExtendedFn(OnExtended)
+
+  return inst
+end
+
+local function stack_haste_fn()
+  local inst = CreateEntity()
+
+  if not TheWorld.ismastersim then
+    --Not meant for client!
+    inst:DoTaskInTime(0, inst.Remove)
+
+    return inst
+  end
+
+  inst.entity:AddTransform()
+
+  --[[Non-networked entity]]
+  --inst.entity:SetCanSleep(false)
+  inst.entity:Hide()
+  inst.persists = false
+
+  inst:AddTag("CLASSIFIED")
+
+  inst.duration = 3
+  inst._stacks = 0
+
+  inst.extendedfn = function(buff, target)
+    inst._stacks = math.min(inst._stacks + 1, 3)
+    -- print("HASTE BUFF", inst._stacks)
+
+    if target:IsValid() and target.components.locomotor then
+      target.components.locomotor:SetExternalSpeedMultiplier(inst, "stack_hasted_buff", 1.0 + 0.2 * inst._stacks)
+    end
+  end
+
+  inst.detachfn = function(buff, target)
+    if target:IsValid() and target.components.locomotor then
+      target.components.locomotor:RemoveExternalSpeedMultiplier(inst)
+    end
+  end
+
+  inst:AddComponent("debuff")
+  inst.components.debuff:SetAttachedFn(OnAttached)
+  inst.components.debuff:SetDetachedFn(OnDetached)
+  inst.components.debuff:SetExtendedFn(OnExtended)
+
+  return inst
+end
+
+local function frostbite_fn()
+  local inst = CreateEntity()
+
+  if not TheWorld.ismastersim then
+    --Not meant for client!
+    inst:DoTaskInTime(0, inst.Remove)
+
+    return inst
+  end
+
+  inst.entity:AddTransform()
+
+  --[[Non-networked entity]]
+  --inst.entity:SetCanSleep(false)
+  inst.entity:Hide()
+  inst.persists = false
+
+  inst:AddTag("CLASSIFIED")
+
+  inst.duration = 10
+  inst._stacks = 0
+
+  inst.extendedfn = function(buff, target)
+    inst._stacks = math.min(inst._stacks + 1, 5)
+
+    -- print("FROSTBITE EXTENDED", inst._stacks)
+
+    if target:IsValid() then
+      if target.components.locomotor then
+        target.components.locomotor:SetExternalSpeedMultiplier(inst, "mutant_frostbite", 1.0 - 0.1 * inst._stacks)
+      end
+
+      if target.components.combat then
+        target.components.combat.externaldamagemultipliers:SetModifier(inst, 1.0 - 0.02 * inst._stacks)
+      end
+    end
+  end
+
+  inst.detachfn = function(buff, target)
+    -- print("FROSTBITE DETACHED")
+
+    if target:IsValid() then
+      if target.components.locomotor then
+        target.components.locomotor:RemoveExternalSpeedMultiplier(inst)
+      end
+
+      if target.components.combat then
+        target.components.combat.externaldamagemultipliers:RemoveModifier(inst)
+      end
+    end
+  end
+
+  inst:AddComponent("debuff")
+  inst.components.debuff:SetAttachedFn(OnAttached)
+  inst.components.debuff:SetDetachedFn(OnDetached)
+  inst.components.debuff:SetExtendedFn(OnExtended)
+
+  return inst
+end
+
 return Prefab("metapis_haste_buff", haste_fn), Prefab("metapis_rage_buff", rage_fn), Prefab(
   "metapis_frenzy_buff",
   frenzy_fn
-), Prefab("metapis_rage_fx", rage_fx, enrage_assets), Prefab("metapis_frenzy_fx", frenzy_fx, frenzy_assets)
+), Prefab("metapis_rage_fx", rage_fx, enrage_assets), Prefab("metapis_frenzy_fx", frenzy_fx, frenzy_assets), Prefab(
+  "metapis_shred_buff",
+  shred_fn
+), Prefab("metapis_stack_haste_buff", stack_haste_fn), Prefab("metapis_frostbite_buff", frostbite_fn)

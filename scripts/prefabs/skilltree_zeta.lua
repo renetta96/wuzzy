@@ -109,7 +109,7 @@ local function BuildSkillsData(SkillTreeFns)
     },
     zeta_metapis_assassin_2 = {
       title = "Metapis Mutant II",
-      desc = "Directly summoned Metapis Mutants have a chance to coat Wuzzy's attacks in poison. This effect lasts 10 seconds.",
+      desc = "Directly summoned Metapis Mutants have a chance to coat Wuzzy’s attacks in poison for 10 seconds. This coating also gives poison ticks on the target a chance to deal increased damage.",
       icon = "zeta_metapis_assassin_2",
       pos = {-62 + W_GAP, 176},
       group = "metapis",
@@ -182,27 +182,27 @@ local function BuildSkillsData(SkillTreeFns)
     zeta_metapis_lock_5 = MakeMetapisLock({-62 - W_GAP, 176 - 4 * H_GAP}, {"zeta_metapis_mimic_1"}, "metapis_mimic"),
     zeta_metapis_mimic_1 = {
       title = "Metapis Mimic I",
-      desc = "Evolve Metapis Soldiers into Metapis Mimics, which randomly change their attacks based on nearby Metapises.",
+      desc = "Evolve Metapis Soldiers into Metapis Mimics, which periodically adapt their abilities based on nearby Metapises. Each adaptation grants 1 ability, retaining only 1 total 75% of the time, and up to 2 abilities 25% of the time.",
       icon = "zeta_metapis_mimic_1",
       pos = {-62, 176 - 4 * H_GAP},
       group = "metapis",
-      tags = {"metapis_minion_root", "metapis_minion", "metapis_mimic"}
-      -- connects = {
-      --     "zeta_metapis_mimic_2"
-      -- }
+      tags = {"metapis_minion_root", "metapis_minion", "metapis_mimic"},
+      connects = {
+        "zeta_metapis_mimic_2"
+      }
     },
-    -- zeta_metapis_mimic_2 = {
-    --     title = "Metapis Mimic II",
-    --     desc = "",
-    --     icon = "zeta_metapis_mimic_1",
-    --     pos = {-62 + W_GAP, 176 - 4 * H_GAP},
-    --     group = "metapis",
-    --     tags = {"metapis_minion", "metapis_mimic"}
-    -- },
+    zeta_metapis_mimic_2 = {
+      title = "Metapis Mimic II",
+      desc = "Metapis Mimics can now retain up to 2 abilities, with a 25% chance to hold up to 3.",
+      icon = "zeta_metapis_mimic_2",
+      pos = {-62 + W_GAP, 176 - 4 * H_GAP},
+      group = "metapis",
+      tags = {"metapis_minion", "metapis_mimic"}
+    },
     zeta_metapis_lock_6 = MakeMetapisLock({-62 - W_GAP, 176 - 5 * H_GAP}, {"zeta_metapis_healer_1"}, "metapis_healer"),
     zeta_metapis_healer_1 = {
       title = "Metapis Alchemist I",
-      desc = "Metapis Alchemists periodically emit pheromones that briefly frenzy nearby allies, boosting attack speed but increasing damage taken.",
+      desc = "Metapis Alchemists periodically release pheromones, briefly frenzying nearby allies to boost attack speed but increase damage taken. Their heal orbs also gain Wuzzy’s bonus movement speed for a short time, stacking up to 3 times.",
       icon = "zeta_metapis_healer_1",
       pos = {-62, 176 - 5 * H_GAP},
       group = "metapis",

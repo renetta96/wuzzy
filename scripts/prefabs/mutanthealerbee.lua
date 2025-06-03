@@ -4,6 +4,8 @@ local easing = require "easing"
 local IsAlly = metapis_common.IsAlly
 local BarrackModifier = metapis_common.BarrackModifier
 local FindTarget = metapis_common.FindTarget
+local FindHealingTarget = metapis_common.FindHealingTarget
+local IsHealable = metapis_common.IsHealable
 
 local assets = {
   Asset("ANIM", "anim/mutanthealerbee.zip"),
@@ -132,32 +134,6 @@ local function OnTimerDone(inst, data)
   end
 end
 
-local function ishealable(inst, guy)
-  return inst:IsValid() and guy and guy:IsValid() and guy.components.health:IsHurt() and
-    not (guy.components.combat and guy.components.combat.target and guy.components.combat.target:HasTag("beemutant")) and -- don't heal bees fighting bees
-    inst:GetOwner() == guy:GetOwner() -- nil owner will heal nil owner
-end
-
-local function FindHealingTarget(inst, origin)
-  if not origin then
-    origin = inst
-  end
-
-  local ally =
-    FindEntity(
-    origin,
-    8,
-    function(guy)
-      return ishealable(inst, guy)
-    end,
-    HEAL_MUST_TAGS,
-    HEAL_MUST_NOT_TAGS,
-    HEAL_MUST_ONE_OF_TAGS
-  )
-
-  return ally
-end
-
 local function DoHeal(inst, ally)
   local healamount = inst._healamount + inst._healcumatk * inst._numatks
   ally.components.health:DoDelta(healamount, nil, "mutantbee_heal", nil, inst)
@@ -172,7 +148,7 @@ local function BounceHeal(inst, ally, num_bounced)
 
   local bounce_left = inst._numbounce
   for i, e in pairs(allies) do
-    if e ~= ally and ishealable(inst, e) then
+    if e ~= ally and IsHealable(inst, e) then
       DoHeal(inst, e)
       bounce_left = bounce_left - 1
       if bounce_left <= 0 then

@@ -15,9 +15,10 @@
 		<Element name="zeta_metapis_healer_1.tex" u1="0.126" u2="0.249" v2="0.499" v1="0.251" variant="" />
 		<Element name="zeta_metapis_healer_2.tex" u1="0.251" u2="0.374" v2="0.499" v1="0.251" variant="" />
 		<Element name="zeta_metapis_mimic_1.tex" u1="0.126" u2="0.249" v2="0.249" v1="0.001" variant="" />
-		<Element name="zeta_metapis_ranger_1.tex" u1="0.251" u2="0.374" v2="0.249" v1="0.001" variant="" />
-		<Element name="zeta_metapis_ranger_2.tex" u1="0.376" u2="0.499" v2="0.499" v1="0.251" variant="" />
-		<Element name="zeta_metapis_shadow_1.tex" u1="0.376" u2="0.499" v2="0.249" v1="0.001" variant="" />
-		<Element name="zeta_metapis_shadow_2.tex" u1="0.501" u2="0.624" v2="0.999" v1="0.751" variant="" />
+		<Element name="zeta_metapis_mimic_2.tex" u1="0.251" u2="0.374" v2="0.249" v1="0.001" variant="" />
+		<Element name="zeta_metapis_ranger_1.tex" u1="0.376" u2="0.499" v2="0.499" v1="0.251" variant="" />
+		<Element name="zeta_metapis_ranger_2.tex" u1="0.376" u2="0.499" v2="0.249" v1="0.001" variant="" />
+		<Element name="zeta_metapis_shadow_1.tex" u1="0.501" u2="0.624" v2="0.999" v1="0.751" variant="" />
+		<Element name="zeta_metapis_shadow_2.tex" u1="0.626" u2="0.749" v2="0.999" v1="0.751" variant="" />
 	</Elements>
 </Atlas>

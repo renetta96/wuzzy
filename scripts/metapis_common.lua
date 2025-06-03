@@ -267,27 +267,6 @@ local function OnCommonInit(inst)
   end
 end
 
-local function GetHiveUpgradeStage(inst)
-  local hive = nil
-  if inst.components.homeseeker and inst.components.homeseeker.home then
-    hive = inst.components.homeseeker.home
-  elseif inst.components.follower and inst.components.follower.leader and inst.components.follower.leader._hive then
-    hive = inst.components.follower.leader._hive
-  end
-
-  if hive and hive.prefab == "mutantteleportal" then
-    hive = hive:GetSource()
-  end
-
-  if not hive or not hive:HasTag("mutantbeehive") or not hive:IsValid() then
-    return 0
-  end
-
-  inst._numbarracks = hive._numbarracks
-
-  return hive._stage.LEVEL
-end
-
 local MAX_TARGET_SHARES = 10
 local SHARE_TARGET_DIST = 30
 local function OnAttacked(inst, data)
@@ -330,6 +309,26 @@ local function OnAttacked(inst, data)
   )
 end
 
+local function getMotherHive(inst)
+  local hive = nil
+
+  if inst.components.homeseeker and inst.components.homeseeker.home then
+    hive = inst.components.homeseeker.home
+  elseif inst.components.follower and inst.components.follower.leader and inst.components.follower.leader._hive then
+    hive = inst.components.follower.leader._hive
+  end
+
+  if hive and hive.prefab == "mutantteleportal" then
+    hive = hive:GetSource()
+  end
+
+  if not hive or not hive:HasTag("mutantbeehive") or not hive:IsValid() then
+    return nil
+  end
+
+  return hive
+end
+
 local function OnInitUpgrade(inst, checkupgradefn, retries)
   retries = retries + 1
 
@@ -337,22 +336,25 @@ local function OnInitUpgrade(inst, checkupgradefn, retries)
     return
   end
 
-  local stage = GetHiveUpgradeStage(inst)
-  if stage == 0 then
+  local hive = getMotherHive(inst)
+  if not hive then
     inst:DoTaskInTime(
-      1,
+      0.3,
       function(inst)
         OnInitUpgrade(inst, checkupgradefn, retries)
       end
     )
+    return
   end
 
-  local check = checkupgradefn(inst, stage)
+  inst._numbarracks = hive._numbarracks
+
+  local check = checkupgradefn(inst, hive._stage.LEVEL)
 
   -- Not check upgrade successfully, retry upto 5 times
   if not check then
     inst:DoTaskInTime(
-      1,
+      0.3,
       function(inst)
         OnInitUpgrade(inst, checkupgradefn, retries)
       end
@@ -942,6 +944,36 @@ local function PickChildPrefab(owner, hive, children, maxchildren, prioritychild
   return chosen
 end
 
+local function IsHealable(inst, guy)
+  return inst:IsValid() and guy and guy:IsValid() and guy.components.health:IsHurt() and
+    not (guy.components.combat and guy.components.combat.target and guy.components.combat.target:HasTag("beemutant")) and -- don't heal bees fighting bees
+    inst:GetOwner() == guy:GetOwner() -- nil owner will heal nil owner
+end
+
+local HEAL_MUST_TAGS = {"_combat", "_health"}
+local HEAL_MUST_NOT_TAGS = {"player", "INLIMBO", "lesserminion"}
+local HEAL_MUST_ONE_OF_TAGS = {"beemutantminion"}
+
+local function FindHealingTarget(inst, origin)
+  if not origin then
+    origin = inst
+  end
+
+  local ally =
+    FindEntity(
+    origin,
+    8,
+    function(guy)
+      return IsHealable(inst, guy)
+    end,
+    HEAL_MUST_TAGS,
+    HEAL_MUST_NOT_TAGS,
+    HEAL_MUST_ONE_OF_TAGS
+  )
+
+  return ally
+end
+
 return {
   CommonInit = CommonInit,
   CommonMasterInit = CommonMasterInit,
@@ -955,5 +987,7 @@ return {
   SpawnShadowlings = SpawnShadowlings,
   DoAreaDamage = DoAreaDamage,
   DealPoison = DealPoison,
-  PickChildPrefab = PickChildPrefab
+  PickChildPrefab = PickChildPrefab,
+  FindHealingTarget = FindHealingTarget,
+  IsHealable = IsHealable
 }
