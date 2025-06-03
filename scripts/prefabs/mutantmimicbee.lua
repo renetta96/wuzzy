@@ -219,7 +219,6 @@ end
 local function UnmimicAssassin(inst)
   local r, g, b = inst.AnimState:GetMultColour()
   inst.AnimState:SetMultColour(r, g, b, 1.0)
-
   inst.components.locomotor.groundspeedmultiplier = 1.0
 end
 
@@ -330,7 +329,6 @@ local function Mimic(inst, prefab)
   end
 
   -- print("MIMIC", prefab, #inst._mimics)
-
   inst:PushEvent("mimic")
 end
 
