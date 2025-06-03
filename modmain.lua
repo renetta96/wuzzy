@@ -331,6 +331,7 @@ RegisterSkilltreeIconsAtlas("images/skilltree_zeta_icons.xml", "zeta_metapis_def
 RegisterSkilltreeIconsAtlas("images/skilltree_zeta_icons.xml", "zeta_metapis_ranger_1.tex")
 RegisterSkilltreeIconsAtlas("images/skilltree_zeta_icons.xml", "zeta_metapis_ranger_2.tex")
 RegisterSkilltreeIconsAtlas("images/skilltree_zeta_icons.xml", "zeta_metapis_mimic_1.tex")
+RegisterSkilltreeIconsAtlas("images/skilltree_zeta_icons.xml", "zeta_metapis_mimic_2.tex")
 RegisterSkilltreeIconsAtlas("images/skilltree_zeta_icons.xml", "zeta_metapis_healer_1.tex")
 RegisterSkilltreeIconsAtlas("images/skilltree_zeta_icons.xml", "zeta_metapis_healer_2.tex")
 RegisterSkilltreeIconsAtlas("images/skilltree_zeta_icons.xml", "zeta_metapimancer_tyrant_1.tex")

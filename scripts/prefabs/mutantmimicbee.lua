@@ -241,10 +241,6 @@ local function MorphHealer(inst)
   inst.AnimState:OverrideSymbol("stinger", "mutantmimicbee_healer", "stinger")
 end
 
-local HEAL_MUST_TAGS = {"_combat", "_health"}
-local HEAL_MUST_NOT_TAGS = {"player", "INLIMBO", "lesserminion"}
-local HEAL_MUST_ONE_OF_TAGS = {"beemutantminion"}
-
 local function OnAttackOtherHealer(inst, data)
   local target = data.target
   if not target then
@@ -257,7 +253,7 @@ local function OnAttackOtherHealer(inst, data)
 
   local ally = FindHealingTarget(inst)
   if ally then
-    print("ATTACK HEALER", ally)
+    -- print("ATTACK HEALER", ally)
     ally.components.health:DoDelta(BarrackModifier(inst, 5), nil, "mutantmimic_heal", nil, inst)
 
     SpawnPrefab("heal_fx"):Attach(ally)

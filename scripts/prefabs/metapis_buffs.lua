@@ -354,21 +354,21 @@ local function shred_fn()
   inst._stacks = 0
 
   inst.attachfn = function(buff, target, followsymbol)
-    print("SHRED ATTACHED")
+    -- print("SHRED ATTACHED")
   end
 
   inst.extendedfn = function(buff, target)
-    print("SHRED EXTENDED")
+    -- print("SHRED EXTENDED")
     inst._stacks = math.min(inst._stacks + 1, 20)
 
     if target:IsValid() and target.components.health then
       target.components.health.externalabsorbmodifiers:SetModifier(inst, -0.01 * inst._stacks)
-      print("SHRED ", target.components.health.externalabsorbmodifiers:Get())
+    -- print("SHRED ", target.components.health.externalabsorbmodifiers:Get())
     end
   end
 
   inst.detachfn = function(buff, target)
-    print("SHRED DETACHED")
+    -- print("SHRED DETACHED")
 
     if target:IsValid() and target.components.health then
       target.components.health.externalabsorbmodifiers:RemoveModifier(inst)
@@ -407,7 +407,7 @@ local function stack_haste_fn()
 
   inst.extendedfn = function(buff, target)
     inst._stacks = math.min(inst._stacks + 1, 3)
-    print("HASTE BUFF", inst._stacks)
+    -- print("HASTE BUFF", inst._stacks)
 
     if target:IsValid() and target.components.locomotor then
       target.components.locomotor:SetExternalSpeedMultiplier(inst, "stack_hasted_buff", 1.0 + 0.2 * inst._stacks)
@@ -453,7 +453,7 @@ local function frostbite_fn()
   inst.extendedfn = function(buff, target)
     inst._stacks = math.min(inst._stacks + 1, 5)
 
-    print("FROSTBITE EXTENDED", inst._stacks)
+    -- print("FROSTBITE EXTENDED", inst._stacks)
 
     if target:IsValid() then
       if target.components.locomotor then
@@ -467,7 +467,7 @@ local function frostbite_fn()
   end
 
   inst.detachfn = function(buff, target)
-    print("FROSTBITE DETACHED")
+    -- print("FROSTBITE DETACHED")
 
     if target:IsValid() then
       if target.components.locomotor then
