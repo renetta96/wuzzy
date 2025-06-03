@@ -8,7 +8,6 @@ local function OnSave(inst, data)
   end
 end
 
-
 local function OnLoad(inst, data)
   if data and data._ownerid then
     inst._ownerid = data._ownerid
@@ -20,11 +19,10 @@ local function OnLoad(inst, data)
 end
 
 local function setowner(inst, owner)
-  if owner and owner:HasTag("player") and owner.prefab == 'zeta' then
+  if owner and owner:HasTag("player") and owner.prefab == "zeta" then
     inst._ownerid = owner.userid
   end
 end
-
 
 local function OnChildBuilt(inst, data)
   local builder = data.builder

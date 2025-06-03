@@ -1,6 +1,5 @@
-local assets =
-{
-  Asset("ANIM", "anim/honey_sting_trap.zip"),
+local assets = {
+  Asset("ANIM", "anim/honey_sting_trap.zip")
 }
 
 local function OnAttack(inst)
@@ -39,7 +38,6 @@ local function MakeSpike(anim, atk_anim)
       return inst
     end
 
-
     inst.OnAttack = OnAttack
     inst.OnFinished = OnFinished
     inst.persists = false
@@ -48,5 +46,8 @@ local function MakeSpike(anim, atk_anim)
   end
 end
 
-return Prefab("honey_sting_spike_0", MakeSpike("spike_0", "spike_0_atk"), assets),
-  Prefab("honey_sting_spike_1", MakeSpike("spike_1", "spike_1_atk"), assets)
+return Prefab("honey_sting_spike_0", MakeSpike("spike_0", "spike_0_atk"), assets), Prefab(
+  "honey_sting_spike_1",
+  MakeSpike("spike_1", "spike_1_atk"),
+  assets
+)

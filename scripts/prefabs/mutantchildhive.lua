@@ -1,10 +1,9 @@
 local hive_common = require "hive_common"
 local hive_defs = require "hive_defs"
 
-local prefabs =
-{
+local prefabs = {
   "honeycomb",
-  "collapse_small",
+  "collapse_small"
 }
 
 local function OnSlaveKilled(inst)
@@ -42,7 +41,6 @@ local function CheckMaster(inst)
     return
   end
 end
-
 
 local function commonslavefn(bank, build, tags, mapicon)
   local inst = CreateEntity()
@@ -117,7 +115,7 @@ end
 
 local function MakeChildHive(name, tag)
   local assets = {
-    Asset("ANIM", "anim/".. name .. ".zip"),
+    Asset("ANIM", "anim/" .. name .. ".zip")
   }
 
   local function fn()
@@ -137,17 +135,18 @@ local function barrackhive()
     return inst
   end
 
-  inst.components.lootdropper:SetLoot({
-    "honeycomb",
-    "stinger",
-    "stinger",
-    "stinger",
-    "stinger"
-  })
+  inst.components.lootdropper:SetLoot(
+    {
+      "honeycomb",
+      "stinger",
+      "stinger",
+      "stinger",
+      "stinger"
+    }
+  )
 
   return inst
 end
-
 
 STRINGS.MUTANTDEFENDERHIVE = "Metapis Moonguard Hive"
 STRINGS.NAMES.MUTANTDEFENDERHIVE = "Metapis Moonguard Hive"
@@ -183,14 +182,7 @@ local returnPrefabs = {}
 
 for i, def in ipairs(hive_defs.HiveDefs) do
   table.insert(returnPrefabs, MakeChildHive(def.hive_prefab, def.hive_tag))
-  table.insert(returnPrefabs,
-    MakePlacer(
-      def.hive_prefab.."_placer",
-      def.hive_prefab,
-      def.hive_prefab,
-      "idle"
-    )
-  )
+  table.insert(returnPrefabs, MakePlacer(def.hive_prefab .. "_placer", def.hive_prefab, def.hive_prefab, "idle"))
 end
 
 table.insert(returnPrefabs, Prefab("mutantbarrack", barrackhive, {Asset("ANIM", "anim/mutantbarrack.zip")}, prefabs))

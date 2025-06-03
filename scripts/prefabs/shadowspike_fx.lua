@@ -1,11 +1,14 @@
-local assets =
-{
-    Asset("ANIM", "anim/shadowspike_fx.zip"),
+local assets = {
+  Asset("ANIM", "anim/shadowspike_fx.zip")
 }
 
 local strike_anims = {
-	"strike_0", "strike_1", "strike_2",
-	"strike_0", "strike_1", "strike_2"
+  "strike_0",
+  "strike_1",
+  "strike_2",
+  "strike_0",
+  "strike_1",
+  "strike_2"
 }
 
 local function PlayStrikeAnim(proxy, anim, scale)
@@ -37,11 +40,11 @@ local function PlayStrikeAnim(proxy, anim, scale)
   end
 
   if not anim then
-    anim = strike_anims[math.random( #strike_anims )]
+    anim = strike_anims[math.random(#strike_anims)]
   end
 
-	inst.AnimState:PlayAnimation(anim)
-	inst:ListenForEvent("animover", inst.Remove)
+  inst.AnimState:PlayAnimation(anim)
+  inst:ListenForEvent("animover", inst.Remove)
 end
 
 local function MakeSpike(anim, scale)
@@ -55,9 +58,12 @@ local function MakeSpike(anim, scale)
     inst:AddTag("shadowspikefx")
 
     if not TheNet:IsDedicated() then
-      inst:DoTaskInTime(0, function()
-        PlayStrikeAnim(inst, anim, scale)
-      end)
+      inst:DoTaskInTime(
+        0,
+        function()
+          PlayStrikeAnim(inst, anim, scale)
+        end
+      )
     end
 
     inst.entity:SetPristine()
@@ -108,18 +114,21 @@ local function PlaySpikeRing(proxy, rings)
   local seed = math.random() * PI
 
   for idx, ring in ipairs(rings) do
-    proxy:DoTaskInTime(ring.delay, function()
-      for i = 1, ring.num do
-        local angle = seed + (2*PI * i / ring.num)
-        if angle > 2*PI then
-          angle = angle - 2*PI
-        end
+    proxy:DoTaskInTime(
+      ring.delay,
+      function()
+        for i = 1, ring.num do
+          local angle = seed + (2 * PI * i / ring.num)
+          if angle > 2 * PI then
+            angle = angle - 2 * PI
+          end
 
-        local offset = Vector3(ring.radius * math.cos(angle), 0, -ring.radius * math.sin(angle))
-        local newPos = pos + offset
-        doSpikeAnim(proxy, ring.anim, newPos, ring.scale)
+          local offset = Vector3(ring.radius * math.cos(angle), 0, -ring.radius * math.sin(angle))
+          local newPos = pos + offset
+          doSpikeAnim(proxy, ring.anim, newPos, ring.scale)
+        end
       end
-    end)
+    )
   end
 end
 
@@ -134,9 +143,12 @@ local function MakeSpikeRing(rings)
     inst:AddTag("shadowspikefx")
 
     if not TheNet:IsDedicated() then
-      inst:DoTaskInTime(0, function()
-        PlaySpikeRing(inst, rings)
-      end)
+      inst:DoTaskInTime(
+        0,
+        function()
+          PlaySpikeRing(inst, rings)
+        end
+      )
     end
 
     inst.entity:SetPristine()
@@ -217,8 +229,12 @@ local ring_3s = {
   }
 }
 
-return Prefab("shadowspike_fx", MakeSpike(), assets),
-  Prefab("big_shadowspike_fx_0", MakeSpike("strike_0"), assets),
-  Prefab("shadowspike_ring_6s", MakeSpikeRing(ring_6s), assets),
-  Prefab("shadowspike_ring_4s", MakeSpikeRing(ring_4s), assets),
-  Prefab("shadowspike_ring_3s", MakeSpikeRing(ring_3s), assets)
+return Prefab("shadowspike_fx", MakeSpike(), assets), Prefab("big_shadowspike_fx_0", MakeSpike("strike_0"), assets), Prefab(
+  "shadowspike_ring_6s",
+  MakeSpikeRing(ring_6s),
+  assets
+), Prefab("shadowspike_ring_4s", MakeSpikeRing(ring_4s), assets), Prefab(
+  "shadowspike_ring_3s",
+  MakeSpikeRing(ring_3s),
+  assets
+)

@@ -1,10 +1,9 @@
-local assets =
-{
-  Asset("ANIM", "anim/mutantbeehive.zip"),
+local assets = {
+  Asset("ANIM", "anim/mutantbeehive.zip")
 }
 
 local function fn()
-    local inst = CreateEntity()
+  local inst = CreateEntity()
 
   inst.entity:AddTransform()
   inst.entity:AddAnimState()
