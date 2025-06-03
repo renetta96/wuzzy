@@ -4,6 +4,8 @@ local easing = require "easing"
 local IsAlly = metapis_common.IsAlly
 local BarrackModifier = metapis_common.BarrackModifier
 local FindTarget = metapis_common.FindTarget
+local FindHealingTarget = metapis_common.FindHealingTarget
+local IsHealable = metapis_common.IsHealable
 
 local assets = {
   Asset("ANIM", "anim/mutanthealerbee.zip"),
@@ -17,7 +19,6 @@ local prefabs = {
   "heal_fx",
   "heal_projectile"
 }
-
 
 local HEAL_MUST_TAGS = {"_combat", "_health"}
 local HEAL_MUST_NOT_TAGS = {"player", "INLIMBO", "lesserminion"}
@@ -72,14 +73,13 @@ local function HealerBuff(inst)
 end
 
 local function HealOrb(inst)
-  local radius = math.random(TUNING.MUTANT_BEE_HEALER_MAX_HEAL_ORB_MIN_DISTANCE, TUNING.MUTANT_BEE_HEALER_MAX_HEAL_ORB_MAX_DISTANCE)
+  local radius =
+    math.random(TUNING.MUTANT_BEE_HEALER_MAX_HEAL_ORB_MIN_DISTANCE, TUNING.MUTANT_BEE_HEALER_MAX_HEAL_ORB_MAX_DISTANCE)
 
   local currentdist = radius - TUNING.MUTANT_BEE_HEALER_MAX_HEAL_ORB_MIN_DISTANCE
-  local maxdist = TUNING.MUTANT_BEE_HEALER_MAX_HEAL_ORB_MAX_DISTANCE - TUNING.MUTANT_BEE_HEALER_MAX_HEAL_ORB_MIN_DISTANCE
-  local speed = easing.linear(
-    currentdist * currentdist,
-    7, 3,
-    maxdist * maxdist)
+  local maxdist =
+    TUNING.MUTANT_BEE_HEALER_MAX_HEAL_ORB_MAX_DISTANCE - TUNING.MUTANT_BEE_HEALER_MAX_HEAL_ORB_MIN_DISTANCE
+  local speed = easing.linear(currentdist * currentdist, 7, 3, maxdist * maxdist)
 
   local offset = FindWalkableOffset(inst:GetPosition(), math.random() * 2 * PI, radius, 12, true, false, nil, true)
   if offset ~= nil then
@@ -99,11 +99,7 @@ end
 
 local function FrenzyBuff(inst)
   local x, y, z = inst.Transform:GetWorldPosition()
-  local allies = TheSim:FindEntities(
-    x, y, z,
-    8,
-    HEAL_MUST_TAGS, HEAL_MUST_NOT_TAGS, HEAL_MUST_ONE_OF_TAGS
-  )
+  local allies = TheSim:FindEntities(x, y, z, 8, HEAL_MUST_TAGS, HEAL_MUST_NOT_TAGS, HEAL_MUST_ONE_OF_TAGS)
 
   allies = shuffleArray(allies)
   local numleft = inst._numfrenzybuffs
@@ -138,25 +134,6 @@ local function OnTimerDone(inst, data)
   end
 end
 
-local function ishealable(inst, guy)
-  return inst:IsValid() and guy and guy:IsValid() and guy.components.health:IsHurt()
-    and not (guy.components.combat and guy.components.combat.target and guy.components.combat.target:HasTag("beemutant")) -- don't heal bees fighting bees
-    and inst:GetOwner() == guy:GetOwner() -- nil owner will heal nil owner
-end
-
-
-local function FindHealingTarget(inst, origin)
-  if not origin then
-    origin = inst
-  end
-
-  local ally = FindEntity(origin, 8, function(guy)
-    return ishealable(inst, guy)
-  end, HEAL_MUST_TAGS, HEAL_MUST_NOT_TAGS, HEAL_MUST_ONE_OF_TAGS)
-
-  return ally
-end
-
 local function DoHeal(inst, ally)
   local healamount = inst._healamount + inst._healcumatk * inst._numatks
   ally.components.health:DoDelta(healamount, nil, "mutantbee_heal", nil, inst)
@@ -167,15 +144,11 @@ end
 
 local function BounceHeal(inst, ally, num_bounced)
   local x, y, z = ally.Transform:GetWorldPosition()
-  local allies = TheSim:FindEntities(
-    x, y, z,
-    8,
-    HEAL_MUST_TAGS, HEAL_MUST_NOT_TAGS, HEAL_MUST_ONE_OF_TAGS
-  )
+  local allies = TheSim:FindEntities(x, y, z, 8, HEAL_MUST_TAGS, HEAL_MUST_NOT_TAGS, HEAL_MUST_ONE_OF_TAGS)
 
   local bounce_left = inst._numbounce
   for i, e in pairs(allies) do
-    if e ~= ally and ishealable(inst, e) then
+    if e ~= ally and IsHealable(inst, e) then
       DoHeal(inst, e)
       bounce_left = bounce_left - 1
       if bounce_left <= 0 then
@@ -204,11 +177,11 @@ local function Heal(inst, ally)
 end
 
 local function retargetfn(inst)
-    return FindTarget(inst, TUNING.MUTANT_BEE_TARGET_DIST)
+  return FindTarget(inst, TUNING.MUTANT_BEE_TARGET_DIST)
 end
 
 local function OnAttackOther(inst)
-    inst._numatks = inst._numatks + 1
+  inst._numatks = inst._numatks + 1
 end
 
 local brain = require("brains/mutanthealerbeebrain")
@@ -221,10 +194,14 @@ local function healerbee()
     {
       buff = HealerBuff,
       sounds = "killer",
-      basedamagefn = function() return TUNING.MUTANT_BEE_HEALER_DAMAGE end,
+      basedamagefn = function()
+        return TUNING.MUTANT_BEE_HEALER_DAMAGE
+      end,
       atkperiodfn = calcAtkPeriod,
-      rage_fx_scale_fn = function() return 2.0 end,
-      frenzy_fx_offset = {x=-4, y=67, z=0}
+      rage_fx_scale_fn = function()
+        return 2.0
+      end,
+      frenzy_fx_offset = {x = -4, y = 67, z = 0}
     },
     CheckHealerUpgrade
   )
@@ -232,7 +209,7 @@ local function healerbee()
   inst.Transform:SetScale(0.85, 0.85, 0.85)
 
   if not TheWorld.ismastersim then
-      return inst
+    return inst
   end
 
   inst.components.locomotor.groundspeedmultiplier = 1.25

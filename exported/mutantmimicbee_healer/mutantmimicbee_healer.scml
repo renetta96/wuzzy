@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<spriter_data scml_version="1.0" generator="BrashMonkey Spriter" generator_version="r11">
+    <folder id="0" name="body">
+        <file id="0" name="body/body-0.png" width="200" height="120" pivot_x="0.465306" pivot_y="0.778338"/>
+    </folder>
+    <folder id="1" name="stinger">
+        <file id="0" name="stinger/stinger-0.png" width="36" height="64" pivot_x="0.492347" pivot_y="0.817195"/>
+    </folder>
+    <entity id="0" name="mutantmimicbee_healer">
+        <animation id="0" name="BUILD" length="1000" interval="100">
+            <mainline>
+                <key id="0">
+                    <object_ref id="0" timeline="0" key="0" z_index="0"/>
+                </key>
+            </mainline>
+            <timeline id="0" name="body-0">
+                <key id="0" spin="0">
+                    <object folder="0" file="0" x="-6" y="42" angle="0"/>
+                </key>
+            </timeline>
+        </animation>
+    </entity>
+</spriter_data>

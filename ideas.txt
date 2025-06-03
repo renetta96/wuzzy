@@ -17,17 +17,16 @@ Metapis (only unlock at most 3)
 (8p)
 - mutant: 
 	. I
-	. II
+	. II -> add crit poison to Wuzzy as well
 - shadow: 
 	. I
-	. II
-	. III => merge into II
+	. II => when a metapis died in Frenzy, => much higher chance to spawn more shadowlings
 - moonguard:
 	. I
 	. II
 - voltwing
-	. I
-	. II
+	. I => move "charge" ability here,
+	. II => Wuzzy's attacks may charge X random rangers nearby. Applied a debuff, when target unfreeze => explode many wisps around
 - mimic
 	. I ??: if no other types around => what to copy? maybe do nothing => weaker 
 	. II ??: swarm - deal more damage as more mimics around, any other minion die => % to spawn a lesser mimic
