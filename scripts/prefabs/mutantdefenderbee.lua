@@ -86,7 +86,7 @@ local function IceNova(inst)
 
   for i, e in ipairs(enemies) do
     -- print("RETALIATE", e)
-    AddColdness(e, 2)
+    AddColdness(e, 0.5)
     inst.components.combat:DoAttack(e)
   end
 
@@ -125,7 +125,7 @@ local function OnDefenderAttacked(inst, data)
 
   CauseFrostBite(attacker)
 
-  if math.random() < 0.4 then
+  if math.random() < 0.25 then
     AddColdness(attacker)
   end
 end
@@ -136,6 +136,26 @@ local function calcMaxHealth(inst)
   end
 
   return TUNING.MUTANT_BEE_DEFENDER_HEALTH
+end
+
+local function onHealthDelta(inst, data)
+  if data and data.amount < 0 and inst._retaliate and math.random() <= 0.25 and not inst.components.health:IsDead() then
+    Retaliate(inst)
+  end
+end
+
+local function getDamageAbsorption(inst, health_val)
+  local pcthealth = health_val / inst.components.health:GetMaxWithPenalty()
+
+  local minabsoprtion = TUNING.MUTANT_BEE_DEFENDER_MIN_ABSORPTION
+  local maxabsoprtion = TUNING.MUTANT_BEE_DEFENDER_MAX_ABSORPTION
+  local threshold = TUNING.MUTANT_BEE_DEFENDER_MAX_ABSORPTION_THRESHOLD
+
+  if pcthealth <= threshold then
+    return maxabsoprtion
+  end
+
+  return Lerp(minabsoprtion, maxabsoprtion, (1.0 - pcthealth) / (1.0 - threshold))
 end
 
 local function CheckDefenderUpgrade(inst, stage)
@@ -169,6 +189,52 @@ local function CheckDefenderUpgrade(inst, stage)
     inst:ListenForEvent("attacked", OnDefenderAttacked)
   end
 
+  inst:ListenForEvent("healthdelta", onHealthDelta)
+
+  if inst._protectaura then
+    local _deltamodifierfn = inst.components.health.deltamodifierfn
+    inst.components.health.deltamodifierfn = function(
+      inst,
+      amount,
+      overtime,
+      cause,
+      ignore_invincible,
+      afflicter,
+      ignore_absorb,
+      ...)
+      local delta = amount
+      if _deltamodifierfn then
+        delta = _deltamodifierfn(inst, amount, overtime, cause, ignore_invincible, afflicter, ignore_absorb, ...)
+      end
+
+      -- heal
+      if delta >= 0 then
+        return delta
+      end
+
+      local result = 0
+      local numticks = 5
+      local current = inst.components.health.currenthealth
+
+      -- print("ORIGIN AMOUNT", delta)
+      for i = 1, numticks do
+        local absorption = getDamageAbsorption(inst, current)
+        local subdelta = (delta / numticks) * (1.0 - absorption)
+        -- print("SUB AMOUNT", i, subdelta, absorption)
+        result = result + subdelta
+        current = current + subdelta
+        if current <= 0 then
+          -- print("DEAD BREAK")
+          break
+        end
+      end
+
+      -- print("ORIGIN AMOUNT vs FINAL", delta, result)
+
+      return result
+    end
+  end
+
   inst.components.health:SetMaxHealth(BarrackModifier(inst, calcMaxHealth(inst)))
   inst:RefreshBaseDamage()
 
@@ -181,19 +247,6 @@ end
 
 local function retargetfn(inst)
   return FindTarget(inst, TUNING.MUTANT_BEE_TARGET_DIST)
-end
-
-local function GetDamageAbsorption(inst)
-  local pcthealth = inst.components.health:GetPercent()
-  local minabsoprtion = TUNING.MUTANT_BEE_DEFENDER_MIN_ABSORPTION
-  local maxabsoprtion = TUNING.MUTANT_BEE_DEFENDER_MAX_ABSORPTION
-  local threshold = TUNING.MUTANT_BEE_DEFENDER_MAX_ABSORPTION_THRESHOLD
-
-  if pcthealth <= threshold then
-    return maxabsoprtion
-  end
-
-  return Lerp(minabsoprtion, maxabsoprtion, (1.0 - pcthealth) / (1.0 - threshold))
 end
 
 local defenderbeebrain = require "brains/defenderbeebrain"
@@ -261,36 +314,6 @@ local function defenderbee()
   inst.components.locomotor.pathcaps = {allowocean = true}
 
   inst.components.health:SetMaxHealth(TUNING.MUTANT_BEE_DEFENDER_HEALTH)
-  local oldDoDelta = inst.components.health.DoDelta
-  inst.components.health.DoDelta = function(comp, amount, ...)
-    if amount < 0 then
-      if inst._retaliate and math.random() <= 0.25 then
-        Retaliate(inst)
-      end
-
-      if inst._protectaura then
-        local finalamount = 0
-        local numticks = 5
-        -- print("ORIGIN AMOUNT", amount)
-        for i = 1, numticks do
-          local absorption = GetDamageAbsorption(inst)
-          local subamount = (amount / numticks) * (1.0 - absorption)
-          -- print("SUB AMOUNT", i, subamount, absorption)
-          finalamount = finalamount + oldDoDelta(comp, subamount, ...)
-
-          if inst.components.health:IsDead() then
-            -- print("DEAD BREAK")
-            break
-          end
-        end
-
-        return finalamount
-      end
-    end
-
-    -- default
-    return oldDoDelta(comp, amount, ...)
-  end
 
   inst.components.combat:SetDefaultDamage(TUNING.MUTANT_BEE_DEFENDER_DAMAGE)
   inst.components.combat:SetAttackPeriod(TUNING.MUTANT_BEE_DEFENDER_ATTACK_PERIOD)

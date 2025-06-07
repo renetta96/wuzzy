@@ -239,13 +239,12 @@ local function Launch(inst, attacker, pos, speed)
 end
 
 local function OnHitGround(inst)
-  if inst._target ~= nil and inst._owner ~= nil then
+  if inst._target ~= nil and inst._dmg ~= nil then
     local w = SpawnPrefab("electric_wisp")
-    w.components.weapon:SetDamage(BarrackModifier(inst._owner, TUNING.MUTANT_BEE_RANGED_WISP_DAMAGE))
-
     w.Transform:SetPosition(inst.Transform:GetWorldPosition())
+    w.components.weapon:SetDamage(inst._dmg)
     w.components.projectile.overridestartpos = inst:GetPosition()
-    w.components.projectile:Throw(inst._owner, inst._target)
+    w.components.projectile:Throw(inst, inst._target)
   end
 
   inst:Remove()

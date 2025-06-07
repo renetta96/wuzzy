@@ -28,10 +28,46 @@ local function MorphDefault(inst)
   inst.AnimState:OverrideSymbol("stinger", "mutantmimicbee", "stinger")
 end
 
+local function extendIceBreaker(target, attacker)
+  if target._icebreaker_task == nil then
+    -- snapshot icebreaker damage, to avoid closure reference as attacker maybe dead when unfreeze happens
+    -- effectively, dmg is calculated from the first attacker
+    local dmg = BarrackModifier(attacker, math.max(target.components.health.maxhealth * 0.005, 40))
+
+    target._icebreaker_fn = function()
+      if target.components.health and not target.components.health:IsDead() then
+        -- limit this by 5 secs cooldown, otherwise too OP
+        if target._icebreaker_time == nil or target._icebreaker_time + 5 <= GetTime() then
+          -- print("ICE BREAKER", dmg)
+          target.components.health:DoDelta(-dmg)
+          target._icebreaker_time = GetTime()
+        end
+      end
+    end
+
+    target:ListenForEvent("unfreeze", target._icebreaker_fn)
+  else
+    target._icebreaker_task:Cancel()
+  end
+
+  target._icebreaker_task =
+    target:DoTaskInTime(
+    10,
+    function()
+      if target._icebreaker_fn then
+        target:RemoveEventCallback("unfreeze", target._icebreaker_fn)
+      end
+
+      target._icebreaker_fn = nil
+      target._icebreaker_task = nil
+    end
+  )
+end
+
 local function OnAttackOtherDefender(inst, data)
   local target = data.target
 
-  if not target then
+  if not target or not target.components.freezable then
     return
   end
 
@@ -40,25 +76,7 @@ local function OnAttackOtherDefender(inst, data)
     target.components.freezable:SpawnShatterFX()
   end
 
-  if target._icebreaker_end == nil then
-    target._icebreaker_end = GetTime() + 10
-
-    target:ListenForEvent(
-      "unfreeze",
-      function()
-        if GetTime() <= target._icebreaker_end and target.components.health and not target.components.health:IsDead() then
-          if target._icebreaker_time == nil or target._icebreaker_time + 5 <= GetTime() then
-            -- print("ICE BREAKER")
-            local delta = BarrackModifier(inst, math.max(target.components.health.maxhealth * 0.005, 40))
-            target.components.health:DoDelta(-delta)
-            target._icebreaker_time = GetTime()
-          end
-        end
-      end
-    )
-  else
-    target._icebreaker_end = GetTime() + 10
-  end
+  extendIceBreaker(target, inst)
 end
 
 local function MorphDefender(inst)

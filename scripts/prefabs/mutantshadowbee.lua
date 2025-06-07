@@ -250,11 +250,28 @@ local function shadowbee()
 end
 
 local function DecayHealth(inst)
-  local pct = math.pow(1.25, inst._decayticks) -- decay in ~20 secs
+  local base = 1.25 + (math.log(math.floor(inst._count / 5) + 1) / math.log(2))
+  local pct = math.pow(base, inst._decayticks) -- decay in ~20 secs
   local amount = inst.components.health.maxhealth * pct / 100
 
   inst.components.health:DoDelta(-amount, nil, "lesser_shadow_health_decay")
   inst._decayticks = inst._decayticks + 1
+end
+
+local _shadowlingmanager = {
+  count = 0
+}
+
+local function registerShadowling(inst)
+  _shadowlingmanager.count = _shadowlingmanager.count + 1
+  inst._count = _shadowlingmanager.count
+
+  inst:ListenForEvent(
+    "onremove",
+    function()
+      _shadowlingmanager.count = _shadowlingmanager.count - 1
+    end
+  )
 end
 
 local shadowlingbrain = require("brains/shadowlingbrain")
@@ -278,9 +295,9 @@ local function lessershadowfn()
         return TUNING.MUTANT_BEE_ATTACK_PERIOD
       end,
       rage_fx_scale_fn = function()
-        return 1
+        return 1.75
       end,
-      frenzy_fx_offset = {x = 0, y = 0, z = 0}
+      frenzy_fx_offset = {x = -3, y = 40, z = 0}
     }
   )
 
@@ -304,19 +321,25 @@ local function lessershadowfn()
 
   inst.components.lootdropper.numrandomloot = 0 -- no loot
 
-  local oldDoDelta = inst.components.health.DoDelta
-  inst.components.health.DoDelta = function(comp, amount, overtime, cause, ...)
+  inst.components.health.deltamodifierfn = function(
+    inst,
+    amount,
+    overtime,
+    cause,
+    ignore_invincible,
+    afflicter,
+    ignore_absorb)
     -- cannot be healed
     if amount > 0 then
-      amount = 0
+      return 0
     end
 
-    -- cap damage at x% max health, except decay health
+    -- cap any damage received other than health decay
     if amount < 0 and cause ~= "lesser_shadow_health_decay" then
-      amount = math.max(amount, -inst.components.health.maxhealth * TUNING.MUTANT_SHADOWLING_DAMAGE_CAP)
+      return math.max(amount, -inst.components.health.maxhealth * TUNING.MUTANT_SHADOWLING_DAMAGE_CAP)
     end
 
-    return oldDoDelta(comp, amount, overtime, cause, ...)
+    return amount
   end
 
   inst._decayticks = 0
@@ -327,6 +350,8 @@ local function lessershadowfn()
   inst.SpikeOnDeath = SpikeOnDeath
 
   inst.persists = false
+
+  registerShadowling(inst)
 
   return inst
 end

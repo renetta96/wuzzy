@@ -7,7 +7,6 @@ local SpawnPrefab = GLOBAL.SpawnPrefab
 local Action = GLOBAL.Action
 local SEASONS = GLOBAL.SEASONS
 local RECIPETABS = GLOBAL.RECIPETABS
-local SendRPCToClient = GLOBAL.SendRPCToClient
 local CLIENT_RPC = GLOBAL.CLIENT_RPC
 local PREFAB_SKINS = GLOBAL.PREFAB_SKINS
 local PREFAB_SKINS_IDS = GLOBAL.PREFAB_SKINS_IDS
@@ -172,6 +171,13 @@ TUNING.GAMEMODE_STARTING_ITEMS.DEFAULT.ZETA = {
   "honeycomb",
   "honey",
   "honey",
+  "honey",
+  "honey",
+  "honey",
+  "honey",
+  "honey",
+  "honey",
+  "honey",
   "honey"
 }
 TUNING.GAMEMODE_STARTING_ITEMS.LAVAARENA.ZETA = {}
@@ -188,7 +194,7 @@ TUNING.MUTANT_BEE_RANGED_TARGET_DIST = 10
 TUNING.MUTANT_BEE_RANGED_DAMAGE = 8
 TUNING.MUTANT_BEE_RANGED_ATK_PERIOD = 3
 TUNING.MUTANT_BEE_RANGED_HEALTH = 150
-TUNING.MUTANT_BEE_RANGED_WISP_DAMAGE = 40
+TUNING.MUTANT_BEE_RANGED_WISP_DAMAGE = 25
 
 TUNING.MUTANT_BEE_DEFENDER_HEALTH = 400
 TUNING.MUTANT_BEE_DEFENDER_DAMAGE = 10
@@ -220,7 +226,6 @@ TUNING.MUTANT_BEE_SHADOW_ATK_RANGE = 5
 
 TUNING.MUTANT_SHADOWLING_HEALTH = 150
 TUNING.MUTANT_SHADOWLING_DAMAGE = 5
-TUNING.MUTANT_SHADOWLING_SPAWN_CHANCE = 0.25
 TUNING.MUTANT_SHADOWLING_DECAY_RATE = 1.25
 TUNING.MUTANT_SHADOWLING_DAMAGE_CAP = 0.15
 
@@ -669,25 +674,6 @@ local function BeeQueenPostInit(inst)
 end
 
 AddPrefabPostInit("beequeen", BeeQueenPostInit)
-
-local function MonkeyQueenPostInit(inst)
-  if not GLOBAL.TheWorld.ismastersim then
-    return
-  end
-
-  if inst.components.trader then
-    local oldonaccept = inst.components.trader.onaccept
-    inst.components.trader.onaccept = function(inst, giver, item, ...)
-      if giver:HasTag("player") and giver:HasTag("beemaster") then
-        SendRPCToClient(CLIENT_RPC.UpdateAccomplishment, giver.userid, "zeta_monkeyqueen_traded")
-      end
-
-      return oldonaccept(inst, giver, item, ...)
-    end
-  end
-end
-
-AddPrefabPostInit("monkeyqueen", MonkeyQueenPostInit)
 
 local containers = GLOBAL.require("containers")
 local mutantbeehive_level3_container = {

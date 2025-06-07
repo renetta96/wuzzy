@@ -141,31 +141,24 @@ local function OnInit(inst)
 
   CheckRecipes(inst)
 
-  if inst.components.eater then
-    local oldeatfn = inst.components.eater.Eat
-    inst.components.eater.Eat = function(comp, food, ...)
-      local healthabsorption = comp.healthabsorption
-      local hungerabsorption = comp.hungerabsorption
-      local sanityabsorption = comp.sanityabsorption
-
-      if food and (food:HasTag("honeyed") or honeyed_foods[food.prefab]) then
-        comp.healthabsorption = TUNING.OZZY_HONEYED_FOOD_ABSORPTION
-        comp.hungerabsorption = TUNING.OZZY_HONEYED_FOOD_ABSORPTION
-        comp.sanityabsorption = TUNING.OZZY_HONEYED_FOOD_ABSORPTION
-      else
-        comp.healthabsorption = TUNING.OZZY_NON_HONEYED_FOOD_ABSORPTION
-        comp.hungerabsorption = TUNING.OZZY_NON_HONEYED_FOOD_ABSORPTION
-        comp.sanityabsorption = TUNING.OZZY_NON_HONEYED_FOOD_ABSORPTION
-      end
-
-      local result = oldeatfn(comp, food, ...)
-
-      comp.healthabsorption = healthabsorption
-      comp.hungerabsorption = hungerabsorption
-      comp.sanityabsorption = sanityabsorption
-
-      return result
+  local _custom_stats_mod_fn = inst.components.eater.custom_stats_mod_fn
+  inst.components.eater.custom_stats_mod_fn = function(inst, health_delta, hunger_delta, sanity_delta, food, feeder, ...)
+    if _custom_stats_mod_fn then
+      health_delta, hunger_delta, sanity_delta =
+        _custom_stats_mod_fn(inst, health_delta, hunger_delta, sanity_delta, food, feeder, ...)
     end
+
+    if food and (food:HasTag("honeyed") or honeyed_foods[food.prefab]) then
+      health_delta = health_delta * TUNING.OZZY_HONEYED_FOOD_ABSORPTION
+      hunger_delta = hunger_delta * TUNING.OZZY_HONEYED_FOOD_ABSORPTION
+      sanity_delta = sanity_delta * TUNING.OZZY_HONEYED_FOOD_ABSORPTION
+    else
+      health_delta = health_delta * TUNING.OZZY_NON_HONEYED_FOOD_ABSORPTION
+      hunger_delta = hunger_delta * TUNING.OZZY_NON_HONEYED_FOOD_ABSORPTION
+      sanity_delta = sanity_delta * TUNING.OZZY_NON_HONEYED_FOOD_ABSORPTION
+    end
+
+    return health_delta, hunger_delta, sanity_delta
   end
 end
 
@@ -354,7 +347,7 @@ end
 local function OnAttackOther(inst, data)
   if data and data.target and data.target:IsValid() then
     local x, y, z = inst.Transform:GetWorldPosition()
-    local allies = TheSim:FindEntities(x, y, z, 15, {"_combat", "_health"}, {"INLIMBO", "player"}, {"beemutantminion"})
+    local allies = TheSim:FindEntities(x, y, z, 15, {"_combat", "_health", "beemutantminion"}, {"INLIMBO", "player"})
 
     for i, e in pairs(allies) do
       if e ~= data.target and e:GetOwner() == inst and not (e:IsInLimbo() or e.components.health:IsDead()) then
@@ -376,6 +369,28 @@ local function OnAttackOther(inst, data)
       math.random() <= calcChance(inst, 0.15, 0.3, 0.3)
    then
     enrageMinions(inst)
+  end
+
+  if math.random() <= 0.25 and inst.components.skilltreeupdater:IsActivated("zeta_metapis_ranger_2") then
+    local x, y, z = inst.Transform:GetWorldPosition()
+    local rangers =
+      TheSim:FindEntities(x, y, z, 10, {"_combat", "_health", "beemutantminion", "ranger"}, {"INLIMBO", "player"})
+
+    local cnt = 0
+    local limit = math.random(2, 4)
+    for i, e in pairs(rangers) do
+      if
+        e ~= data.target and e._shouldcharge and e:GetOwner() == inst and
+          not (e:IsInLimbo() or e.components.health:IsDead())
+       then
+        -- print("CHARGE WUZZY", e)
+        e:Charge()
+        cnt = cnt + 1
+        if cnt >= limit then
+          break
+        end
+      end
+    end
   end
 end
 

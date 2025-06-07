@@ -196,7 +196,7 @@ local function OnCommonLoad(inst, data)
   end
 end
 
-local function SpawnShadowlings(inst, num_spawn)
+local function SpawnShadowlings(inst, num_spawn, frenzy)
   local spikeondeath = false
   local owner = inst:GetOwner()
   if owner and owner:HasTag("beemaster") then
@@ -219,6 +219,17 @@ local function SpawnShadowlings(inst, num_spawn)
 
     if spikeondeath then
       s:ListenForEvent("death", s.SpikeOnDeath)
+    end
+
+    -- frenzy til death
+    if frenzy then
+      s.components.debuffable:AddDebuff("metapis_frenzy_buff", "metapis_frenzy_buff")
+      s:DoPeriodicTask(
+        1,
+        function()
+          s.components.debuffable:AddDebuff("metapis_frenzy_buff", "metapis_frenzy_buff")
+        end
+      )
     end
   end
 end
@@ -249,7 +260,9 @@ local function OnCommonInit(inst)
       inst:ListenForEvent(
         "death",
         function(inst)
-          if math.random() <= TUNING.MUTANT_SHADOWLING_SPAWN_CHANCE then
+          if owner.components.skilltreeupdater:IsActivated("zeta_metapis_healer_2") and inst.frenzy_buff then
+            SpawnShadowlings(inst, math.random(2, 3), true)
+          elseif math.random() <= 0.25 then
             SpawnShadowlings(inst, math.random(2, 3))
           end
         end
@@ -333,6 +346,16 @@ local function OnInitUpgrade(inst, checkupgradefn, retries)
   retries = retries + 1
 
   if retries >= 5 then
+    -- is a homeless minion, e.g. hive/portal destroyed
+    if inst:GetOwner() == nil then
+      inst:DoTaskInTime(
+        math.random(2, 8),
+        function()
+          inst.components.health:Kill()
+        end
+      )
+    end
+
     return
   end
 
@@ -350,15 +373,8 @@ local function OnInitUpgrade(inst, checkupgradefn, retries)
   inst._numbarracks = hive._numbarracks
 
   local check = checkupgradefn(inst, hive._stage.LEVEL)
-
-  -- Not check upgrade successfully, retry upto 5 times
   if not check then
-    inst:DoTaskInTime(
-      0.3,
-      function(inst)
-        OnInitUpgrade(inst, checkupgradefn, retries)
-      end
-    )
+    print("check upgrade failed", inst)
   end
 end
 

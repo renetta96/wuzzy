@@ -129,7 +129,7 @@ local function BuildSkillsData(SkillTreeFns)
     },
     zeta_metapis_shadow_2 = {
       title = "Metapis Shadow II",
-      desc = "When a Metapis dies, there is a chance to spawn Shadowlings. When Shadowlings die, they have a chance to damage nearby enemies with spikes.",
+      desc = "When a Metapis dies, it has a chance to spawn Shadowlings. On death, Shadowlings may release damaging spikes at nearby enemies. If Metapis Alchemist II is activated and the dying Metapis is frenzied, it will always spawn frenzied Shadowlings instead.",
       icon = "zeta_metapis_shadow_2",
       pos = {-62 + W_GAP, 176 - H_GAP},
       group = "metapis",
@@ -162,7 +162,7 @@ local function BuildSkillsData(SkillTreeFns)
     zeta_metapis_lock_4 = MakeMetapisLock({-62 - W_GAP, 176 - 3 * H_GAP}, {"zeta_metapis_ranger_1"}, "metapis_ranger"),
     zeta_metapis_ranger_1 = {
       title = "Metapis Voltwing I",
-      desc = "Metapis Voltwings orbit around their target, periodically firing electric balls.",
+      desc = "Metapis Voltwings orbit around their target, periodically firing electric orbs. Each attack builds up their charge, and at full power, they unleash an electric wisp that accelerates toward the target, dealing damage on impact.",
       icon = "zeta_metapis_ranger_1",
       pos = {-62, 176 - H_GAP - H_GAP - H_GAP},
       group = "metapis",
@@ -173,7 +173,7 @@ local function BuildSkillsData(SkillTreeFns)
     },
     zeta_metapis_ranger_2 = {
       title = "Metapis Voltwing II",
-      desc = "Metapis Voltwings charge up electricity with each attack. At maximum charge, an electric wisp spawns and accelerates toward their target.",
+      desc = "Metapis Voltwings' attacks apply a debuff to their target. When the target thaws, electric wisps erupts from them and circles back to strike again. Additionally, Wuzzy's attacks have a chance to charge some nearby Voltwings.",
       icon = "zeta_metapis_ranger_2",
       pos = {-62 + W_GAP, 176 - H_GAP - H_GAP - H_GAP},
       group = "metapis",
@@ -213,7 +213,7 @@ local function BuildSkillsData(SkillTreeFns)
     },
     zeta_metapis_healer_2 = {
       title = "Metapis Alchemist II",
-      desc = "When a Metapis dies in frenzy, it explodes, dealing double damage in a small area.",
+      desc = "When a Metapis dies while frenzied, it explodes, dealing double damage in a small area. If Metapis Shadow II is active, it always spawns Shadowlings on death and sends them into a frenzy.",
       icon = "zeta_metapis_healer_2",
       pos = {-62 + W_GAP, 176 - 5 * H_GAP},
       group = "metapis",

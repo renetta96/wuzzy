@@ -83,33 +83,33 @@ local function disable_chargefx(inst)
   end
 end
 
-local function SpawnWisp(inst)
-  if not inst.components.combat:HasTarget() then
-    return
-  end
+local function SpawnWisp(inst, target, damage)
+  local min_radius = 12
+  local max_radius = 15
+  local radius = math.random(min_radius, max_radius)
 
-  local target = inst.components.combat.target
-
-  local min_dist = 12
-  local max_dist = 15
-  local radius = math.random(min_dist, max_dist)
-  local currentdist = radius - min_dist
-  local maxdist = max_dist - min_dist
+  local currentdist = radius - min_radius
+  local maxdist = max_radius - min_radius
   local speed = easing.linear(currentdist * currentdist, 17, 3, maxdist * maxdist) -- scale speed
 
-  local pt = Point(target.Transform:GetWorldPosition())
-  local mypos = Point(inst.Transform:GetWorldPosition())
-  local angle = VecUtil_GetAngleInRads(mypos.x - pt.x, mypos.z - pt.z) + PI
+  local pt = target:GetPosition()
+  local startpos = inst:GetPosition()
+
+  -- if inst ~= target, angle is the opposite direction from inst->target
+  -- otherwise, use a random angle
+  local angle = math.random(2 * PI)
+  if inst ~= target then
+    angle = VecUtil_GetAngleInRads(startpos.x - pt.x, startpos.z - pt.z) + PI
+  end
 
   local offset = FindWalkableOffset(inst:GetPosition(), angle, radius, 12, false, true, nil, true, true)
   if offset ~= nil then
     local w_launch = SpawnPrefab("electric_wisp_launch")
-    local pos = inst:GetPosition()
-    offset.x = offset.x + pos.x
-    offset.z = offset.z + pos.z
+    offset.x = offset.x + startpos.x
+    offset.z = offset.z + startpos.z
 
     w_launch._target = target
-    w_launch._owner = inst
+    w_launch._dmg = damage
     w_launch:Launch(inst, offset, speed)
   end
 end
@@ -117,12 +117,9 @@ end
 local function Charge(inst)
   inst._charge = inst._charge + 1
 
-  -- print("CHARGE", inst._charge)
-  -- SpawnWisp(inst)
-
-  if inst._charge >= 15 then
-    SpawnWisp(inst)
-
+  if inst._charge >= 15 and inst.components.combat:HasTarget() then
+    -- snapshot damage
+    SpawnWisp(inst, inst.components.combat.target, BarrackModifier(inst, TUNING.MUTANT_BEE_RANGED_WISP_DAMAGE))
     inst._charge = 0
   end
 
@@ -158,7 +155,39 @@ local function LightningStrike(inst)
   end
 end
 
+local function extendDischarge(inst, target)
+  if target._discharge_task == nil then
+    local dmg = BarrackModifier(inst, TUNING.MUTANT_BEE_RANGED_WISP_DAMAGE)
+
+    target._discharge_fn = function()
+      for i = 1, math.random(2, 4) do
+        SpawnWisp(target, target, dmg)
+      end
+    end
+
+    target:ListenForEvent("unfreeze", target._discharge_fn)
+  else
+    target._discharge_task:Cancel()
+  end
+
+  target._discharge_task =
+    target:DoTaskInTime(
+    10,
+    function()
+      if target._discharge_fn then
+        target:RemoveEventCallback("unfreeze", target._discharge_fn)
+      end
+      target._discharge_fn = nil
+      target._discharge_task = nil
+    end
+  )
+end
+
 local function OnAttack(inst, data)
+  if inst._shouldicebreak and data and data.target then
+    extendDischarge(inst, data.target)
+  end
+
   if inst._shouldcharge then
     Charge(inst)
   end
@@ -198,16 +227,19 @@ end
 local brains = require("brains/rangedkillerbeebrain")
 local function CheckRangerUpgrade(inst, stage)
   local owner = inst:GetOwner()
+
   local shouldcircleatk = false
   local shouldcharge = false
+  local shouldicebreak = false
 
   if owner and owner:HasTag("beemaster") then
     if owner.components.skilltreeupdater:IsActivated("zeta_metapis_ranger_1") then
       shouldcircleatk = true
+      shouldcharge = true
     end
 
     if owner.components.skilltreeupdater:IsActivated("zeta_metapis_ranger_2") then
-      shouldcharge = true
+      shouldicebreak = true
     end
   end
 
@@ -250,6 +282,8 @@ local function CheckRangerUpgrade(inst, stage)
       OnStartCombat(inst)
     end
   end
+
+  inst._shouldicebreak = shouldicebreak
 
   if stage >= 2 then
     inst._doublechance = 0.3
@@ -347,6 +381,7 @@ local function rangerbee()
   inst._shouldcircleatk = false
   inst._shouldcharge = false
   inst._charge = 0
+  inst.Charge = Charge
 
   return inst
 end
