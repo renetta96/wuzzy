@@ -65,7 +65,7 @@ end
 
 local function checkmaxuses(inst)
   if inst._upgraded ~= nil and inst._upgraded then
-    inst.components.finiteuses:SetMaxUses(TUNING.MELISSA_USES * 2)
+    inst.components.finiteuses:SetMaxUses(TUNING.MELISSA_USES_2)
   else
     inst.components.finiteuses:SetMaxUses(TUNING.MELISSA_USES)
   end

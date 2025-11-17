@@ -58,7 +58,7 @@ local function haste_fn()
 
   inst:AddTag("CLASSIFIED")
 
-  inst.duration = TUNING.OZZY_ENRAGE_BUFF_DURATION
+  inst.duration = TUNING.ZETA_ENRAGE_BUFF_DURATION
 
   inst.extendedfn = function(buff, target)
     target.hasted_buff = true
@@ -102,7 +102,7 @@ local function rage_fn()
 
   inst:AddTag("CLASSIFIED")
 
-  inst.duration = TUNING.OZZY_ENRAGE_BUFF_DURATION
+  inst.duration = TUNING.ZETA_ENRAGE_BUFF_DURATION
 
   inst.attachfn = function(buff, target, followsymbol)
     -- print("RAGE ATTACH SPAWN FX")

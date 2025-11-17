@@ -86,6 +86,7 @@ Assets = {
   Asset("SOUND", "sound/zeta.fsb"),
   Asset("ANIM", "anim/status_symbiosis.zip"),
   Asset("ANIM", "anim/status_meter_symbiosis.zip"),
+  Asset("ANIM", "anim/mother_hive_display.zip"),
   Asset("IMAGE", "images/inventoryimages/mutantdefenderhive.tex"),
   Asset("ATLAS", "images/inventoryimages/mutantdefenderhive.xml"),
   Asset("IMAGE", "images/inventoryimages/mutantrangerhive.tex"),
@@ -131,41 +132,44 @@ Assets = {
 RemapSoundEvent("dontstarve/characters/zeta/hurt", "zeta/zeta/hurt")
 RemapSoundEvent("dontstarve/characters/zeta/talk_LP", "zeta/zeta/talk_LP")
 RemapSoundEvent("dontstarve/characters/zeta/death_voice", "zeta/zeta/death_voice")
-RemapSoundEvent("dontstarve/characters/zeta/emote", "zeta/zeta/emote") --dst
-RemapSoundEvent("dontstarve/characters/zeta/pose", "zeta/zeta/pose") --dst
-RemapSoundEvent("dontstarve/characters/zeta/yawn", "zeta/zeta/yawn") --dst
+RemapSoundEvent("dontstarve/characters/zeta/emote", "zeta/zeta/emote")       --dst
+RemapSoundEvent("dontstarve/characters/zeta/pose", "zeta/zeta/pose")         --dst
+RemapSoundEvent("dontstarve/characters/zeta/yawn", "zeta/zeta/yawn")         --dst
 RemapSoundEvent("dontstarve/characters/zeta/ghost_LP", "zeta/zeta/ghost_LP") --dst
 
 -- Stats
 TUNING.ZETA_HEALTH = 175
 TUNING.ZETA_SANITY = 100
 TUNING.ZETA_HUNGER = 150
-TUNING.ZETA_HEALTH_TYRANT = 250
-TUNING.ZETA_SANITY_TYRANT = 150
-TUNING.ZETA_HUNGER_TYRANT = 225
+TUNING.ZETA_HEALTH_TYRANT = 200
+TUNING.ZETA_SANITY_TYRANT = 125
+TUNING.ZETA_HUNGER_TYRANT = 175
 TUNING.ZETA_HEALTH_SHEPHERD = 130
 TUNING.ZETA_SANITY_SHEPHERD = 75
 TUNING.ZETA_HUNGER_SHEPHERD = 115
+TUNING.ZETA_SUMMON_REGEN_HUNGER_THRESHOLD = 0.2
+TUNING.ZETA_SUMMON_REGEN_HUNGER_COST = 5
+TUNING.ZETA_SUMMON_REGEN_HUNGER_COST_TYRANT = 10
+TUNING.ZETA_SUMMON_REGEN_HUNGER_COST_SHEPHERD = 3
 
-TUNING.OZZY_DEFAULT_DAMAGE_MULTIPLIER = 0.75
-TUNING.OZZY_SHEPHERD_DAMAGE_MULTIPLIER = 0.6
-TUNING.OZZY_TYRANT_DAMAGE_MULTIPLIER_0 = 1.05
-TUNING.OZZY_TYRANT_DAMAGE_MULTIPLIER_1 = 1.15
-TUNING.OZZY_TYRANT_DAMAGE_MULTIPLIER_2 = 1.3
-TUNING.OZZY_TYRANT_DAMAGE_MULTIPLIER_3 = 1.5
+TUNING.ZETA_DEFAULT_DAMAGE_MULTIPLIER = 0.75
+TUNING.ZETA_SHEPHERD_DAMAGE_MULTIPLIER = 0.6
+TUNING.ZETA_TYRANT_DAMAGE_MULTIPLIER_0 = 1.05
+TUNING.ZETA_TYRANT_DAMAGE_MULTIPLIER_1 = 1.15
+TUNING.ZETA_TYRANT_DAMAGE_MULTIPLIER_2 = 1.3
+TUNING.ZETA_TYRANT_DAMAGE_MULTIPLIER_3 = 1.5
 
-TUNING.OZZY_HUNGER_SCALE = 1
-TUNING.OZZY_NUM_POLLENS_PER_HONEY = 10
-TUNING.OZZY_SPRING_SPEED_MULTIPLIER = 1.15
-TUNING.OZZY_WINTER_SPEED_MULTIPLIER = 0.85
-TUNING.OZZY_MAX_SUMMON_BEES = 4
-TUNING.OZZY_SUMMON_CHANCE = 0.7
-TUNING.OZZY_MAX_BEES_STORE = 6
-TUNING.OZZY_HONEYED_FOOD_ABSORPTION = 1.25
-TUNING.OZZY_NON_HONEYED_FOOD_ABSORPTION = 0.5
-TUNING.OZZY_PICK_FLOWER_SANITY = -3 * TUNING.SANITY_TINY
-TUNING.OZZY_TYRANT_REDIRECT_DAMAGE_MINIONS = 3
-TUNING.OZZY_ENRAGE_BUFF_DURATION = 10
+TUNING.ZETA_NUM_POLLENS_PER_HONEY = 10
+TUNING.ZETA_SPRING_SPEED_MULTIPLIER = 1.15
+TUNING.ZETA_WINTER_SPEED_MULTIPLIER = 0.85
+TUNING.ZETA_MAX_SUMMON_BEES = 4
+TUNING.ZETA_SUMMON_CHANCE = 0.7
+TUNING.ZETA_MAX_BEES_STORE = 6
+TUNING.ZETA_HONEYED_FOOD_ABSORPTION = 1.25
+TUNING.ZETA_NON_HONEYED_FOOD_ABSORPTION = 0.5
+TUNING.ZETA_PICK_FLOWER_SANITY = -3 * TUNING.SANITY_TINY
+TUNING.ZETA_TYRANT_REDIRECT_DAMAGE_MINIONS = 3
+TUNING.ZETA_ENRAGE_BUFF_DURATION = 10
 
 TUNING.GAMEMODE_STARTING_ITEMS.DEFAULT.ZETA = {
   "honeycomb",
@@ -244,15 +248,14 @@ TUNING.MUTANT_BEE_RAGED_DAMAGE_BUFF = 1.25
 TUNING.MUTANT_BEE_FRENZY_ATK_SPEED_BUFF = 0.5
 
 -- Mutant beehive stats
-TUNING.MUTANT_BEEHIVE_DEFAULT_EMERGENCY_BEES = 0
-TUNING.MUTANT_BEEHIVE_EMERGENCY_BEES_PER_PLAYER = 500
+TUNING.MUTANT_BEEHIVE_DEFAULT_EMERGENCY_BEES = 2
 TUNING.MUTANT_BEEHIVE_EMERGENCY_RADIUS = 30
 TUNING.MUTANT_BEEHIVE_BEES = 4
-TUNING.MUTANT_BEEHIVE_DEFAULT_RELEASE_TIME = 30
+TUNING.MUTANT_BEEHIVE_DEFAULT_RELEASE_TIME = 20
 TUNING.MUTANT_BEEHIVE_DEFAULT_REGEN_TIME = 30
 TUNING.MUTANT_BEEHIVE_DELTA_BEES = 3
-TUNING.MUTANT_BEEHIVE_DELTA_RELEASE_TIME = 10
-TUNING.MUTANT_BEEHIVE_DELTA_REGEN_TIME = 5
+TUNING.MUTANT_BEEHIVE_DELTA_RELEASE_TIME = 5
+TUNING.MUTANT_BEEHIVE_DELTA_REGEN_TIME = 10
 TUNING.MUTANT_BEEHIVE_UPGRADES_PER_STAGE = 3
 TUNING.MUTANT_BEEHIVE_WATCH_DIST = 25
 TUNING.MUTANT_BEEHIVE_RECOVER_PER_CHILD = 0.75
@@ -263,9 +266,22 @@ TUNING.MUTANT_BEEHIVE_CHILDREN_PER_SLAVE = 1
 TUNING.MUTANT_BEEHIVE_CHILDREN_PER_BARRACK = 2
 TUNING.MUTANT_BEEHIVE_BARRACK_MODIFIER = 0.05
 
+TUNING.MUTANT_BEEHIVE_REGEN_COST_A = 0.25
+TUNING.MUTANT_BEEHIVE_REGEN_COST_S = 1.5
+TUNING.MUTANT_BEEHIVE_REGEN_COST_B = 1.7
+
+TUNING.MUTANT_BEEHIVE_MAINTAIN_COST_A = 0.5
+TUNING.MUTANT_BEEHIVE_MAINTAIN_COST_S = 1.3
+TUNING.MUTANT_BEEHIVE_MAINTAIN_COST_B = 1.07
+
+TUNING.MUTANT_BEEHIVE_MAINTAIN_PERIOD = 30
+TUNING.MUTANT_BEEHIVE_MAINTAIN_DECAY_RATE = 0.2
+TUNING.MUTANT_TELEPORTAL_SUMMON_COST_CHANCE = 0.25
+TUNING.MUTANT_TELEPORTAL_SUMMON_COST = 1
+
 -- Armor honey
 TUNING.ARMORHONEY_MAX_ABSORPTION = 0.7
-TUNING.ARMORHONEY_MIN_ABSORPTION = 0.55
+TUNING.ARMORHONEY_MIN_ABSORPTION = 0.5
 TUNING.ARMORHONEY_HEAL_TICKS = 3
 TUNING.ARMORHONEY_HEAL_INTERVAL = 3
 TUNING.ARMORHONEY_MIN_HEAL_PERCENT = 0.03
@@ -277,6 +293,7 @@ TUNING.ARMORHONEY_MULT_REGEN_TICK = 2 / 3
 TUNING.MELISSA_DAMAGE = 40
 TUNING.MELISSA_DAMAGE_2 = 52
 TUNING.MELISSA_USES = 150
+TUNING.MELISSA_USES_2 = 200
 TUNING.MELISSA_SWAP_USES = 20
 TUNING.MELISSA_SLAM_DAMAGE_MULT = 3
 
@@ -290,7 +307,7 @@ TUNING.STING_TRAP_EPIC_SPEED_PENALTY = 0.75
 STRINGS.CHARACTER_TITLES.zeta = "The Buzzy"
 STRINGS.CHARACTER_NAMES.zeta = "Wuzzy"
 STRINGS.CHARACTER_DESCRIPTIONS.zeta =
-  "*Leads his own species and hive\n*Fights alongside his symbiotic bees\n*Can pick pollen from flowers\n*Loves honeyed foods"
+"*Leads his own species and hive\n*Fights alongside his symbiotic bees\n*Can pick pollen from flowers\n*Loves honeyed foods"
 STRINGS.CHARACTER_QUOTES.zeta = '"Bees together strong."'
 STRINGS.CHARACTER_SURVIVABILITY.zeta = "Grim"
 STRINGS.SKIN_NAMES.zeta_none = "Wuzzy"
@@ -364,7 +381,7 @@ local skin_modes = {
     anim_bank = "ghost",
     idle_anim = "idle",
     scale = 0.75,
-    offset = {0, -25}
+    offset = { 0, -25 }
   }
 }
 AddModCharacter("zeta", "MALE", skin_modes)
@@ -373,8 +390,8 @@ AddModCharacter("zeta", "MALE", skin_modes)
 local function HandleHoneyPerishingInMetapisHive(prefab)
   if prefab.components.perishable and prefab.components.inventoryitem then
     local OldOnPutInInventory = prefab.components.inventoryitem.onputininventoryfn or function()
-        return
-      end
+      return
+    end
     prefab.components.inventoryitem:SetOnPutInInventoryFn(
       function(inst, owner)
         if owner and owner.prefab == "mutantcontainer" then
@@ -491,7 +508,7 @@ local function FlowerPostInit(prefab)
           if oldonpickedfn ~= nil then
             oldonpickedfn(inst, picker)
           end
-          picker.components.sanity:DoDelta(TUNING.OZZY_PICK_FLOWER_SANITY)
+          picker.components.sanity:DoDelta(TUNING.ZETA_PICK_FLOWER_SANITY)
         end
 
         return
@@ -704,7 +721,7 @@ local mutantcontainer_container = {
   },
   itemtestfn = function(inst, item, slot)
     return item and item.prefab and
-      (item.prefab == "honey" or item.prefab == "zetapollen" or item.prefab == "armor_honey")
+        (item.prefab == "honey" or item.prefab == "zetapollen" or item.prefab == "armor_honey")
   end,
   type = "chest"
 }
@@ -723,7 +740,7 @@ AddCharacterRecipe(
   {
     Ingredient("log", 10),
     Ingredient("rope", 1),
-    Ingredient("honey", 3)
+    Ingredient("honey", 5)
   },
   TECH.NONE,
   {
@@ -740,8 +757,8 @@ AddCharacterRecipe(
   "melissa",
   {
     Ingredient("twigs", 2),
-    Ingredient("goldnugget", 1),
-    Ingredient("stinger", 5)
+    Ingredient("goldnugget", 2),
+    Ingredient("stinger", 8)
   },
   TECH.NONE,
   {
@@ -787,7 +804,7 @@ AddCharacterRecipe(
 local function slavehivetestfn(pt, rot)
   local x, y, z = pt:Get()
   local possiblemasters =
-    GLOBAL.TheSim:FindEntities(x, y, z, TUNING.MUTANT_BEEHIVE_MASTER_SLAVE_DIST, {"mutantbeehive"})
+      GLOBAL.TheSim:FindEntities(x, y, z, TUNING.MUTANT_BEEHIVE_MASTER_SLAVE_DIST, { "mutantbeehive" })
 
   if possiblemasters[1] ~= nil then
     return true
@@ -885,7 +902,7 @@ AddCharacterRecipe(
 AddCharacterRecipe(
   "mutantbarrack_recipe",
   {
-    Ingredient("honey", 40),
+    Ingredient("honey", 20),
     Ingredient("honeycomb", 1),
     Ingredient("killerbee", 4)
   },
@@ -1109,7 +1126,7 @@ local function findNearestMinion(pos, inst)
 
   -- a bit longer than client find distance to compensate minion movement
   local radius = swap_approx_dist + 4
-  local ents = GLOBAL.TheSim:FindEntities(x, y, z, radius, {"beemutantminion"}, {"lesserminion", "INLIMBO"})
+  local ents = GLOBAL.TheSim:FindEntities(x, y, z, radius, { "beemutantminion" }, { "lesserminion", "INLIMBO" })
 
   local closestEntity = nil
   local rangesq = radius * radius
@@ -1127,20 +1144,20 @@ local function findNearestMinion(pos, inst)
 end
 
 local blink_swap_approx_act =
-  AddAction(
-  "ZETA_BLINK_SWAP_APPROX",
-  "Swap",
-  function(act)
-    -- print("BLINK SWAP APPROX", act.doer, act.invobject, act.target)
+    AddAction(
+      "ZETA_BLINK_SWAP_APPROX",
+      "Swap",
+      function(act)
+        -- print("BLINK SWAP APPROX", act.doer, act.invobject, act.target)
 
-    local minion = findNearestMinion(act:GetActionPoint(), act.doer)
-    if minion ~= nil then
-      return performSwap(act.doer, minion, act.invobject)
-    end
+        local minion = findNearestMinion(act:GetActionPoint(), act.doer)
+        if minion ~= nil then
+          return performSwap(act.doer, minion, act.invobject)
+        end
 
-    return false, "NO_MINION"
-  end
-)
+        return false, "NO_MINION"
+      end
+    )
 blink_swap_approx_act.priority = 10
 blink_swap_approx_act.rmb = true
 blink_swap_approx_act.distance = 25
@@ -1148,7 +1165,7 @@ blink_swap_approx_act.distance = 25
 local function hasNearbyMinion(pos)
   local x, y, z = pos:Get()
   local radius = swap_approx_dist
-  local ents = GLOBAL.TheSim:FindEntities(x, y, z, radius, {"beemutantminion"}, {"lesserminion"})
+  local ents = GLOBAL.TheSim:FindEntities(x, y, z, radius, { "beemutantminion" }, { "lesserminion" })
 
   return #ents > 0
 end
@@ -1159,11 +1176,11 @@ AddComponentAction(
   function(inst, doer, pos, actions, right, target)
     local x, y, z = pos:Get()
     if
-      right and inst:HasTag("beemaster_weapon") and doer:HasTag("beemaster") and not doer:HasTag("steeringboat") and
+        right and inst:HasTag("beemaster_weapon") and doer:HasTag("beemaster") and not doer:HasTag("steeringboat") and
         not doer:HasTag("rotatingboat") and
         (GLOBAL.TheWorld.Map:IsAboveGroundAtPoint(x, y, z) or GLOBAL.TheWorld.Map:GetPlatformAtPoint(x, z) ~= nil) and
         not GLOBAL.TheWorld.Map:IsGroundTargetBlocked(pos)
-     then
+    then
       if hasNearbyMinion(pos) then
         table.insert(actions, GLOBAL.ACTIONS.ZETA_BLINK_SWAP_APPROX)
       end
@@ -1172,7 +1189,11 @@ AddComponentAction(
 )
 
 -- Badge
+local Widget = require("widgets/widget")
 local Badge = require("widgets/badge")
+local Text = require("widgets/text")
+local UIAnim = require("widgets/uianim")
+local Class = GLOBAL.Class
 
 local function OnRegenTick(inst, data)
   local percent = inst.components.beesummoner:GetRegenTickPercent()
@@ -1203,7 +1224,7 @@ end
 
 local function StatusPostConstruct(self)
   if self.owner.prefab == "zeta" then
-    self.symbiosis = self:AddChild(Badge(nil, self.owner, {48 / 255, 169 / 255, 169 / 255, 1}, "status_symbiosis"))
+    self.symbiosis = self:AddChild(Badge(nil, self.owner, { 48 / 255, 169 / 255, 169 / 255, 1 }, "status_symbiosis"))
     self.symbiosis.backing:GetAnimState():SetBuild("status_meter_symbiosis")
 
     self.symbiosis:Hide()
@@ -1232,7 +1253,102 @@ local function StatusPostConstruct(self)
   end
 end
 
+local MotherHiveDisplay = Class(Widget, function(self, owner)
+  Widget._ctor(self, "MotherHiveDisplay")
+  self.owner = owner
+
+  self.backing = self:AddChild(UIAnim())
+  self.backing:GetAnimState():SetBank("mother_hive_display")
+  self.backing:GetAnimState():SetBuild("mother_hive_display")
+  self.backing:GetAnimState():PlayAnimation("anim")
+
+  self.num_children = self:AddChild(Text(GLOBAL.BODYTEXTFONT, 24))
+  self.num_children:SetPosition(-48, -40)
+  self._num_children_val = nil -- local cache for pulsing
+  self._num_children_pulse_task = nil
+
+  self.num_honey = self:AddChild(Text(GLOBAL.BODYTEXTFONT, 30))
+  self.num_honey:SetPosition(-42, -113)
+  self._num_honey = nil -- local cache for pulsing
+  self._num_honey_pulse_task = nil
+end)
+
+function MotherHiveDisplay:SetNumChildren(num, max)
+  self.num_children:SetString(string.format("%d/%d", num, max))
+
+  if self._num_children_val ~= nil and self._num_children_val ~= num then
+    if self._num_children_val < num then
+      self.num_children:SetColour(0, 1, 0, 1) -- green, increase
+    else
+      self.num_children:SetColour(1, 0, 0, 1) -- red, decrease
+    end
+
+    if self._num_children_pulse_task ~= nil then
+      self._num_children_pulse_task:Cancel()
+    end
+
+    self._num_children_pulse_task = self.inst:DoTaskInTime(0.3, function()
+      self.num_children:SetColour(1, 1, 1, 1)
+      self._num_children_pulse_task = nil
+    end)
+  end
+
+  self._num_children_val = num
+end
+
+function MotherHiveDisplay:SetNumHoney(num)
+  if num == -1 then
+    self.num_honey:SetString("-")
+    self._num_honey = nil
+    return
+  end
+
+  self.num_honey:SetString(string.format("%d", num))
+  if self._num_honey ~= nil and self._num_honey ~= num then
+    if self._num_honey < num then
+      self.num_honey:SetColour(0, 1, 0, 1) -- green, increase
+    else
+      self.num_honey:SetColour(1, 0, 0, 1) -- red, decrease
+    end
+
+    if self._num_honey_pulse_task ~= nil then
+      self._num_honey_pulse_task:Cancel()
+    end
+
+    self._num_honey_pulse_task = self.inst:DoTaskInTime(0.3, function()
+      self.num_honey:SetColour(1, 1, 1, 1)
+      self._num_honey_pulse_task = nil
+    end)
+  end
+
+  self._num_honey = num
+end
+
+local function SecondaryStatusPostConstruct(self)
+  if self.owner.prefab == "zeta" then
+    if self.mother_hive == nil then
+      self.mother_hive = self:AddChild(MotherHiveDisplay(self.owner))
+      self.mother_hive:SetPosition(self.column1 + 10, -80, 0)
+      self.mother_hive:SetScale(0.65, 0.65, 0.65)
+
+      self.mother_hive:Hide()
+
+      self.owner.UpdateMotherHiveDisplay = function()
+        if self.owner.net_hivemaxchildren:value() == -1 then
+          self.mother_hive:Hide()
+          return
+        end
+
+        self.mother_hive:Show()
+        self.mother_hive:SetNumChildren(self.owner.net_hivechildren:value(), self.owner.net_hivemaxchildren:value())
+        self.mother_hive:SetNumHoney(self.owner.net_hivehoney:value())
+      end
+    end
+  end
+end
+
 AddClassPostConstruct("widgets/statusdisplays", StatusPostConstruct)
+AddClassPostConstruct("widgets/secondarystatusdisplays", SecondaryStatusPostConstruct)
 
 local function onsymbiosisdirty(inst)
   if GLOBAL.ThePlayer and GLOBAL.ThePlayer.UpdateSymbiosisBadge then
@@ -1258,7 +1374,7 @@ local function PlayerPostConstruct(inst)
     inst:DoTaskInTime(
       0,
       function()
-        inst:PushEvent("onregentick", {currenttick = 0})
+        inst:PushEvent("onregentick", { currenttick = 0 })
       end
     )
   end
@@ -1313,7 +1429,7 @@ AddStategraphState(
   "wilson",
   State {
     name = "attack_zeta_smash",
-    tags = {"attack", "notalking", "abouttoattack", "autopredict"},
+    tags = { "attack", "notalking", "abouttoattack", "autopredict" },
     onenter = function(inst)
       if inst.components.combat:InCooldown() then
         inst.sg:RemoveStateTag("abouttoattack")
@@ -1406,7 +1522,7 @@ AddStategraphState(
   "wilson_client",
   State {
     name = "attack_zeta_smash",
-    tags = {"attack", "notalking", "abouttoattack"},
+    tags = { "attack", "notalking", "abouttoattack" },
     onenter = function(inst)
       local combat = inst.replica.combat
       if combat:InCooldown() then

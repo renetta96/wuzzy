@@ -55,7 +55,7 @@ local function BuildSkillsData(SkillTreeFns)
       title = "Tyrant II",
       desc = string.format(
         "When attacked, Wuzzy may redirect 10x damage to %d nearby Metapises, guaranteed at 30%% HP. If too few Metapises are nearby, Wuzzy takes the hit.",
-        TUNING.OZZY_TYRANT_REDIRECT_DAMAGE_MINIONS
+        TUNING.ZETA_TYRANT_REDIRECT_DAMAGE_MINIONS
       ),
       icon = "zeta_metapimancer_tyrant_2",
       pos = {-214 + 18 + W_GAP, 176},

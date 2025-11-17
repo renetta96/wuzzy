@@ -12,7 +12,7 @@ local prefabs = {
 }
 
 local function CheckWorkerUpgrade(inst, stage)
-  inst.components.pollinator.collectcount = math.max(5 - (stage - 1), 1)
+  inst.components.pollinator.collectcount = math.max(6 - stage, 1)
 
   return true
 end

@@ -23,7 +23,7 @@ for k, v in pairs(TUNING.GAMEMODE_STARTING_ITEMS) do
   start_inv[string.lower(k)] = v.ZETA or {}
 end
 
-prefabs = FlattenTree({prefabs, start_inv}, true)
+prefabs = FlattenTree({ prefabs, start_inv }, true)
 
 local function GetChildPrefab(inst)
   return PickChildPrefab(
@@ -38,7 +38,7 @@ end
 local function OnEat(inst, data)
   if data.food and data.food.prefab == "zetapollen" then
     inst._eatenpollens = inst._eatenpollens + 1
-    if (inst._eatenpollens >= TUNING.OZZY_NUM_POLLENS_PER_HONEY) then
+    if (inst._eatenpollens >= TUNING.ZETA_NUM_POLLENS_PER_HONEY) then
       local honey = SpawnPrefab("honey")
       inst.components.inventory:GiveItem(honey)
       inst._eatenpollens = 0
@@ -53,14 +53,14 @@ local function OnNumStoreChange(inst)
   local maxstore = inst.components.beesummoner.maxstore
 
   inst.components.temperature.inherentinsulation =
-    (TUNING.INSULATION_MED / maxstore) * numstore - TUNING.INSULATION_SMALL
+      (TUNING.INSULATION_MED / maxstore) * numstore - TUNING.INSULATION_SMALL
 end
 
 local function SeasonalChanges(inst, season)
   if season == SEASONS.SPRING then
-    inst.components.locomotor:SetExternalSpeedMultiplier(inst, "season_speed_mod", TUNING.OZZY_SPRING_SPEED_MULTIPLIER)
+    inst.components.locomotor:SetExternalSpeedMultiplier(inst, "season_speed_mod", TUNING.ZETA_SPRING_SPEED_MULTIPLIER)
   elseif season == SEASONS.WINTER then
-    inst.components.locomotor:SetExternalSpeedMultiplier(inst, "season_speed_mod", TUNING.OZZY_WINTER_SPEED_MULTIPLIER)
+    inst.components.locomotor:SetExternalSpeedMultiplier(inst, "season_speed_mod", TUNING.ZETA_WINTER_SPEED_MULTIPLIER)
   else
     inst.components.locomotor:RemoveExternalSpeedMultiplier(inst, "season_speed_mod")
   end
@@ -72,7 +72,7 @@ local function CheckHiveUpgrade(inst)
     inst.components.beesummoner:RemoveStoreModifier_Additive("childhives")
 
     if inst.components.skilltreeupdater:IsActivated("zeta_metapimancer_tyrant_1") then
-      inst.components.combat.damagemultiplier = TUNING.OZZY_TYRANT_DAMAGE_MULTIPLIER_0
+      inst.components.combat.damagemultiplier = TUNING.ZETA_TYRANT_DAMAGE_MULTIPLIER_0
     end
 
     return
@@ -80,11 +80,11 @@ local function CheckHiveUpgrade(inst)
 
   if inst.components.skilltreeupdater:IsActivated("zeta_metapimancer_tyrant_1") then
     if inst._hive._stage.LEVEL == 1 then
-      inst.components.combat.damagemultiplier = TUNING.OZZY_TYRANT_DAMAGE_MULTIPLIER_1
+      inst.components.combat.damagemultiplier = TUNING.ZETA_TYRANT_DAMAGE_MULTIPLIER_1
     elseif inst._hive._stage.LEVEL == 2 then
-      inst.components.combat.damagemultiplier = TUNING.OZZY_TYRANT_DAMAGE_MULTIPLIER_2
+      inst.components.combat.damagemultiplier = TUNING.ZETA_TYRANT_DAMAGE_MULTIPLIER_2
     elseif inst._hive._stage.LEVEL == 3 then
-      inst.components.combat.damagemultiplier = TUNING.OZZY_TYRANT_DAMAGE_MULTIPLIER_3
+      inst.components.combat.damagemultiplier = TUNING.ZETA_TYRANT_DAMAGE_MULTIPLIER_3
     end
   end
 
@@ -113,7 +113,7 @@ local function CheckHiveUpgrade(inst)
     end
   end
 
-  inst.components.beesummoner:SetMaxChildren(math.max(TUNING.OZZY_MAX_SUMMON_BEES, count + 1))
+  inst.components.beesummoner:SetMaxChildren(math.max(TUNING.ZETA_MAX_SUMMON_BEES, count + 1))
 end
 
 local hiveTokenRecipes = {}
@@ -145,17 +145,17 @@ local function OnInit(inst)
   inst.components.eater.custom_stats_mod_fn = function(inst, health_delta, hunger_delta, sanity_delta, food, feeder, ...)
     if _custom_stats_mod_fn then
       health_delta, hunger_delta, sanity_delta =
-        _custom_stats_mod_fn(inst, health_delta, hunger_delta, sanity_delta, food, feeder, ...)
+          _custom_stats_mod_fn(inst, health_delta, hunger_delta, sanity_delta, food, feeder, ...)
     end
 
     if food and (food:HasTag("honeyed") or honeyed_foods[food.prefab]) then
-      health_delta = health_delta * TUNING.OZZY_HONEYED_FOOD_ABSORPTION
-      hunger_delta = hunger_delta * TUNING.OZZY_HONEYED_FOOD_ABSORPTION
-      sanity_delta = sanity_delta * TUNING.OZZY_HONEYED_FOOD_ABSORPTION
+      health_delta = health_delta * TUNING.ZETA_HONEYED_FOOD_ABSORPTION
+      hunger_delta = hunger_delta * TUNING.ZETA_HONEYED_FOOD_ABSORPTION
+      sanity_delta = sanity_delta * TUNING.ZETA_HONEYED_FOOD_ABSORPTION
     else
-      health_delta = health_delta * TUNING.OZZY_NON_HONEYED_FOOD_ABSORPTION
-      hunger_delta = hunger_delta * TUNING.OZZY_NON_HONEYED_FOOD_ABSORPTION
-      sanity_delta = sanity_delta * TUNING.OZZY_NON_HONEYED_FOOD_ABSORPTION
+      health_delta = health_delta * TUNING.ZETA_NON_HONEYED_FOOD_ABSORPTION
+      hunger_delta = hunger_delta * TUNING.ZETA_NON_HONEYED_FOOD_ABSORPTION
+      sanity_delta = sanity_delta * TUNING.ZETA_NON_HONEYED_FOOD_ABSORPTION
     end
 
     return health_delta, hunger_delta, sanity_delta
@@ -169,7 +169,7 @@ local function UpdatePollenFx(inst)
   end
 
   local x, y, z = inst.Transform:GetWorldPosition()
-  local flowers = TheSim:FindEntities(x, y, z, 25, {"flower"})
+  local flowers = TheSim:FindEntities(x, y, z, 25, { "flower" })
 
   for i, flower in ipairs(flowers) do
     if flower.net_pollenpicked ~= nil then
@@ -291,24 +291,24 @@ local function findNearbyMinion(inst)
     function(guy)
       return not guy.components.health:IsDead() and guy:IsValid() and guy:GetOwner() == inst
     end,
-    {"beemutant", "_combat", "_health"},
-    {"INLIMBO", "lesserminion"},
-    {"beemutantminion"}
+    { "beemutant", "_combat", "_health" },
+    { "INLIMBO", "lesserminion" },
+    { "beemutantminion" }
   )
 end
 
 local function findNearbyMinions(inst, num)
   local x, y, z = inst.Transform:GetWorldPosition()
   local minions =
-    TheSim:FindEntities(
-    x,
-    y,
-    z,
-    10,
-    {"beemutant", "_combat", "_health"},
-    {"INLIMBO", "lesserminion"},
-    {"beemutantminion"}
-  )
+      TheSim:FindEntities(
+        x,
+        y,
+        z,
+        10,
+        { "beemutant", "_combat", "_health" },
+        { "INLIMBO", "lesserminion" },
+        { "beemutantminion" }
+      )
 
   local res = {}
   local cnt = 0
@@ -347,7 +347,7 @@ end
 local function OnAttackOther(inst, data)
   if data and data.target and data.target:IsValid() then
     local x, y, z = inst.Transform:GetWorldPosition()
-    local allies = TheSim:FindEntities(x, y, z, 15, {"_combat", "_health", "beemutantminion"}, {"INLIMBO", "player"})
+    local allies = TheSim:FindEntities(x, y, z, 15, { "_combat", "_health", "beemutantminion" }, { "INLIMBO", "player" })
 
     for i, e in pairs(allies) do
       if e ~= data.target and e:GetOwner() == inst and not (e:IsInLimbo() or e.components.health:IsDead()) then
@@ -365,24 +365,24 @@ local function OnAttackOther(inst, data)
   end
 
   if
-    inst.components.skilltreeupdater:IsActivated("zeta_metapimancer_shepherd_2") and
+      inst.components.skilltreeupdater:IsActivated("zeta_metapimancer_shepherd_2") and
       math.random() <= calcChance(inst, 0.15, 0.3, 0.3)
-   then
+  then
     enrageMinions(inst)
   end
 
   if math.random() <= 0.25 and inst.components.skilltreeupdater:IsActivated("zeta_metapis_ranger_2") then
     local x, y, z = inst.Transform:GetWorldPosition()
     local rangers =
-      TheSim:FindEntities(x, y, z, 10, {"_combat", "_health", "beemutantminion", "ranger"}, {"INLIMBO", "player"})
+        TheSim:FindEntities(x, y, z, 10, { "_combat", "_health", "beemutantminion", "ranger" }, { "INLIMBO", "player" })
 
     local cnt = 0
     local limit = math.random(2, 4)
     for i, e in pairs(rangers) do
       if
-        e ~= data.target and e._shouldcharge and e:GetOwner() == inst and
+          e ~= data.target and e._shouldcharge and e:GetOwner() == inst and
           not (e:IsInLimbo() or e.components.health:IsDead())
-       then
+      then
         -- print("CHARGE WUZZY", e)
         e:Charge()
         cnt = cnt + 1
@@ -400,37 +400,37 @@ local function ModifySGClient(sg)
   local atk_deststate_fn = atk_handler.deststate
 
   local new_handler =
-    ActionHandler(
-    ACTIONS.ATTACK,
-    function(inst, action, ...)
-      local state = atk_deststate_fn(inst, action, ...)
-      local equip = inst.replica.inventory:GetEquippedItem(EQUIPSLOTS.HANDS)
-      local rider = inst.replica.rider
+      ActionHandler(
+        ACTIONS.ATTACK,
+        function(inst, action, ...)
+          local state = atk_deststate_fn(inst, action, ...)
+          local equip = inst.replica.inventory:GetEquippedItem(EQUIPSLOTS.HANDS)
+          local rider = inst.replica.rider
 
-      if
-        inst.prefab == "zeta" and state == "attack" and inst.components.skilltreeupdater ~= nil and
-          inst.components.skilltreeupdater:IsActivated("zeta_honeysmith_melissa_1") and
-          not (rider ~= nil and rider:IsRiding()) and
-          equip ~= nil and
-          equip:HasTag("beemaster_weapon") and
-          equip.ShouldSmashClient ~= nil and
-          equip:ShouldSmashClient()
-       then
-        return "attack_zeta_smash"
-      end
+          if
+              inst.prefab == "zeta" and state == "attack" and inst.components.skilltreeupdater ~= nil and
+              inst.components.skilltreeupdater:IsActivated("zeta_honeysmith_melissa_1") and
+              not (rider ~= nil and rider:IsRiding()) and
+              equip ~= nil and
+              equip:HasTag("beemaster_weapon") and
+              equip.ShouldSmashClient ~= nil and
+              equip:ShouldSmashClient()
+          then
+            return "attack_zeta_smash"
+          end
 
-      return state
-    end,
-    atk_handler.condition
-  )
+          return state
+        end,
+        atk_handler.condition
+      )
 
   local blink_swap_handler =
-    ActionHandler(
-    ACTIONS.ZETA_BLINK_SWAP_APPROX,
-    function(inst, action)
-      return "quicktele"
-    end
-  )
+      ActionHandler(
+        ACTIONS.ZETA_BLINK_SWAP_APPROX,
+        function(inst, action)
+          return "quicktele"
+        end
+      )
 
   sg.actionhandlers[new_handler.action] = new_handler
   sg.actionhandlers[blink_swap_handler.action] = blink_swap_handler
@@ -442,36 +442,36 @@ local function ModifySGMaster(sg)
   local atk_deststate_fn = atk_handler.deststate
 
   local new_handler =
-    ActionHandler(
-    ACTIONS.ATTACK,
-    function(inst, action, ...)
-      local state = atk_deststate_fn(inst, action, ...)
-      local weapon = inst.components.combat ~= nil and inst.components.combat:GetWeapon() or nil
+      ActionHandler(
+        ACTIONS.ATTACK,
+        function(inst, action, ...)
+          local state = atk_deststate_fn(inst, action, ...)
+          local weapon = inst.components.combat ~= nil and inst.components.combat:GetWeapon() or nil
 
-      if
-        inst.prefab == "zeta" and state == "attack" and inst.components.skilltreeupdater ~= nil and
-          inst.components.skilltreeupdater:IsActivated("zeta_honeysmith_melissa_1") and
-          not (inst.components.rider ~= nil and inst.components.rider:IsRiding()) and
-          weapon ~= nil and
-          weapon:HasTag("beemaster_weapon") and
-          weapon.ShouldSmash ~= nil and
-          weapon:ShouldSmash()
-       then
-        return "attack_zeta_smash"
-      end
+          if
+              inst.prefab == "zeta" and state == "attack" and inst.components.skilltreeupdater ~= nil and
+              inst.components.skilltreeupdater:IsActivated("zeta_honeysmith_melissa_1") and
+              not (inst.components.rider ~= nil and inst.components.rider:IsRiding()) and
+              weapon ~= nil and
+              weapon:HasTag("beemaster_weapon") and
+              weapon.ShouldSmash ~= nil and
+              weapon:ShouldSmash()
+          then
+            return "attack_zeta_smash"
+          end
 
-      return state
-    end,
-    atk_handler.condition
-  )
+          return state
+        end,
+        atk_handler.condition
+      )
 
   local blink_swap_handler =
-    ActionHandler(
-    ACTIONS.ZETA_BLINK_SWAP_APPROX,
-    function(inst, action)
-      return "quicktele"
-    end
-  )
+      ActionHandler(
+        ACTIONS.ZETA_BLINK_SWAP_APPROX,
+        function(inst, action)
+          return "quicktele"
+        end
+      )
 
   sg.actionhandlers[new_handler.action] = new_handler
   sg.actionhandlers[blink_swap_handler.action] = blink_swap_handler
@@ -502,6 +502,13 @@ local function tryModifySG(inst)
   end
 end
 
+-- client side
+local function updateMotherHiveDisplay(inst)
+  if inst.UpdateMotherHiveDisplay ~= nil then
+    inst.UpdateMotherHiveDisplay()
+  end
+end
+
 -- This initializes for both the server and client. Tags can be added here.
 local common_postinit = function(inst)
   inst.soundsname = "zeta"
@@ -517,9 +524,20 @@ local common_postinit = function(inst)
 
   inst:DoTaskInTime(0, tryModifySG)
 
+  inst.net_hivechildren = net_shortint(inst.GUID, "zeta.hivechildren", "hivechildren_dirty")
+  inst.net_hivechildren:set(-1)
+  inst.net_hivemaxchildren = net_shortint(inst.GUID, "zeta.hivemaxchildren", "hivemaxchildren_dirty")
+  inst.net_hivemaxchildren:set(-1)
+  inst.net_hivehoney = net_shortint(inst.GUID, "zeta.hivehoney", "hivehoney_dirty")
+  inst.net_hivehoney:set(-1)
+
   if not TheNet:IsDedicated() then
     inst._activefx = {}
     inst:ListenForEvent("playeractivated", EnablePollenFx)
+
+    inst:ListenForEvent("hivechildren_dirty", updateMotherHiveDisplay)
+    inst:ListenForEvent("hivemaxchildren_dirty", updateMotherHiveDisplay)
+    inst:ListenForEvent("hivehoney_dirty", updateMotherHiveDisplay)
   end
 end
 
@@ -570,20 +588,32 @@ local function setTyrantStats(inst)
   setMaxHunger(inst, TUNING.ZETA_HUNGER_TYRANT)
   setMaxSanity(inst, TUNING.ZETA_SANITY_TYRANT)
   -- tyrant damage multiplier -> CheckHiveUpgrade
+
+  inst.components.beesummoner.onregenfn = function(num)
+    inst.components.hunger:DoDelta(-num * TUNING.ZETA_SUMMON_REGEN_HUNGER_COST_TYRANT)
+  end
 end
 
 local function setShepherdStats(inst)
   setMaxHealth(inst, TUNING.ZETA_HEALTH_SHEPHERD)
   setMaxHunger(inst, TUNING.ZETA_HUNGER_SHEPHERD)
   setMaxSanity(inst, TUNING.ZETA_SANITY_SHEPHERD)
-  inst.components.combat.damagemultiplier = TUNING.OZZY_SHEPHERD_DAMAGE_MULTIPLIER
+  inst.components.combat.damagemultiplier = TUNING.ZETA_SHEPHERD_DAMAGE_MULTIPLIER
+
+  inst.components.beesummoner.onregenfn = function(num)
+    inst.components.hunger:DoDelta(-num * TUNING.ZETA_SUMMON_REGEN_HUNGER_COST_SHEPHERD)
+  end
 end
 
 local function setDefaultStats(inst)
   setMaxHealth(inst, TUNING.ZETA_HEALTH)
   setMaxHunger(inst, TUNING.ZETA_HUNGER)
   setMaxSanity(inst, TUNING.ZETA_SANITY)
-  inst.components.combat.damagemultiplier = TUNING.OZZY_DEFAULT_DAMAGE_MULTIPLIER
+  inst.components.combat.damagemultiplier = TUNING.ZETA_DEFAULT_DAMAGE_MULTIPLIER
+
+  inst.components.beesummoner.onregenfn = function(num)
+    inst.components.hunger:DoDelta(-num * TUNING.ZETA_SUMMON_REGEN_HUNGER_COST)
+  end
 end
 
 local function OnActivateSkill(inst, data)
@@ -637,16 +667,23 @@ local master_postinit = function(inst)
   inst.components.health:SetMaxHealth(TUNING.ZETA_HEALTH)
   inst.components.hunger:SetMax(TUNING.ZETA_HUNGER)
   inst.components.sanity:SetMax(TUNING.ZETA_SANITY)
-  inst.components.combat.damagemultiplier = TUNING.OZZY_DEFAULT_DAMAGE_MULTIPLIER
+  inst.components.combat.damagemultiplier = TUNING.ZETA_DEFAULT_DAMAGE_MULTIPLIER
   inst.components.temperature.inherentinsulation = -TUNING.INSULATION_SMALL
 
   inst.components.foodaffinity:AddPrefabAffinity("honeyham", TUNING.AFFINITY_15_CALORIES_LARGE)
 
   inst:AddComponent("beesummoner")
-  inst.components.beesummoner:SetMaxChildren(TUNING.OZZY_MAX_SUMMON_BEES)
-  inst.components.beesummoner:SetSummonChance(TUNING.OZZY_SUMMON_CHANCE)
-  inst.components.beesummoner:SetMaxStore(TUNING.OZZY_MAX_BEES_STORE)
+  inst.components.beesummoner:SetMaxChildren(TUNING.ZETA_MAX_SUMMON_BEES)
+  inst.components.beesummoner:SetSummonChance(TUNING.ZETA_SUMMON_CHANCE)
+  inst.components.beesummoner:SetMaxStore(TUNING.ZETA_MAX_BEES_STORE)
   inst.components.beesummoner.childprefabfn = GetChildPrefab
+  inst.components.beesummoner.shouldregenfn = function()
+    return inst.components.hunger:GetPercent() >= TUNING.ZETA_SUMMON_REGEN_HUNGER_THRESHOLD
+  end
+  inst.components.beesummoner.onregenfn = function(num)
+    inst.components.hunger:DoDelta(-num * TUNING.ZETA_SUMMON_REGEN_HUNGER_COST)
+  end
+
   inst:ListenForEvent("onnumstorechange", OnNumStoreChange)
 
   SeasonalChanges(inst, TheWorld.state.season)
@@ -686,11 +723,11 @@ local master_postinit = function(inst)
       local skilltreeupdater = inst.components.skilltreeupdater
 
       if
-        skilltreeupdater:IsActivated("zeta_metapimancer_tyrant_2") and math.random() <= calcChance(inst, 0.25, 1.0, 0.3)
-       then
-        local minions = findNearbyMinions(inst, TUNING.OZZY_TYRANT_REDIRECT_DAMAGE_MINIONS)
+          skilltreeupdater:IsActivated("zeta_metapimancer_tyrant_2") and math.random() <= calcChance(inst, 0.25, 1.0, 0.3)
+      then
+        local minions = findNearbyMinions(inst, TUNING.ZETA_TYRANT_REDIRECT_DAMAGE_MINIONS)
 
-        if #minions >= TUNING.OZZY_TYRANT_REDIRECT_DAMAGE_MINIONS then
+        if #minions >= TUNING.ZETA_TYRANT_REDIRECT_DAMAGE_MINIONS then
           for i, m in ipairs(minions) do
             -- print("DIRECT DAMAGE ", m)
             m.components.health:DoDelta(10 * amount)
@@ -705,15 +742,34 @@ local master_postinit = function(inst)
       end
 
       if
-        skilltreeupdater:IsActivated("zeta_metapimancer_shepherd_2") and
+          skilltreeupdater:IsActivated("zeta_metapimancer_shepherd_2") and
           math.random() <= calcChance(inst, 0.2, 0.5, 0.3)
-       then
+      then
         enrageMinions(inst)
       end
     end
 
     -- default
     return oldDoDelta(comp, amount, ...)
+  end
+
+  inst._onhivenumchildren = function()
+    if inst._hive ~= nil and inst._hive.components.childspawner then
+      inst.net_hivechildren:set(inst._hive.components.childspawner:NumChildren() + inst._hive.components.childspawner:NumEmergencyChildren())
+      inst.net_hivemaxchildren:set(inst._hive.components.childspawner.maxchildren + inst._hive.components.childspawner.maxemergencychildren)
+    else
+      inst.net_hivechildren:set(-1)
+      inst.net_hivemaxchildren:set(-1)
+    end
+  end
+
+  inst._onhivenumhoney = function()
+    if inst._hive ~= nil and inst._hive._container ~= nil then
+      local has, numhoney = inst._hive._container.components.container:Has("honey", 1)
+      inst.net_hivehoney:set(numhoney)
+    else
+      inst.net_hivehoney:set(-1)
+    end
   end
 
   inst.OnSave = OnSave

@@ -44,44 +44,46 @@ local function OnSummonerRemove(self, summoner)
 end
 
 local BeeSummoner =
-  Class(
-  function(self, inst)
-    self.inst = inst
-    self.children = {}
-    self.numchildren = 0
-    self.maxchildren = 0
-    self.childname = "mutantkillerbee"
-    self.childprefabfn = nil
-    self.summonchance = 0.3
-    self.radius = 0.5
-    self.maxstore = 6
-    self.numstore = self.maxstore
-    self.regentask = nil
-    self.regentick = 5
-    self.tickscale = 3
-    self.maxticks = 6
-    self.currenttick = 0
-    self.store_modifiers_add = {}
-    self.regentick_modifiers_mult = {}
+    Class(
+      function(self, inst)
+        self.inst = inst
+        self.children = {}
+        self.numchildren = 0
+        self.maxchildren = 0
+        self.childname = "mutantkillerbee"
+        self.childprefabfn = nil
+        self.summonchance = 0.3
+        self.radius = 0.5
+        self.maxstore = 6
+        self.numstore = self.maxstore
+        self.regentask = nil
+        self.regentick = 5
+        self.tickscale = 3
+        self.maxticks = 6
+        self.currenttick = 0
+        self.store_modifiers_add = {}
+        self.regentick_modifiers_mult = {}
+        self.shouldregenfn = nil -- external should regen condition
+        self.onregenfn = nil
 
-    self._onchildkilled = function(child)
-      self:OnChildKilled(child)
-    end
-    self._onattack = function(inst, data)
-      self:SummonChild(data.target)
-    end
-    self._onplayerleft = function(src, player)
-      OnPlayerLeft(self, player)
-    end
-    self._onsummonerremove = function(inst)
-      OnSummonerRemove(self, inst)
-    end
+        self._onchildkilled = function(child)
+          self:OnChildKilled(child)
+        end
+        self._onattack = function(inst, data)
+          self:SummonChild(data.target)
+        end
+        self._onplayerleft = function(src, player)
+          OnPlayerLeft(self, player)
+        end
+        self._onsummonerremove = function(inst)
+          OnSummonerRemove(self, inst)
+        end
 
-    self.inst:ListenForEvent("onattackother", self._onattack, inst)
-    self.inst:ListenForEvent("ms_playerleft", self._onplayerleft, TheWorld)
-    self.inst:ListenForEvent("onremove", self._onsummonerremove, self.inst)
-  end
-)
+        self.inst:ListenForEvent("onattackother", self._onattack, inst)
+        self.inst:ListenForEvent("ms_playerleft", self._onplayerleft, TheWorld)
+        self.inst:ListenForEvent("onremove", self._onsummonerremove, self.inst)
+      end
+    )
 
 function BeeSummoner:OnRemoveFromEntity()
   for k, v in pairs(self.children) do
@@ -113,12 +115,10 @@ local function Refresh(self)
   self.numstore = math.min(self.numstore, self:GetTotalStore())
 
   if currentnumstore ~= self.numstore then
-    self.inst:PushEvent("onnumstorechange", {numstore = self.numstore})
+    self.inst:PushEvent("onnumstorechange", { numstore = self.numstore })
   end
 
-  if self.numstore < self:GetTotalStore() then
-    self:StartRegen()
-  end
+  self:StartRegen()
 end
 
 function BeeSummoner:SetMaxStore(num)
@@ -204,12 +204,12 @@ end
 
 function BeeSummoner:SetTick(tick)
   self.currenttick = tick
-  self.inst:PushEvent("onregentick", {currenttick = self.currenttick})
+  self.inst:PushEvent("onregentick", { currenttick = self.currenttick })
 end
 
 function BeeSummoner:AddNumStore(num)
   self.numstore = math.min(math.max(0, self.numstore + num), self:GetTotalStore())
-  self.inst:PushEvent("onnumstorechange", {numstore = self.numstore})
+  self.inst:PushEvent("onnumstorechange", { numstore = self.numstore })
 
   if self.numstore >= self:GetTotalStore() then
     self:SetTick(0)
@@ -218,6 +218,7 @@ function BeeSummoner:AddNumStore(num)
 end
 
 function BeeSummoner:GetNumStoreRegen()
+  -- regen more for extra bees from modifiers
   local totalstore = self:GetTotalStore()
   local added = totalstore - self.maxstore
 
@@ -228,17 +229,27 @@ function BeeSummoner:GetNumStoreRegen()
   return 1 + math.floor(math.log(added))
 end
 
+function BeeSummoner:ShouldRegen()
+  return self.numstore + self.numchildren < self:GetTotalStore() and (self.shouldregenfn == nil or self.shouldregenfn())
+end
+
 local function DoRegenTick(inst, self)
   self:SetTick(self.currenttick + 1)
   -- print("REGEN, TICK : ", self.currenttick)
 
   if self.currenttick >= self.maxticks then
-    self:AddNumStore(self:GetNumStoreRegen())
-    self:SetTick(0)
+    local numregen = self:GetNumStoreRegen()
+    self:AddNumStore(numregen)
 
-    if self.numstore >= self:GetTotalStore() then
-      return
+    if self.onregenfn ~= nil then
+      self.onregenfn(numregen)
     end
+
+    self:SetTick(0)
+  end
+
+  if not self:ShouldRegen() then
+    return
   end
 
   local regentick = self:GetRegenTick()
@@ -255,7 +266,8 @@ function BeeSummoner:StopRegen()
 end
 
 function BeeSummoner:StartRegen(tick)
-  if self.numstore >= self:GetTotalStore() then
+  -- if num spawned children + num stored children exceeding max, stop regen
+  if not self:ShouldRegen() then
     self:StopRegen()
     return
   end
@@ -314,7 +326,7 @@ function BeeSummoner:DoSummonChild(target)
     self:AddNumStore(-1)
     self:StartRegen()
 
-    self.inst:PushEvent("onsummonchild", {child = child})
+    self.inst:PushEvent("onsummonchild", { child = child })
   end
 
   return child

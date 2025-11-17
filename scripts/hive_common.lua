@@ -18,15 +18,15 @@ local function OnLoad(inst, data)
   end
 end
 
-local function setowner(inst, owner)
+local function OnChildBuilt(inst, data)
+  local owner = data.builder
   if owner and owner:HasTag("player") and owner.prefab == "zeta" then
     inst._ownerid = owner.userid
-  end
-end
 
-local function OnChildBuilt(inst, data)
-  local builder = data.builder
-  setowner(inst, builder)
+    if owner._hive ~= nil then
+      owner._hive:OnSlave()
+    end
+  end
 end
 
 return {

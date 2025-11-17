@@ -28,12 +28,13 @@ local assets = {
 
 local SPEECH = {
   ATTACK = {
-    "SLAY 'EM ALL!!!",
-    "ATTACC!!!",
-    "TO WARRRR!!!"
+    "HOW DARE YOU!",
+    "SO YOU CHOSE VIOLENCE.",
+    "GET STUNG, DUNG!",
+    "YOU GET WHAT YOU DESERVE. IT'S PAIN!"
   },
   SPAWN = {
-    "NO WORKY NO HONEY.",
+    "WORK WORK WORK WORK WORK~",
     "AHHHH FLOWERS!",
     "MORNIN'!"
   },
@@ -43,34 +44,33 @@ local SPEECH = {
     "HOT HOT HOT!!!"
   },
   FREEZE = {
-    "OUCH! IT'S FREEZING!",
-    "BING CHILLING.",
+    "LET IT GO, LET IT GOOO!",
+    "WELCOME TO CANADA.",
     "BRRRRRR!"
   },
   HAMMER = {
     "WELL IF THAT'S YOUR CHOICE THEN...",
     "BUT... WHY?",
-    "IF DOING THIS MAY HELP, THEN JUST DO IT!",
-    "AIN'T WE GOOD ENOUGH, MASTER?"
+    "WE WILL REPORT YOU FOR ABUSE.",
+    "DID YOU HAVE AN AFFAIR?"
   },
   HIT = {
     "THE HIVE IS UNDER ATTACK!!!",
     "PROTECT THE HIVE!",
-    "HOW DARE YOU?",
-    "WE WILL KILL YOU INTRUDER!"
+    "YOU DARE MESSING WITH US?"
   },
   STAGE_ADVANCE = {
-    "BIGGER HIVE COME STRONGER BEES.",
-    "MORE BEES TO COME.",
+    "UPGRADES, PEOPLE. UPGRADES.",
+    "STONK.",
     "UNLIMITED POWERRRR!!!"
   },
   UPGRADE = {
-    "THANKS, MASTER!",
-    "WE ARE GRATEFUL OF THAT!",
+    "THANKS, I GUESS.",
+    "FINALLY!",
     "MOARRRR!"
   },
   WELCOME = {
-    "WELCOME BACK, MASTER!",
+    "GOT SOME FREE TIME TODAY, ARE WE?",
     "WE ARE GLAD TO SEE YOU!",
     "WE'VE BEEN WAITING FOR YOU!",
     "FINALLY WE'RE UNITED!"
@@ -129,6 +129,12 @@ local function UnlinkPlayer(inst)
   -- if _hive is already set to something else, do not set to nil
   if owner ~= nil and owner._hive == inst then
     owner._hive = nil
+
+    owner._onhivenumchildren()
+    owner._onhivenumhoney()
+
+    owner:RemoveEventCallback("onnumchildren", owner._onhivenumchildren, inst)
+    owner:RemoveEventCallback("onnumhoney", owner._onhivenumhoney, inst)
   end
 end
 
@@ -154,9 +160,9 @@ end
 
 local function StartSpawning(inst)
   if
-    inst.components.childspawner ~= nil and
+      inst.components.childspawner ~= nil and
       not (inst.components.freezable ~= nil and inst.components.freezable:IsFrozen())
-   then
+  then
     inst:Say(SPEECH.SPAWN)
     inst.components.childspawner:StartSpawning()
   end
@@ -291,7 +297,7 @@ local function IsValidOwner(inst, owner)
 
   if inst._ownerid then
     return owner.userid and owner.userid == inst._ownerid and owner.prefab == "zeta" and
-      not (owner._hive and owner._hive ~= inst)
+        not (owner._hive and owner._hive ~= inst)
   end
 
   return false
@@ -314,6 +320,10 @@ local function OnHit(inst, attacker, damage)
   end
 end
 
+local function has_valid_container(inst)
+  return inst._container and inst._container:IsValid() and inst._container.components.container ~= nil
+end
+
 local function OnWork(inst, worker, workleft)
   if inst.components.container ~= nil then
     inst.components.container:DropEverything()
@@ -333,7 +343,7 @@ end
 
 local function GetSlaves(inst, moremusttags)
   local x, y, z = inst.Transform:GetWorldPosition()
-  local musttags = {"mutantslavehive"}
+  local musttags = { "mutantslavehive" }
 
   if moremusttags ~= nil and type(moremusttags) == "table" then
     for i, tag in ipairs(moremusttags) do
@@ -342,15 +352,15 @@ local function GetSlaves(inst, moremusttags)
   end
 
   local entities =
-    TheSim:FindEntities(
-    x,
-    y,
-    z,
-    TUNING.MUTANT_BEEHIVE_MASTER_SLAVE_DIST,
-    {"_combat", "_health"},
-    {"INLIMBO", "player"},
-    musttags
-  )
+      TheSim:FindEntities(
+        x,
+        y,
+        z,
+        TUNING.MUTANT_BEEHIVE_MASTER_SLAVE_DIST,
+        { "_combat", "_health" },
+        { "INLIMBO", "player" },
+        musttags
+      )
 
   local slaves = {}
 
@@ -368,7 +378,7 @@ local function GetUtils(inst)
   local x, y, z = inst.Transform:GetWorldPosition()
 
   local entities =
-    TheSim:FindEntities(x, y, z, TUNING.MUTANT_BEEHIVE_MASTER_SLAVE_DIST, {}, {"INLIMBO", "player"}, {"mutantutil"})
+      TheSim:FindEntities(x, y, z, TUNING.MUTANT_BEEHIVE_MASTER_SLAVE_DIST, {}, { "INLIMBO", "player" }, { "mutantutil" })
 
   local utils = {}
 
@@ -381,15 +391,85 @@ local function GetUtils(inst)
   return utils
 end
 
-local function GetNumChildrenRegen(inst)
-  local barracks = GetSlaves(inst, {"mutantbarrack"})
-  local numbarracks = #barracks
+local function NumEmergencyChildrenBase(inst)
+  return TUNING.MUTANT_BEEHIVE_DEFAULT_EMERGENCY_BEES + (inst._stage.LEVEL - 1) * TUNING.MUTANT_BEEHIVE_DELTA_BEES
+end
 
-  if numbarracks < 1 then
-    return 0
+local function getnumhoney(inst)
+  if has_valid_container(inst) then
+    local has, numfound = inst._container.components.container:Has("honey", 1)
+    return numfound
   end
 
-  return math.ceil(math.log(numbarracks))
+  return 0
+end
+
+local function GetNumChildrenDecay(inst)
+  local numbase = NumEmergencyChildrenBase(inst)
+  local numhoney = getnumhoney(inst)
+
+  if inst.components.childspawner.emergencychildreninside > numbase then
+    local diff = inst.components.childspawner.emergencychildreninside - numbase
+    local maintaincost = RoundBiasedUp(TUNING.MUTANT_BEEHIVE_MAINTAIN_COST_A * (TUNING.MUTANT_BEEHIVE_MAINTAIN_COST_S^inst._stage.LEVEL) * (TUNING.MUTANT_BEEHIVE_MAINTAIN_COST_B^diff))
+
+    -- not enough honey to maintain
+    if numhoney < maintaincost then
+      local numdecay = math.max(1, RoundBiasedUp(TUNING.MUTANT_BEEHIVE_MAINTAIN_DECAY_RATE * diff))
+      return -numdecay, numhoney
+    end
+
+    return 0, maintaincost
+  end
+
+  return 0, 0
+end
+
+local function regenCostFormula(inst, num)
+  return RoundBiasedUp(TUNING.MUTANT_BEEHIVE_REGEN_COST_A * (TUNING.MUTANT_BEEHIVE_REGEN_COST_S^inst._stage.LEVEL) * (TUNING.MUTANT_BEEHIVE_REGEN_COST_B^num))
+end
+
+local function GetNumChildrenRegen(inst)
+  local numbase = NumEmergencyChildrenBase(inst)
+  local numhoney = getnumhoney(inst)
+  local barracks = GetSlaves(inst, { "mutantbarrack" })
+  local numbarracks = #barracks
+
+  local numregen = 1
+  if numbarracks > 0 then
+    numregen = 1 + math.ceil(math.log(numbarracks))
+  end
+
+  -- calculate exact number of regen to avoid over-calculate cost
+  numregen = math.min(
+    numregen,
+    math.max(0, inst.components.childspawner.maxemergencychildren - inst.components.childspawner:NumEmergencyChildren())
+  )
+
+  local freeregen = math.min(numregen, math.max(0, numbase - inst.components.childspawner.emergencychildreninside))
+  local costregen = math.max(0, numregen - freeregen)
+  local cost = regenCostFormula(inst, costregen)
+  -- no honey
+  if numhoney <= 0 then
+    return freeregen, 0
+  end
+
+  if numhoney >= cost then
+    return numregen, cost
+  end
+
+  -- find highest number of cost regen given num honey
+  local cancostregen = 0
+  local cancost = 0
+  for c = costregen-1, 0, -1 do
+    local regencost = regenCostFormula(inst, c)
+    if regencost <= numhoney then
+      cancostregen = c
+      cancost = regencost
+      break
+    end
+  end
+
+  return freeregen + cancostregen, cancost
 end
 
 local function GetNumChildrenFromSlaves(slaves)
@@ -409,12 +489,14 @@ local function GetNumChildrenFromSlaves(slaves)
   return num
 end
 
+
+
 local function OnSlave(inst)
   if inst.components.childspawner then
     local slaves = GetSlaves(inst)
-    inst.components.childspawner.maxemergencychildren =
-      TUNING.MUTANT_BEEHIVE_DEFAULT_EMERGENCY_BEES + (inst._stage.LEVEL - 1) * TUNING.MUTANT_BEEHIVE_DELTA_BEES +
-      GetNumChildrenFromSlaves(slaves)
+
+    -- do not use SetMaxEmergencyChildren here as it will refill children inside to max
+    inst.components.childspawner.maxemergencychildren = NumEmergencyChildrenBase(inst) + GetNumChildrenFromSlaves(slaves)
     inst.components.childspawner:TryStopUpdate()
     inst.components.childspawner:StartUpdate()
 
@@ -429,6 +511,13 @@ local function OnSlave(inst)
   end
 
   local utils = GetUtils(inst)
+
+  -- avoid duplicate event callbacks
+  if inst._owner ~= nil and inst._container ~= nil then
+    inst._owner:RemoveEventCallback("itemget", inst._owner._onhivenumhoney, inst._container)
+    inst._owner:RemoveEventCallback("itemlose", inst._owner._onhivenumhoney, inst._container)
+  end
+
   inst._container = nil
 
   for i, util in ipairs(utils) do
@@ -436,6 +525,14 @@ local function OnSlave(inst)
       inst._container = util
     end
   end
+
+  if inst._owner ~= nil and inst._container ~= nil then
+    inst._owner:ListenForEvent("itemget", inst._owner._onhivenumhoney, inst._container)
+    inst._owner:ListenForEvent("itemlose", inst._owner._onhivenumhoney, inst._container)
+  end
+
+  inst:PushEvent("onnumchildren")
+  inst:PushEvent("onnumhoney")
 end
 
 local function checkContainerTokens(inst)
@@ -466,16 +563,16 @@ end
 
 local function HasSlaveWithTag(inst, tag)
   local hive =
-    FindEntity(
-    inst,
-    TUNING.MUTANT_BEEHIVE_MASTER_SLAVE_DIST,
-    function(guy)
-      return IsSlave(inst, guy)
-    end,
-    {"_combat", "_health"},
-    {"INLIMBO", "player"},
-    {tag}
-  )
+      FindEntity(
+        inst,
+        TUNING.MUTANT_BEEHIVE_MASTER_SLAVE_DIST,
+        function(guy)
+          return IsSlave(inst, guy)
+        end,
+        { "_combat", "_health" },
+        { "INLIMBO", "player" },
+        { tag }
+      )
 
   return hive ~= nil
 end
@@ -510,14 +607,12 @@ local function SetStage(inst, stage)
   inst.components.health:SetMaxHealth(inst._stage.HEALTH)
 
   inst.components.childspawner:SetRegenPeriod(
-    TUNING.MUTANT_BEEHIVE_DEFAULT_REGEN_TIME - (stage - 1) * TUNING.MUTANT_BEEHIVE_DELTA_REGEN_TIME
+    TUNING.MUTANT_BEEHIVE_DEFAULT_REGEN_TIME - (inst._stage.LEVEL - 1) * TUNING.MUTANT_BEEHIVE_DELTA_REGEN_TIME
   )
   inst.components.childspawner:SetSpawnPeriod(
     TUNING.MUTANT_BEEHIVE_DEFAULT_RELEASE_TIME - (stage - 1) * TUNING.MUTANT_BEEHIVE_DELTA_RELEASE_TIME
   )
-  inst.components.childspawner:SetMaxEmergencyChildren(
-    TUNING.MUTANT_BEEHIVE_DEFAULT_EMERGENCY_BEES + (stage - 1) * TUNING.MUTANT_BEEHIVE_DELTA_BEES
-  )
+  inst.components.childspawner:SetMaxEmergencyChildren(NumEmergencyChildrenBase(inst))
 
   local loots = {}
   local numhoneycombs = TUNING.MUTANT_BEEHIVE_UPGRADES_PER_STAGE * (math.min(stage, 2) - 1)
@@ -541,11 +636,11 @@ local function FindEnemy(inst)
     TUNING.MUTANT_BEEHIVE_WATCH_DIST,
     function(guy)
       return inst.components.combat:CanTarget(guy) and guy.components.combat and guy.components.combat.target and
-        (guy.components.combat.target:HasTag("beemaster") or guy.components.combat.target:HasTag("beemutant"))
+          (guy.components.combat.target:HasTag("beemaster") or guy.components.combat.target:HasTag("beemutant"))
     end,
-    {"_combat", "_health"},
-    {"beemutant", "INLIMBO", "player"},
-    {"monster", "insect", "animal", "character"}
+    { "_combat", "_health" },
+    { "beemutant", "INLIMBO", "player" },
+    { "monster", "insect", "animal", "character" }
   )
 end
 
@@ -581,9 +676,9 @@ local function onwallattacked(inst, wall, data)
   end
 
   if
-    not (attacker:HasTag("monster") or attacker:HasTag("animal") or attacker:HasTag("insect") or
-      attacker:HasTag("character"))
-   then
+      not (attacker:HasTag("monster") or attacker:HasTag("animal") or attacker:HasTag("insect") or
+        attacker:HasTag("character"))
+  then
     return
   end
 
@@ -604,7 +699,7 @@ end
 local function WatchWalls(inst)
   local x, y, z = inst.Transform:GetWorldPosition()
   local walls =
-    TheSim:FindEntities(x, y, z, TUNING.MUTANT_BEEHIVE_WATCH_DIST, {"_combat", "_health"}, {"INLIMBO"}, {"wall"})
+      TheSim:FindEntities(x, y, z, TUNING.MUTANT_BEEHIVE_WATCH_DIST, { "_combat", "_health" }, { "INLIMBO" }, { "wall" })
 
   for i, wall in ipairs(walls) do
     if not inst._watched_walls[wall] then
@@ -634,7 +729,7 @@ local function SelfRepair(inst)
   if inst and inst.components.childspawner and inst.components.health then
     if not inst.components.health:IsDead() then
       local numfixers =
-        inst.components.childspawner.childreninside + inst.components.childspawner.emergencychildreninside
+          inst.components.childspawner.childreninside + inst.components.childspawner.emergencychildreninside
       local recover = TUNING.MUTANT_BEEHIVE_RECOVER_PER_CHILD * numfixers
       inst.components.health:DoDelta(recover, true, "self_repair")
 
@@ -650,23 +745,23 @@ end
 
 local function OnHaunt(inst)
   if
-    inst.components.childspawner == nil or not inst.components.childspawner:CanSpawn() or
+      inst.components.childspawner == nil or not inst.components.childspawner:CanSpawn() or
       math.random() > TUNING.HAUNT_CHANCE_HALF
-   then
+  then
     return false
   end
 
   local target =
-    FindEntity(
-    inst,
-    25,
-    function(guy)
-      return inst.components.combat:CanTarget(guy)
-    end,
-    {"_combat"}, --See entityreplica.lua (re: "_combat" tag)
-    {"insect", "playerghost", "INLIMBO"},
-    {"character", "animal", "monster"}
-  )
+      FindEntity(
+        inst,
+        25,
+        function(guy)
+          return inst.components.combat:CanTarget(guy)
+        end,
+        { "_combat" }, --See entityreplica.lua (re: "_combat" tag)
+        { "insect", "playerghost", "INLIMBO" },
+        { "character", "animal", "monster" }
+      )
 
   if target ~= nil then
     OnHit(inst, target)
@@ -675,12 +770,23 @@ local function OnHaunt(inst)
   return false
 end
 
-local function LinkToPlayer(inst, player)
+local function LinkToPlayer(inst, player, say)
   if IsValidOwner(inst, player) then
-    inst:Say(SPEECH.WELCOME)
+    if say == nil or say then
+      inst:Say(SPEECH.WELCOME)
+    end
+
     inst._ownerid = player.userid
     inst._owner = player
     player._hive = inst
+
+    player:ListenForEvent("onnumchildren", player._onhivenumchildren , inst)
+    player:ListenForEvent("onnumhoney", player._onhivenumhoney, inst)
+
+    -- kick off
+    inst:PushEvent("onnumchildren")
+    inst:PushEvent("onnumhoney")
+
     return true
   end
 
@@ -691,8 +797,11 @@ local function InheritOwner(inst, origin)
   inst._ownerid = origin._ownerid
 
   if origin._owner then
-    inst._owner = origin._owner
-    origin._owner._hive = inst
+    origin._owner._hive = nil
+    local linked = LinkToPlayer(inst, origin._owner, false)
+    if not linked then
+      print("UNEXPECTED, NOT LINKED DURING OWNER INHERITANCE")
+    end
   end
 end
 
@@ -713,21 +822,12 @@ local function OnPlayerJoined(inst, player)
     -- if the player is the owner, and is not a seamless character (like Wonkey), which means the player despawned and joined using another character
     -- then destroy the mother hive
     if
-      inst._ownerid and player.userid and player.userid == inst._ownerid and
+        inst._ownerid and player.userid and player.userid == inst._ownerid and
         (not table.contains(SEAMLESSSWAP_CHARACTERLIST, player.prefab))
-     then
+    then
       print("SAME PLAYER, DIFFERENT CHARACTER, NOT SEAMLESS")
-    -- inst:DoTaskInTime(0,
-    --   function(inst)
-    --     inst.components.lootdropper:DropLoot(inst:GetPosition())
-    --     inst:Remove()
-    --   end)
     end
   end
-end
-
-local function has_valid_container(inst)
-  return inst._container and inst._container:IsValid() and inst._container.components.container ~= nil
 end
 
 local function GiveHoney(inst)
@@ -737,6 +837,7 @@ local function GiveHoney(inst)
 
   local honey = SpawnPrefab("honey")
   inst._container.components.container:GiveItem(honey)
+  inst:PushEvent("onnumhoney")
 end
 
 local function ConvertPollenToHoney(inst)
@@ -748,7 +849,7 @@ local function ConvertPollenToHoney(inst)
 
   for i = 1, maxhoneys do
     local numpollens =
-      math.random(TUNING.MUTANT_BEEHIVE_NUM_POLLENS_PER_HONEY, TUNING.MUTANT_BEEHIVE_NUM_POLLENS_PER_HONEY + 2)
+        math.random(TUNING.MUTANT_BEEHIVE_NUM_POLLENS_PER_HONEY, TUNING.MUTANT_BEEHIVE_NUM_POLLENS_PER_HONEY + 2)
     local has, numfound = inst._container.components.container:Has("zetapollen", numpollens)
     if not has then
       break
@@ -759,17 +860,22 @@ local function ConvertPollenToHoney(inst)
   end
 end
 
+local function consumeHoney(inst, num)
+  inst._container.components.container:ConsumeByName("honey", num)
+  inst:PushEvent("onnumhoney")
+end
+
 local function RefreshHoneyArmor(inst)
   if not has_valid_container(inst) then
     return
   end
 
   local armors =
-    inst._container.components.container:FindItems(
-    function(item)
-      return item.prefab and item.prefab == "armor_honey" and item:IsValid()
-    end
-  )
+      inst._container.components.container:FindItems(
+        function(item)
+          return item.prefab and item.prefab == "armor_honey" and item:IsValid()
+        end
+      )
 
   local chunk = 0.2
 
@@ -784,24 +890,19 @@ local function RefreshHoneyArmor(inst)
 
         if numfound > 0 then
           armor.components.perishable:SetPercent(percent + numfound * chunk)
-          inst._container.components.container:ConsumeByName("honey", numfound)
+          consumeHoney(inst, numfound)
         end
       end
     end
   end
 end
 
-local function AddHoneyProgress(inst, child)
+local function AddHoneyProgress(inst)
   if not has_valid_container(inst) then
     return
   end
 
-  local numpollens = 1
-
-  if child then
-    numpollens = 1 + inst._stage.LEVEL
-  end
-
+  local numpollens = 1 + inst._stage.LEVEL
   local pollen = SpawnPrefab("zetapollen")
   pollen.components.stackable:SetStackSize(numpollens)
   inst._container.components.container:GiveItem(pollen)
@@ -810,33 +911,33 @@ end
 local function onchildgoinghome(inst, data)
   if not inst:HasTag("burnt") then
     if data.child and data.child.components.pollinator and data.child.components.pollinator:HasCollectedEnough() then
-      AddHoneyProgress(inst, data.child)
+      AddHoneyProgress(inst)
     end
   end
 end
 
 local function DoGather(inst)
-  inst._gathertick = inst._gathertick or 0
-
-  local x, y, z = inst.Transform:GetWorldPosition()
-  local entities = TheSim:FindEntities(x, y, z, TUNING.MUTANT_BEEHIVE_WATCH_DIST, {"flower"})
-  local numflowers = #entities
-
-  if numflowers >= 5 - (inst._stage.LEVEL - 1) then
-    inst._gathertick = inst._gathertick + 1
+  if not TheWorld.state.isday then
+    return
   end
 
-  -- stage 1: 8 ticks, stage 2: 7 ticks, stage 3: 6 ticks
-  local requiredticks = 9 - inst._stage.LEVEL
-  if inst._gathertick >= requiredticks then
-    inst._gathertick = inst._gathertick - requiredticks
-    AddHoneyProgress(inst)
+  local x, y, z = inst.Transform:GetWorldPosition()
+  local entities = TheSim:FindEntities(x, y, z, TUNING.MUTANT_BEEHIVE_WATCH_DIST, { "flower" })
+  local numflowers = #entities
+
+  -- num required flowers per bee, check mutantworkerbee.lua
+  if numflowers >= math.max(1, 6 - inst._stage.LEVEL) then
+    for i = 1, inst.components.childspawner.maxchildren do
+      AddHoneyProgress(inst)
+    end
   end
 end
 
 local function StartBackgroundGatherTask(inst)
   if inst._gathertask == nil then
-    inst._gathertask = inst:DoPeriodicTask(10, DoGather)
+    -- add some extra period to penalty auto background gather task
+    local period = inst.components.childspawner.spawnperiod * inst.components.childspawner.maxchildren + (8 - inst._stage.LEVEL) * 5
+    inst._gathertask = inst:DoPeriodicTask(period, DoGather)
   end
 end
 
@@ -871,6 +972,7 @@ local function OnConstructed(inst, doer)
     local new_hive = SpawnPrefab(inst._stage.CONSTRUCT_PRODUCT)
     InheritOwner(new_hive, inst)
     new_hive.Transform:SetPosition(x, y, z)
+    new_hive:Say(SPEECH.STAGE_ADVANCE)
     inst:Remove()
   end
 end
@@ -880,6 +982,19 @@ local function OnBuilt(inst, data)
   if builder and builder:HasTag("player") and builder.prefab == "zeta" then
     inst._ownerid = builder.userid
     LinkToPlayer(inst, builder)
+  end
+end
+
+local function DoDecay(inst)
+  local numdecay, cost = GetNumChildrenDecay(inst)
+
+  if inst.components.childspawner.emergencychildreninside + numdecay >= 0 then
+    inst.components.childspawner:AddEmergencyChildrenInside(numdecay)
+    inst.components.childspawner:StartUpdate()
+  end
+
+  if has_valid_container(inst) and cost > 0 then
+    consumeHoney(inst, cost)
   end
 end
 
@@ -897,20 +1012,23 @@ local function OnInit(inst)
   SetStage(inst, inst._stage.LEVEL)
   OnSlave(inst)
 
-  -- On init, emergencychildreninside always start at 0, so fill half the pool for quickstart
-  inst.components.childspawner.emergencychildreninside =
-    math.floor(inst.components.childspawner.maxemergencychildren / 2)
+  -- from load
+  if inst._emergencychildreninside ~= nil then
+    local diff = inst._emergencychildreninside - inst.components.childspawner.emergencychildreninside
+    if diff > 0 then
+      inst.components.childspawner:AddEmergencyChildrenInside(diff)
+      inst.components.childspawner:StartUpdate()
+    end
+  end
 
   inst:DoPeriodicTask(3, SelfRepair)
-  inst:DoPeriodicTask(30, ConvertPollenToHoney)
+  inst:DoPeriodicTask(10, ConvertPollenToHoney)
   inst:DoPeriodicTask(2, OnSlave)
   inst:DoPeriodicTask(30, RefreshHoneyArmor)
 
-  MakeWatchWalls(inst)
-end
+  inst:DoPeriodicTask(TUNING.MUTANT_BEEHIVE_MAINTAIN_PERIOD, DoDecay)
 
-local function itemtestfn(inst, item, slot)
-  return item and item:HasTag("beemutanttoken")
+  MakeWatchWalls(inst)
 end
 
 local function onopen(inst)
@@ -927,6 +1045,24 @@ local function onclose(inst)
   end
 
   checkContainerTokens(inst)
+end
+
+local function OnSave(inst, data)
+  hive_common.OnSave(inst, data)
+
+  data._emergencychildreninside = inst.components.childspawner.emergencychildreninside
+end
+
+local function OnLoad(inst, data)
+  hive_common.OnLoad(inst, data)
+
+  inst._emergencychildreninside = data._emergencychildreninside
+end
+
+local function updateNetNumChildren(inst)
+  if inst.components.childspawner ~= nil then
+    inst.net_numchildren:set(inst.components.childspawner:NumChildren() + inst.components.childspawner:NumEmergencyChildren())
+  end
 end
 
 local function MakeMotherHive(name, stage_conf)
@@ -980,7 +1116,7 @@ local function MakeMotherHive(name, stage_conf)
     inst.components.childspawner.allowboats = true
     inst.components.childspawner.childname = "mutantbee"
     inst.components.childspawner.emergencychildname = "mutantkillerbee"
-    inst.components.childspawner.emergencychildrenperplayer = TUNING.MUTANT_BEEHIVE_EMERGENCY_BEES_PER_PLAYER
+    inst.components.childspawner.emergencychildrenperplayer = 999
     inst.components.childspawner.canemergencyspawn = true
     inst.components.childspawner:SetEmergencyRadius(TUNING.MUTANT_BEEHIVE_EMERGENCY_RADIUS)
     inst.components.childspawner:SetMaxChildren(TUNING.MUTANT_BEEHIVE_BEES)
@@ -988,7 +1124,9 @@ local function MakeMotherHive(name, stage_conf)
 
     local oldSpawnChild = inst.components.childspawner.SpawnChild
     local oldSpawnEmergencyChild = inst.components.childspawner.SpawnEmergencyChild
-    local oldDoRegen = inst.components.childspawner.DoRegen
+    local oldAddChildrenInside = inst.components.childspawner.AddChildrenInside
+    local oldAddEmergencyChildrenInside = inst.components.childspawner.AddEmergencyChildrenInside
+    local oldOnChildKilled = inst.components.childspawner.OnChildKilled
 
     inst.components.childspawner.SpawnChild = function(comp, target, prefab, ...)
       local newprefab = prefab
@@ -1004,15 +1142,44 @@ local function MakeMotherHive(name, stage_conf)
     end
 
     inst.components.childspawner.DoRegen = function(comp, ...)
-      local result = oldDoRegen(comp, ...)
-
       if comp.regening then
+        if not comp:IsFull() then
+          comp:AddChildrenInside(1)
+        end
+
         if not comp:IsEmergencyFull() then
-          comp:AddEmergencyChildrenInside(GetNumChildrenRegen(inst))
+          local numregen, honeycost = GetNumChildrenRegen(inst)
+
+          comp:AddEmergencyChildrenInside(numregen)
+
+          if has_valid_container(inst) and honeycost > 0 then
+            consumeHoney(inst, honeycost)
+          end
         end
       end
+    end
+
+    inst.components.childspawner.AddChildrenInside = function(comp, count, ...)
+      local result = oldAddChildrenInside(comp, count, ...)
+
+
+      inst:PushEvent("onnumchildren")
 
       return result
+    end
+
+    inst.components.childspawner.AddEmergencyChildrenInside = function(comp, count, ...)
+      local result = oldAddEmergencyChildrenInside(comp, count, ...)
+
+      inst:PushEvent("onnumchildren")
+
+      return result
+    end
+
+    inst.components.childspawner.OnChildKilled = function(comp, child, ...)
+      oldOnChildKilled(comp, child, ...)
+
+      inst:PushEvent("onnumchildren")
     end
 
     inst:DoTaskInTime(0, OnInit)
@@ -1075,11 +1242,10 @@ local function MakeMotherHive(name, stage_conf)
     inst.incombat = false
     inst.OnEntitySleep = OnEntitySleep
     inst.OnEntityWake = OnEntityWake
-    inst.OnSave = hive_common.OnSave
-    inst.OnLoad = hive_common.OnLoad
+    inst.OnSave = OnSave
+    inst.OnLoad = OnLoad
     inst.OnRemoveEntity = OnRemoveEntity
     inst.OnSlave = OnSlave
-    inst.InheritOwner = InheritOwner
     inst.GetSlaves = GetSlaves
     inst.HasSlaveWithTag = HasSlaveWithTag
     inst._onplayerjoined = function(src, player)
@@ -1130,6 +1296,7 @@ local function onteleporthammered(inst)
   inst:Remove()
 end
 
+-- make sure teleportal always has more than enough emergency children to proxy from mother hive
 local function teleportal()
   local inst = CreateEntity()
 
@@ -1167,7 +1334,7 @@ local function teleportal()
   inst.components.childspawner.allowboats = true
   inst.components.childspawner.canemergencyspawn = true
   inst.components.childspawner.emergencychildname = "mutantkillerbee"
-  inst.components.childspawner.emergencychildrenperplayer = TUNING.MUTANT_BEEHIVE_EMERGENCY_BEES_PER_PLAYER
+  inst.components.childspawner.emergencychildrenperplayer = 999
   inst.components.childspawner:SetEmergencyRadius(TUNING.MUTANT_BEEHIVE_EMERGENCY_RADIUS)
   inst.components.childspawner:SetMaxChildren(0)
   inst.components.childspawner:SetMaxEmergencyChildren(250) -- effectively no limit, but still put a cap just in case
@@ -1182,12 +1349,26 @@ local function teleportal()
       return
     end
 
+    -- randomly require honey cost to summon with teleportal
+    if math.random() <= TUNING.MUTANT_TELEPORTAL_SUMMON_COST_CHANCE then
+      if not has_valid_container(source) then
+        return
+      end
+
+      local has, numfound = source._container.components.container:Has("honey", TUNING.MUTANT_TELEPORTAL_SUMMON_COST)
+      if not has then
+        return
+      end
+
+      consumeHoney(source, TUNING.MUTANT_TELEPORTAL_SUMMON_COST)
+    end
+
     local newprefab = PickChildPrefab_Teleportal(inst)
     local child = oldSpawnEmergencyChild(comp, target, newprefab, ...)
 
     if child ~= nil then
-      source.components.childspawner.emergencychildreninside =
-        source.components.childspawner.emergencychildreninside - 1
+      source.components.childspawner:AddEmergencyChildrenInside(-1)
+      source.components.childspawner:StartUpdate()
     end
 
     return child
@@ -1197,10 +1378,9 @@ local function teleportal()
   inst.components.childspawner.CanEmergencySpawn = function(comp)
     local source = GetSource(inst)
 
-    if
-      source and source:IsValid() and source.components.childspawner and
+    if source and source:IsValid() and source.components.childspawner and
         source.components.childspawner.emergencychildreninside > 0
-     then
+    then
       return oldCanEmergencySpawn(comp)
     end
 
@@ -1210,6 +1390,12 @@ local function teleportal()
   inst:AddComponent("combat")
 
   inst:DoPeriodicTask(1, WatchEnemyTeleportal)
+  inst:DoPeriodicTask(3, function()
+    -- basically refill full
+    inst.components.childspawner:AddEmergencyChildrenInside(
+      inst.components.childspawner.maxemergencychildren - inst.components.childspawner.emergencychildreninside
+    )
+  end)
 
   ---------------------
   MakeLargeBurnable(inst)
