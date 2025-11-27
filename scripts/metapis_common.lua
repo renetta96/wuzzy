@@ -728,6 +728,7 @@ local function MakePoisonable(inst)
   end
 
   inst.components.dotable:AddSource("single_poison", 1)
+  inst.components.dotable:AddSource("crit_poison", 1)
   inst.components.dotable:AddSource("stackable_poison", 20)
 
   if inst.components.dotable.ontickfn ~= nil then
@@ -735,22 +736,26 @@ local function MakePoisonable(inst)
   end
 
   inst.components.dotable.ontickfn = function(inst, damaged_sources, all_damage)
-    if #damaged_sources > 0 then
-      poisoncolor(inst, 0.8, 0.2, 0.8)
-    end
+    local r, g, b = 0.8, 0.2, 0.8
 
     if inst._crit_poison_end_time ~= nil and inst._crit_poison_end_time > GetTime() and math.random() <= 0.3 then
       inst.components.dotable:DoDamage("crit_poison", all_damage * 2)
 
-      local fx = SpawnPrefab("poison_fx")
-      if fx ~= nil then
-        local scale = math.max(inst:GetPhysicsRadius(0.5) * 8, 4.0) -- min 4 to be visible
-        fx.Transform:SetScale(scale, scale, scale)
+      -- local fx = SpawnPrefab("poison_fx")
+      -- if fx ~= nil then
+      --   local scale = math.max(inst:GetPhysicsRadius(0.5) * 8, 4.0) -- min 4 to be visible
+      --   fx.Transform:SetScale(scale, scale, scale)
 
-        if inst.components.combat then
-          fx.entity:AddFollower():FollowSymbol(inst.GUID, inst.components.combat.hiteffectsymbol, 0, 0, 0)
-        end
-      end
+      --   if inst.components.combat then
+      --     fx.entity:AddFollower():FollowSymbol(inst.GUID, inst.components.combat.hiteffectsymbol, 0, 0, 0)
+      --   end
+      -- end
+
+      r, g, b = 0.8, 0.2, 0.2
+    end
+
+    if #damaged_sources > 0 then
+      poisoncolor(inst, r, g, b)
     end
   end
 end

@@ -583,14 +583,22 @@ local function setMaxSanity(inst, amount)
   inst.components.sanity:DoDelta(0)
 end
 
+local function doRegenHungerDelta(inst, delta)
+  if inst:IsValid() and inst.components.hunger and not IsEntityDeadOrGhost(inst) then
+    inst.components.hunger:DoDelta(delta)
+  end
+end
+
 local function setTyrantStats(inst)
   setMaxHealth(inst, TUNING.ZETA_HEALTH_TYRANT)
   setMaxHunger(inst, TUNING.ZETA_HUNGER_TYRANT)
   setMaxSanity(inst, TUNING.ZETA_SANITY_TYRANT)
+  inst.components.beesummoner:SetSummonChance(TUNING.ZETA_SUMMON_CHANCE_TYRANT)
+
   -- tyrant damage multiplier -> CheckHiveUpgrade
 
   inst.components.beesummoner.onregenfn = function(num)
-    inst.components.hunger:DoDelta(-num * TUNING.ZETA_SUMMON_REGEN_HUNGER_COST_TYRANT)
+    doRegenHungerDelta(inst, -num * TUNING.ZETA_SUMMON_REGEN_HUNGER_COST_TYRANT)
   end
 end
 
@@ -599,9 +607,10 @@ local function setShepherdStats(inst)
   setMaxHunger(inst, TUNING.ZETA_HUNGER_SHEPHERD)
   setMaxSanity(inst, TUNING.ZETA_SANITY_SHEPHERD)
   inst.components.combat.damagemultiplier = TUNING.ZETA_SHEPHERD_DAMAGE_MULTIPLIER
+  inst.components.beesummoner:SetSummonChance(TUNING.ZETA_SUMMON_CHANCE_SHEPHERD)
 
   inst.components.beesummoner.onregenfn = function(num)
-    inst.components.hunger:DoDelta(-num * TUNING.ZETA_SUMMON_REGEN_HUNGER_COST_SHEPHERD)
+    doRegenHungerDelta(inst, -num * TUNING.ZETA_SUMMON_REGEN_HUNGER_COST_SHEPHERD)
   end
 end
 
@@ -610,9 +619,10 @@ local function setDefaultStats(inst)
   setMaxHunger(inst, TUNING.ZETA_HUNGER)
   setMaxSanity(inst, TUNING.ZETA_SANITY)
   inst.components.combat.damagemultiplier = TUNING.ZETA_DEFAULT_DAMAGE_MULTIPLIER
+  inst.components.beesummoner:SetSummonChance(TUNING.ZETA_SUMMON_CHANCE)
 
   inst.components.beesummoner.onregenfn = function(num)
-    inst.components.hunger:DoDelta(-num * TUNING.ZETA_SUMMON_REGEN_HUNGER_COST)
+    doRegenHungerDelta(inst, -num * TUNING.ZETA_SUMMON_REGEN_HUNGER_COST)
   end
 end
 
@@ -659,6 +669,12 @@ local function OnSkillTreeInitialized(inst)
   end
 end
 
+local function tryStartRegen(inst)
+  if inst.components.beesummoner then
+    inst.components.beesummoner:StartRegen(inst.components.beesummoner.currenttick) -- try resume regen
+  end
+end
+
 -- This initializes for the server only. Components are added here.
 local master_postinit = function(inst)
   inst.starting_inventory = start_inv[TheNet:GetServerGameMode()] or start_inv.default
@@ -678,11 +694,13 @@ local master_postinit = function(inst)
   inst.components.beesummoner:SetMaxStore(TUNING.ZETA_MAX_BEES_STORE)
   inst.components.beesummoner.childprefabfn = GetChildPrefab
   inst.components.beesummoner.shouldregenfn = function()
-    return inst.components.hunger:GetPercent() >= TUNING.ZETA_SUMMON_REGEN_HUNGER_THRESHOLD
+    return inst.components.hunger:GetPercent() >= TUNING.ZETA_SUMMON_REGEN_HUNGER_THRESHOLD and not IsEntityDeadOrGhost(inst)
   end
   inst.components.beesummoner.onregenfn = function(num)
-    inst.components.hunger:DoDelta(-num * TUNING.ZETA_SUMMON_REGEN_HUNGER_COST)
+    doRegenHungerDelta(inst, -num * TUNING.ZETA_SUMMON_REGEN_HUNGER_COST)
   end
+  inst:ListenForEvent("hungerdelta", tryStartRegen)
+  inst:ListenForEvent("ms_respawnedfromghost", tryStartRegen)
 
   inst:ListenForEvent("onnumstorechange", OnNumStoreChange)
 
@@ -755,8 +773,10 @@ local master_postinit = function(inst)
 
   inst._onhivenumchildren = function()
     if inst._hive ~= nil and inst._hive.components.childspawner then
-      inst.net_hivechildren:set(inst._hive.components.childspawner:NumChildren() + inst._hive.components.childspawner:NumEmergencyChildren())
-      inst.net_hivemaxchildren:set(inst._hive.components.childspawner.maxchildren + inst._hive.components.childspawner.maxemergencychildren)
+      inst.net_hivechildren:set(inst._hive.components.childspawner:NumChildren() +
+      inst._hive.components.childspawner:NumEmergencyChildren())
+      inst.net_hivemaxchildren:set(inst._hive.components.childspawner.maxchildren +
+      inst._hive.components.childspawner.maxemergencychildren)
     else
       inst.net_hivechildren:set(-1)
       inst.net_hivemaxchildren:set(-1)

@@ -1,38 +1,38 @@
-local function debugstring(stack)
-  if stack == nil then
-    return "<nil>"
-  end
+-- local function debugstring(stack)
+--   if stack == nil then
+--     return "<nil>"
+--   end
 
-  return string.format("damage=%d, ticskleft=%d", stack.damage, stack.ticksleft)
-end
+--   return string.format("damage=%d, ticskleft=%d", stack.damage, stack.ticksleft)
+-- end
 
 local DOTable =
-  Class(
-  function(self, inst)
-    self.inst = inst
-    self.stacks = {}
-    self.tickinterval = 1 -- every sec
-    self.sources = {}
+    Class(
+      function(self, inst)
+        self.inst = inst
+        self.stacks = {}
+        self.tickinterval = 2
+        self.sources = {}
 
-    self._gc = nil
-    self._ticktask = nil
+        self._gc = nil
+        self._ticktask = nil
 
-    self.ontickfn = nil
+        self.ontickfn = nil
 
-    self.inst:ListenForEvent(
-      "death",
-      function(inst)
-        self:StopTicking()
+        self.inst:ListenForEvent(
+          "death",
+          function(inst)
+            self:StopTicking()
+          end
+        )
+        self.inst:ListenForEvent(
+          "onremove",
+          function(inst)
+            self:StopTicking()
+          end
+        )
       end
     )
-    self.inst:ListenForEvent(
-      "onremove",
-      function(inst)
-        self:StopTicking()
-      end
-    )
-  end
-)
 
 local function _gc(inst, self)
   -- print("GC")
@@ -73,9 +73,10 @@ end
 function DOTable:DoDamage(source, damage)
   -- print("DOT DAMAGE: ", source, damage)
 
-  if self.inst:IsValid() and self.inst.components.health and not self.inst.components.health:IsDead() then
+  if self.inst:IsValid() and self.inst.components.combat and self.inst.components.health then
     local delta = math.min(damage, self.inst.components.health.currenthealth - 1)
-    self.inst.components.health:DoDelta(-delta, true, "dot_tick_" .. source)
+    self.inst.components.combat:GetAttacked(self.sources[source].inst, delta)
+    -- self.inst.components.health:DoDelta(-delta, true, "dot_tick_" .. source)
   end
 end
 
@@ -96,7 +97,7 @@ local function OnTick(inst, self)
 
         total_damage = total_damage + stack.damage
 
-      -- print("AFTER", debugstring(stacks[i]))
+        -- print("AFTER", debugstring(stacks[i]))
       end
     end
 
@@ -137,9 +138,19 @@ end
 
 function DOTable:AddSource(name, maxstacks)
   -- allow overwrite
-  self.sources[name] = {
-    maxstacks = maxstacks
-  }
+  if self.sources[name] ~= nil then
+    self.sources[name].maxstacks = maxstacks
+  else
+    local inst = CreateEntity()
+    inst:AddTag("CLASSIFIED")
+    inst.entity:SetCanSleep(false)
+    inst.persists = false
+
+    self.sources[name] = {
+      maxstacks = maxstacks,
+      inst = inst
+    }
+  end
 end
 
 local function getLastNElements(array, n)
@@ -189,17 +200,25 @@ end
 
 function DOTable:OnSave()
   -- print("ON SAVE")
+  local sources = {}
+  for source, conf  in pairs(self.sources) do
+    sources[source] = {
+      maxstacks = conf.maxstacks
+    }
+  end
+
   return {
     stacks = self:GetEffectiveStacks(),
-    sources = self.sources,
+    sources = sources,
     add_component_if_missing = true
   }
 end
 
 function DOTable:OnLoad(data)
-  -- print("ON LOAD")
   if data and data.sources ~= nil then
-    self.sources = data.sources
+    for source, conf in pairs(data.sources) do
+      self:AddSource(source, conf.maxstacks or 1)
+    end
   end
 
   if data and data.stacks ~= nil then
