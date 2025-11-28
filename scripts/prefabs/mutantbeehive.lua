@@ -410,7 +410,13 @@ local function GetNumChildrenDecay(inst)
 
   if inst.components.childspawner.emergencychildreninside > numbase then
     local diff = inst.components.childspawner.emergencychildreninside - numbase
-    local maintaincost = RoundBiasedUp(TUNING.MUTANT_BEEHIVE_MAINTAIN_COST_A * (TUNING.MUTANT_BEEHIVE_MAINTAIN_COST_S^inst._stage.LEVEL) * (TUNING.MUTANT_BEEHIVE_MAINTAIN_COST_B^diff))
+
+    local multiplier = 1.0
+    if not inst.entity:IsAwake() then
+      multiplier = 0.5
+    end
+
+    local maintaincost = RoundBiasedUp(multiplier * TUNING.MUTANT_BEEHIVE_MAINTAIN_COST_A * (TUNING.MUTANT_BEEHIVE_MAINTAIN_COST_S^inst._stage.LEVEL) * (TUNING.MUTANT_BEEHIVE_MAINTAIN_COST_B^diff))
 
     -- not enough honey to maintain
     if numhoney < maintaincost then
