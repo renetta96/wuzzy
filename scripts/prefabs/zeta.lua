@@ -162,73 +162,6 @@ local function OnInit(inst)
   end
 end
 
-local function UpdatePollenFx(inst)
-  local oldfx = {}
-  for flower, fx in pairs(inst._activefx) do
-    oldfx[flower] = fx
-  end
-
-  local x, y, z = inst.Transform:GetWorldPosition()
-  local flowers = TheSim:FindEntities(x, y, z, 25, { "flower" })
-
-  for i, flower in ipairs(flowers) do
-    if flower.net_pollenpicked ~= nil then
-      local pollenpicked = flower.net_pollenpicked:value()
-
-      if not pollenpicked then
-        if inst._activefx[flower] == nil then
-          local fx = SpawnPrefab("pollen_fx")
-          fx.entity:SetParent(flower.entity)
-          fx.entity:AddFollower():FollowSymbol(flower.GUID, "flowers01", 0, 0, 0)
-
-          inst._activefx[flower] = fx
-        else
-          oldfx[flower] = nil
-        end
-      else
-        if inst._activefx[flower] ~= nil then
-          inst._activefx[flower]:Remove()
-          inst._activefx[flower] = nil
-          oldfx[flower] = nil
-        end
-      end
-    end
-  end
-
-  for flower, fx in pairs(oldfx) do
-    inst._activefx[flower] = nil
-    if fx:IsValid() then
-      ErodeAway(fx, 0.5)
-    end
-  end
-end
-
-local function DisablePollenFx(inst)
-  if inst._pollenfx_task then
-    inst._pollenfx_task:Cancel()
-    inst._pollenfx_task = nil
-  end
-
-  for flower, fx in pairs(inst._activefx) do
-    if fx:IsValid() then
-      fx:Remove()
-    end
-  end
-
-  inst._activefx = {}
-end
-
-local function EnablePollenFx(inst)
-  if inst.player_classified ~= nil then
-    inst:ListenForEvent("playerdeactivated", DisablePollenFx)
-    if inst._pollenfx_task == nil then
-      inst._pollenfx_task = inst:DoPeriodicTask(0.1, UpdatePollenFx)
-    end
-  else
-    inst:RemoveEventCallback("playeractivated", EnablePollenFx)
-  end
-end
-
 local function OnBeeQueenKilled(inst)
   local numkilled = inst._numbeequeenkilled ~= nil and inst._numbeequeenkilled or 0
 
@@ -282,19 +215,6 @@ local function calcChance(inst, minchance, maxchance, minthreshold)
   end
 
   return Lerp(minchance, maxchance, (1.0 - healthpercent) / (1.0 - minthreshold))
-end
-
-local function findNearbyMinion(inst)
-  return FindEntity(
-    inst,
-    10,
-    function(guy)
-      return not guy.components.health:IsDead() and guy:IsValid() and guy:GetOwner() == inst
-    end,
-    { "beemutant", "_combat", "_health" },
-    { "INLIMBO", "lesserminion" },
-    { "beemutantminion" }
-  )
 end
 
 local function findNearbyMinions(inst, num)
@@ -532,9 +452,6 @@ local common_postinit = function(inst)
   inst.net_hivehoney:set(-1)
 
   if not TheNet:IsDedicated() then
-    inst._activefx = {}
-    inst:ListenForEvent("playeractivated", EnablePollenFx)
-
     inst:ListenForEvent("hivechildren_dirty", updateMotherHiveDisplay)
     inst:ListenForEvent("hivemaxchildren_dirty", updateMotherHiveDisplay)
     inst:ListenForEvent("hivehoney_dirty", updateMotherHiveDisplay)
@@ -735,13 +652,16 @@ local master_postinit = function(inst)
     end
   )
 
-  local oldDoDelta = inst.components.health.DoDelta
-  inst.components.health.DoDelta = function(comp, amount, ...)
-    if amount < 0 then -- taking damage from any source
-      local skilltreeupdater = inst.components.skilltreeupdater
+  local _deltamodifierfn = inst.components.health.deltamodifierfn
+  inst.components.health.deltamodifierfn = function (inst, amount, overtime, cause, ignore_invincible, afflicter, ignore_absorb, ...)
+    if _deltamodifierfn ~= nil then
+      amount = _deltamodifierfn(inst, amount, overtime, cause, ignore_invincible, afflicter, ignore_absorb, ...)
+    end
 
+    if amount < 0 and afflicter ~= nil and not overtime then -- taking damage from enemies
+      local skilltreeupdater = inst.components.skilltreeupdater
       if
-          skilltreeupdater:IsActivated("zeta_metapimancer_tyrant_2") and math.random() <= calcChance(inst, 0.25, 1.0, 0.3)
+        skilltreeupdater:IsActivated("zeta_metapimancer_tyrant_2") and math.random() <= calcChance(inst, 0.25, 1.0, 0.3)
       then
         local minions = findNearbyMinions(inst, TUNING.ZETA_TYRANT_REDIRECT_DAMAGE_MINIONS)
 
@@ -760,15 +680,14 @@ local master_postinit = function(inst)
       end
 
       if
-          skilltreeupdater:IsActivated("zeta_metapimancer_shepherd_2") and
-          math.random() <= calcChance(inst, 0.2, 0.5, 0.3)
+        skilltreeupdater:IsActivated("zeta_metapimancer_shepherd_2") and
+        math.random() <= calcChance(inst, 0.2, 0.5, 0.3)
       then
         enrageMinions(inst)
       end
     end
 
-    -- default
-    return oldDoDelta(comp, amount, ...)
+    return amount
   end
 
   inst._onhivenumchildren = function()

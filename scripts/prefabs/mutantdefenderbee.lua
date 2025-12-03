@@ -207,29 +207,23 @@ local function CheckDefenderUpgrade(inst, stage)
         delta = _deltamodifierfn(inst, amount, overtime, cause, ignore_invincible, afflicter, ignore_absorb, ...)
       end
 
-      -- heal
-      if delta >= 0 then
+      if delta >= 0 or overtime or ignore_absorb or afflicter == nil then
         return delta
       end
 
       local result = 0
-      local numticks = 5
+      local numticks = 3
       local current = inst.components.health.currenthealth
 
-      -- print("ORIGIN AMOUNT", delta)
       for i = 1, numticks do
         local absorption = getDamageAbsorption(inst, current)
         local subdelta = (delta / numticks) * (1.0 - absorption)
-        -- print("SUB AMOUNT", i, subdelta, absorption)
         result = result + subdelta
         current = current + subdelta
         if current <= 0 then
-          -- print("DEAD BREAK")
           break
         end
       end
-
-      -- print("ORIGIN AMOUNT vs FINAL", delta, result)
 
       return result
     end

@@ -479,8 +479,48 @@ local function onseasonchange(inst, season)
   end
 end
 
+local function onpollenpickeddirty(inst)
+  if inst.net_pollenpicked:value() then
+    inst.components.colorpulser:Stop()
+  else
+    if GLOBAL.ThePlayer and GLOBAL.ThePlayer:HasTag("beemaster") then
+      inst.components.colorpulser:Start()
+    end
+  end
+end
+
+local function tryEnablingPulsing(inst)
+  if GLOBAL.ThePlayer and GLOBAL.ThePlayer:HasTag("beemaster") then
+    if not inst.components.colorpulser then
+      inst:AddComponent("colorpulser")
+    end
+
+    inst.components.colorpulser:SetTargetColor(0.8, 0.8, 0) --yellow
+    inst:ListenForEvent("pollenpickeddirty", onpollenpickeddirty)
+    onpollenpickeddirty(inst)
+  else
+    inst:RemoveEventCallback("pollenpickeddirty", onpollenpickeddirty)
+
+    if inst.components.colorpulser then
+      inst.components.colorpulser:Stop()
+      inst:RemoveComponent("colorpulser")
+    end
+  end
+end
+
 local function FlowerPostInit(prefab)
   prefab.net_pollenpicked = GLOBAL.net_bool(prefab.GUID, "flower.pollenpicked", "pollenpickeddirty")
+
+  if not GLOBAL.TheNet:IsDedicated() then
+    prefab:ListenForEvent("playeractivated", function(world, player)
+      tryEnablingPulsing(prefab)
+    end, GLOBAL.TheWorld)
+    prefab:ListenForEvent("playerdeactivated", function(world, player)
+      tryEnablingPulsing(prefab)
+    end, GLOBAL.TheWorld)
+
+    prefab:DoTaskInTime(0, tryEnablingPulsing)
+  end
 
   if not GLOBAL.TheWorld.ismastersim then
     return
