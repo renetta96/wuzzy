@@ -223,7 +223,7 @@ local function BuildSkillsData(SkillTreeFns)
     zeta_honeysmith_melissa_1 = {
       title = "Melissa I",
       desc = string.format(
-        "Every 4th attack with Melissa, Wuzzy slams the target for %dx damage. Also double Melissa's max uses.",
+        "Every 4th attack with Melissa, Wuzzy slams the target for %dx damage. Also increase Melissa's max uses.",
         TUNING.MELISSA_SLAM_DAMAGE_MULT
       ),
       icon = "zeta_honeysmith_melissa_1",
@@ -245,6 +245,30 @@ local function BuildSkillsData(SkillTreeFns)
       pos = {66 + 18, 176},
       group = "honeysmith",
       tags = {"honeysmith", "melissa"}
+    },
+
+    zeta_honeysmith_armor_honey_1 = {
+      title = "Honey Suit I",
+      desc = string.format(
+        "Honey Suit now stores absorbed damage. Exceeding %d releases stingers that strike nearby enemies, with damage scaling by the number of summoned Metapises. Unequipping resets stored damage, and stored damage rapidly decays after a period without taking hits.",
+        TUNING.ARMORHONEY_RETALIATE_ACC_DAMAGE_THRESHOLD
+      ),
+      icon = "zeta_honeysmith_armor_honey_1",
+      root = true,
+      pos = {66 + 18 - W_GAP, 176 - H_GAP},
+      group = "honeysmith",
+      tags = {"honeysmith", "armor_honey"},
+      connects = {
+        "zeta_honeysmith_armor_honey_2"
+      }
+    },
+    zeta_honeysmith_armor_honey_2 = {
+      title = "Honey Suit II",
+      desc = "When Wuzzy is attacked while wearing the Honey Suit, there is a chance to summon a Metapis. Releasing stingers always summons 1 Metapis. These summons are tracked separately and have the same cap.",
+      icon = "zeta_honeysmith_armor_honey_2",
+      pos = {66 + 18, 176 - H_GAP},
+      group = "honeysmith",
+      tags = {"honeysmith", "armor_honey"}
     }
   }
 

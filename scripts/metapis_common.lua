@@ -888,8 +888,6 @@ local function PickChildPrefab(owner, hive, children, maxchildren, prioritychild
     end
   end
 
-  local totalexpect = #canspawnprefabs
-
   -- must spawn
   local expect, totalexpect = calcExpect(hive, basechild, canspawnprefabs, checkchildtags)
 

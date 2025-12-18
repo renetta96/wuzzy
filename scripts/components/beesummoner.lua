@@ -1,22 +1,37 @@
-local function AddChild(self, child)
+local function AddChild(self, child, source)
+  child.persists = false
+
+  if source == nil then
+    self.children[child] = child
+    self.numchildren = GetTableSize(self.children)
+  else
+    self.extrachildren[source][child] = child
+    self.numextrachildren[source] = GetTableSize(self.extrachildren[source])
+  end
+end
+
+local function getSource(self, child)
   if self.children[child] ~= nil then
-    print("Already added child", child)
-    return
+    return nil
   end
 
-  child.persists = false
-  self.children[child] = child
-  self.numchildren = GetTableSize(self.children)
+  for source, children in pairs(self.extrachildren) do
+    if children[child] ~= nil then
+      return source
+    end
+  end
 end
 
 local function RemoveChild(self, child)
-  if self.children[child] == nil then
-    print("Not our child or already removed child", child)
-    return
-  end
+  local source = getSource(self, child)
 
-  self.children[child] = nil
-  self.numchildren = GetTableSize(self.children)
+  if source == nil then
+    self.children[child] = nil
+    self.numchildren = GetTableSize(self.children)
+  else
+    self.extrachildren[source][child] = nil
+    self.numextrachildren[source] = GetTableSize(self.extrachildren[source])
+  end
 end
 
 local function AddChildListeners(self, child)
@@ -47,12 +62,19 @@ local BeeSummoner =
     Class(
       function(self, inst)
         self.inst = inst
+
+        -- default
         self.children = {}
         self.numchildren = 0
         self.maxchildren = 0
+        -- extra summon sources
+        self.extrachildren = {}
+        self.numextrachildren = {}
+        self.maxextrachildren = {}
+
         self.childname = "mutantkillerbee"
         self.childprefabfn = nil
-        self.summonchance = 0.3
+        self.summonchance = 0.3 -- default chance
         self.radius = 0.5
         self.maxstore = 6
         self.numstore = self.maxstore
@@ -89,6 +111,12 @@ function BeeSummoner:OnRemoveFromEntity()
   for k, v in pairs(self.children) do
     RemoveChildListeners(self, v)
   end
+
+  for source, children in pairs(self.extrachildren) do
+    for k, v in pairs(children) do
+      RemoveChildListeners(self, v)
+    end
+  end
 end
 
 function BeeSummoner:RemoveAllChildren()
@@ -99,10 +127,39 @@ function BeeSummoner:RemoveAllChildren()
       v:Remove()
     end
   end
+
+  for source, children in pairs(self.extrachildren) do
+    for k, v in pairs(children) do
+      if v.components.health then
+        v.components.health:Kill()
+      else
+        v:Remove()
+      end
+    end
+  end
 end
 
 function BeeSummoner:SetMaxChildren(num)
   self.maxchildren = num
+end
+
+function BeeSummoner:AddExtraSource(source, maxnum)
+  self.maxextrachildren[source] = maxnum -- maxnum can be a function
+
+  if self.extrachildren[source] == nil then
+    self.extrachildren[source] = {}
+  end
+
+  if self.numextrachildren[source] == nil then
+    self.numextrachildren[source] = 0
+  end
+end
+
+function BeeSummoner:RemoveExtraSource(source)
+  -- simply not allow the extra source to summon anymore
+  -- do not remove source from extrachildren and numextrachildren because there can be children outside not yet despawned
+  -- otherwise, game will crash
+  self.maxextrachildren[source] = nil
 end
 
 function BeeSummoner:SetSummonChance(chance)
@@ -135,7 +192,7 @@ local function NoHoles(pt)
   return not TheWorld.Map:IsPointNearHole(pt)
 end
 
-function BeeSummoner:TakeOwnership(child)
+function BeeSummoner:TakeOwnership(child, source)
   if not child.components.follower then
     child:AddComponent("follower")
   end
@@ -147,8 +204,8 @@ function BeeSummoner:TakeOwnership(child)
     self.inst.components.leader:AddFollower(child)
   end
 
+  AddChild(self, child, source)
   AddChildListeners(self, child)
-  AddChild(self, child)
 end
 
 function BeeSummoner:AddStoreModifier_Additive(key, mod)
@@ -183,7 +240,11 @@ function BeeSummoner:GetRegenTickMultiplier()
   local mult = 1
 
   for k, v in pairs(self.regentick_modifiers_mult) do
-    mult = mult * v
+    if type(v) == "function" then
+      mult = mult * v()
+    else
+      mult = mult * v
+    end
   end
 
   return mult
@@ -229,8 +290,17 @@ function BeeSummoner:GetNumStoreRegen()
   return 1 + math.floor(math.log(added))
 end
 
+function BeeSummoner:GetNumExtraChildren()
+  local num = 0
+  for source, children in pairs(self.extrachildren) do
+    num = num + GetTableSize(children)
+  end
+
+  return num
+end
+
 function BeeSummoner:ShouldRegen()
-  return self.numstore + self.numchildren < self:GetTotalStore() and (self.shouldregenfn == nil or self.shouldregenfn())
+  return self.numstore + self.numchildren + self:GetNumExtraChildren() < self:GetTotalStore() and (self.shouldregenfn == nil or self.shouldregenfn())
 end
 
 local function DoRegenTick(inst, self)
@@ -280,9 +350,9 @@ function BeeSummoner:StartRegen(tick)
   end
 end
 
-function BeeSummoner:GetChildPrefab()
+function BeeSummoner:GetChildPrefab(source)
   if self.childprefabfn then
-    return self.childprefabfn(self.inst)
+    return self.childprefabfn(self.inst, source) or self.childname
   end
 
   return self.childname
@@ -292,12 +362,33 @@ function BeeSummoner:CanSummonChild()
   return self.numchildren < self.maxchildren and math.random() < self.summonchance and self.numstore > 0
 end
 
-function BeeSummoner:DoSummonChild(target)
-  if not self:CanSummonChild() then
+function BeeSummoner:GetMaxExtraChildren(source)
+  local maxnum = 0
+  if self.maxextrachildren[source] ~= nil then
+    if type(self.maxextrachildren[source]) == "function" then
+      maxnum = self.maxextrachildren[source](self.inst)
+    else
+      maxnum = self.maxextrachildren[source]
+    end
+  end
+
+  return maxnum
+end
+
+function BeeSummoner:CanSummonExtraChild(source)
+  return (self.numextrachildren[source] or 0) < self:GetMaxExtraChildren(source) and self.numstore > 0
+end
+
+function BeeSummoner:DoSummonChild(target, source)
+  if source == nil and not self:CanSummonChild() then
     return
   end
 
-  local childprefab = self:GetChildPrefab()
+  if source ~= nil and not self:CanSummonExtraChild(source) then
+    return
+  end
+
+  local childprefab = self:GetChildPrefab(source)
 
   if not childprefab then
     print("No child prefab defined")
@@ -332,10 +423,10 @@ function BeeSummoner:DoSummonChild(target)
   return child
 end
 
-function BeeSummoner:SummonChild(target)
-  local child = self:DoSummonChild(target)
+function BeeSummoner:SummonChild(target, source)
+  local child = self:DoSummonChild(target, source)
   if child ~= nil then
-    self:TakeOwnership(child)
+    self:TakeOwnership(child, source)
   end
 end
 
@@ -345,10 +436,21 @@ function BeeSummoner:Despawn(child)
     self:AddNumStore(1)
     return true
   end
+
+  for source, children in pairs(self.extrachildren) do
+    if children[child] then
+      child:Remove()
+      self:AddNumStore(1)
+      return true
+    end
+  end
+
+  return false
 end
 
 function BeeSummoner:OnSave()
   local children = {}
+  local extrachildren = {}
   local references = {}
 
   for k, v in pairs(self.children) do
@@ -364,10 +466,29 @@ function BeeSummoner:OnSave()
     end
   end
 
-  local data = {}
-  data.children = children
-  data.numstore = self.numstore
-  data.currenttick = self.currenttick
+  for source, extra in pairs(self.extrachildren) do
+    extrachildren[source] = {}
+
+    for k, v in pairs(extra) do
+      if v then
+        local record, refs = v:GetSaveRecord()
+        table.insert(extrachildren[source], record)
+
+        if refs then
+          for k, v in pairs(refs) do
+            table.insert(references, v)
+          end
+        end
+      end
+    end
+  end
+
+  local data = {
+    children = children,
+    extrachildren = extrachildren,
+    numstore = self.numstore,
+    currenttick = self.currenttick
+  }
 
   return data, references
 end
@@ -378,6 +499,22 @@ function BeeSummoner:OnLoad(data, newents)
       local child = SpawnSaveRecord(v, newents)
       if child then
         self:TakeOwnership(child)
+      end
+    end
+  end
+
+  if data and data.extrachildren then
+    for source, extra in pairs(data.extrachildren) do
+      -- in case source is not added for some reasons
+      if self.extrachildren[source] == nil then
+        self.extrachildren[source] = {}
+      end
+
+      for k, v in pairs(extra) do
+        local child = SpawnSaveRecord(v, newents)
+        if child then
+          self:TakeOwnership(child, source)
+        end
       end
     end
   end

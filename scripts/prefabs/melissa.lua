@@ -119,7 +119,7 @@ local function OnBuiltFn(inst, builder)
     if builder.components.skilltreeupdater:IsActivated("zeta_honeysmith_melissa_1") then
       inst._upgraded = true
       checkmaxuses(inst)
-      inst.components.finiteuses:SetUses(TUNING.MELISSA_USES * 2)
+      inst.components.finiteuses:SetUses(TUNING.MELISSA_USES_2)
     end
 
     if builder.components.skilltreeupdater:IsActivated("zeta_honeysmith_melissa_2") then

@@ -25,14 +25,27 @@ end
 
 prefabs = FlattenTree({ prefabs, start_inv }, true)
 
-local function GetChildPrefab(inst)
-  return PickChildPrefab(
-    inst,
-    inst._hive,
-    inst.components.beesummoner.children,
-    inst.components.beesummoner.maxchildren,
-    "mutantdefenderbee"
-  )
+local function GetChildPrefab(inst, source)
+  if source == nil then
+    return PickChildPrefab(
+      inst,
+      inst._hive,
+      inst.components.beesummoner.children,
+      inst.components.beesummoner.maxchildren,
+      "mutantdefenderbee"
+    )
+  end
+
+  if inst.components.beesummoner.maxextrachildren[source] ~= nil then
+    return PickChildPrefab(
+      inst,
+      inst._hive,
+      inst.components.beesummoner.extrachildren[source],
+      inst.components.beesummoner:GetMaxExtraChildren(source)
+    )
+  end
+
+  return nil
 end
 
 local function OnEat(inst, data)

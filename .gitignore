@@ -3,3 +3,5 @@ exported/zeta/zeta.zip
 build/
 calc.py
 .goutputstream*
+.vscode/
+*.code-workspace

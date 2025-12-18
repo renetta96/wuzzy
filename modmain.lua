@@ -42,7 +42,8 @@ PrefabFiles = {
   "icenova_fx",
   "poison_fx",
   "metapis_buffs",
-  "mutantbeetoken"
+  "mutantbeetoken",
+  "stinger_nova"
 }
 
 Assets = {
@@ -198,10 +199,10 @@ TUNING.MUTANT_BEE_TARGET_DIST = 8
 
 TUNING.MUTANT_BEE_WEAPON_ATK_RANGE = 8
 TUNING.MUTANT_BEE_RANGED_TARGET_DIST = 10
-TUNING.MUTANT_BEE_RANGED_DAMAGE = 8
-TUNING.MUTANT_BEE_RANGED_ATK_PERIOD = 3
-TUNING.MUTANT_BEE_RANGED_HEALTH = 150
-TUNING.MUTANT_BEE_RANGED_WISP_DAMAGE = 25
+TUNING.MUTANT_BEE_RANGED_DAMAGE = 5
+TUNING.MUTANT_BEE_RANGED_ATK_PERIOD = 4
+TUNING.MUTANT_BEE_RANGED_HEALTH = 100
+TUNING.MUTANT_BEE_RANGED_WISP_DAMAGE = 10
 
 TUNING.MUTANT_BEE_DEFENDER_HEALTH = 400
 TUNING.MUTANT_BEE_DEFENDER_DAMAGE = 10
@@ -291,6 +292,13 @@ TUNING.ARMORHONEY_MIN_HEAL_PERCENT = 0.03
 TUNING.ARMORHONEY_MAX_HEAL_PERCENT = 0.05
 TUNING.ARMORHONEY_ADD_STORE = 1
 TUNING.ARMORHONEY_MULT_REGEN_TICK = 2 / 3
+TUNING.ARMORHONEY_RETALIATE_ACC_DAMAGE_THRESHOLD = 150
+TUNING.ARMORHONEY_RETALIATE_DAMAGE_MULT = 5
+TUNING.ARMORHONEY_RETALIATE_DAMAGE_BASE = 10
+TUNING.ARMORHONEY_RETALIATE_NUM_TARGETS = 4
+TUNING.ARMORHONEY_RETALIATE_RANGE = 5
+TUNING.ARMORHONEY_RETALIATE_NUM_SUMMONS = 1
+TUNING.ARMORHONEY_ATTACKED_SUMMON_CHANCE = 0.25
 
 -- Melissa
 TUNING.MELISSA_DAMAGE = 40
@@ -365,6 +373,8 @@ RegisterSkilltreeIconsAtlas("images/skilltree_zeta_icons.xml", "zeta_metapimance
 RegisterSkilltreeIconsAtlas("images/skilltree_zeta_icons.xml", "zeta_metapimancer_shepherd_2.tex")
 RegisterSkilltreeIconsAtlas("images/skilltree_zeta_icons.xml", "zeta_honeysmith_melissa_1.tex")
 RegisterSkilltreeIconsAtlas("images/skilltree_zeta_icons.xml", "zeta_honeysmith_melissa_2.tex")
+RegisterSkilltreeIconsAtlas("images/skilltree_zeta_icons.xml", "zeta_honeysmith_armor_honey_1.tex")
+RegisterSkilltreeIconsAtlas("images/skilltree_zeta_icons.xml", "zeta_honeysmith_armor_honey_2.tex")
 
 CreateSkillTree()
 
