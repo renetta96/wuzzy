@@ -264,6 +264,7 @@ local function fn()
   inst.components.equippable.equipslot = EQUIPSLOTS.BODY
   inst.components.equippable:SetOnEquip(onequip)
   inst.components.equippable:SetOnUnequip(onunequip)
+  inst.components.equippable.restrictedtag = "beemaster"
 
   inst:AddComponent("perishable")
   inst.components.perishable:SetPerishTime(TUNING.PERISH_FASTISH)

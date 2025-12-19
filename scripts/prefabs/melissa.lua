@@ -183,6 +183,7 @@ local function fn()
   inst:AddComponent("equippable")
   inst.components.equippable:SetOnEquip(onequip)
   inst.components.equippable:SetOnUnequip(onunequip)
+  inst.components.equippable.restrictedtag = "beemaster"
 
   inst._atkcounter = 0
   inst._netatkcounter:set(0)

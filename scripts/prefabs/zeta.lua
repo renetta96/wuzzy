@@ -278,23 +278,33 @@ local function enrageMinions(inst)
 end
 
 local function OnAttackOther(inst, data)
-  if data and data.target and data.target:IsValid() then
+  if not data then
+    return
+  end
+
+  local target = data.target
+
+  if not target or target == inst then
+    return
+  end
+
+  if target:IsValid() then
     local x, y, z = inst.Transform:GetWorldPosition()
     local allies = TheSim:FindEntities(x, y, z, 15, { "_combat", "_health", "beemutantminion" }, { "INLIMBO", "player" })
 
     for i, e in pairs(allies) do
-      if e ~= data.target and e:GetOwner() == inst and not (e:IsInLimbo() or e.components.health:IsDead()) then
-        e.components.combat:SetTarget(data.target)
+      if e ~= target and e:GetOwner() == inst and not (e:IsInLimbo() or e.components.health:IsDead()) then
+        e.components.combat:SetTarget(target)
         e._focusatktime = GetTime() + 5
       end
     end
   end
 
-  if data and IsPoisonable(data.target) and inst._poisonatk then
-    MakePoisonable(data.target)
+  if IsPoisonable(target) and inst._poisonatk then
+    MakePoisonable(target)
 
-    data.target.components.dotable:Add("stackable_poison", 5, TUNING.MUTANT_BEE_STACK_POISON_TICKS)
-    data.target._crit_poison_end_time = GetTime() + 5
+    target.components.dotable:Add("stackable_poison", 5, TUNING.MUTANT_BEE_STACK_POISON_TICKS)
+    target._crit_poison_end_time = GetTime() + 5
   end
 
   if
@@ -313,10 +323,9 @@ local function OnAttackOther(inst, data)
     local limit = math.random(2, 4)
     for i, e in pairs(rangers) do
       if
-          e ~= data.target and e._shouldcharge and e:GetOwner() == inst and
+          e ~= target and e._shouldcharge and e:GetOwner() == inst and
           not (e:IsInLimbo() or e.components.health:IsDead())
       then
-        -- print("CHARGE WUZZY", e)
         e:Charge()
         cnt = cnt + 1
         if cnt >= limit then
@@ -624,7 +633,8 @@ local master_postinit = function(inst)
   inst.components.beesummoner:SetMaxStore(TUNING.ZETA_MAX_BEES_STORE)
   inst.components.beesummoner.childprefabfn = GetChildPrefab
   inst.components.beesummoner.shouldregenfn = function()
-    return inst.components.hunger:GetPercent() >= TUNING.ZETA_SUMMON_REGEN_HUNGER_THRESHOLD and not IsEntityDeadOrGhost(inst)
+    return inst.components.hunger:GetPercent() >= TUNING.ZETA_SUMMON_REGEN_HUNGER_THRESHOLD and
+        not IsEntityDeadOrGhost(inst)
   end
   inst.components.beesummoner.onregenfn = function(num)
     doRegenHungerDelta(inst, -num * TUNING.ZETA_SUMMON_REGEN_HUNGER_COST)
@@ -666,7 +676,8 @@ local master_postinit = function(inst)
   )
 
   local _deltamodifierfn = inst.components.health.deltamodifierfn
-  inst.components.health.deltamodifierfn = function (inst, amount, overtime, cause, ignore_invincible, afflicter, ignore_absorb, ...)
+  inst.components.health.deltamodifierfn = function(inst, amount, overtime, cause, ignore_invincible, afflicter,
+                                                    ignore_absorb, ...)
     if _deltamodifierfn ~= nil then
       amount = _deltamodifierfn(inst, amount, overtime, cause, ignore_invincible, afflicter, ignore_absorb, ...)
     end
@@ -674,7 +685,7 @@ local master_postinit = function(inst)
     if amount < 0 and afflicter ~= nil and not overtime then -- taking damage from enemies
       local skilltreeupdater = inst.components.skilltreeupdater
       if
-        skilltreeupdater:IsActivated("zeta_metapimancer_tyrant_2") and math.random() <= calcChance(inst, 0.25, 1.0, 0.3)
+          skilltreeupdater:IsActivated("zeta_metapimancer_tyrant_2") and math.random() <= calcChance(inst, 0.25, 1.0, 0.3)
       then
         local minions = findNearbyMinions(inst, TUNING.ZETA_TYRANT_REDIRECT_DAMAGE_MINIONS)
 
@@ -693,8 +704,8 @@ local master_postinit = function(inst)
       end
 
       if
-        skilltreeupdater:IsActivated("zeta_metapimancer_shepherd_2") and
-        math.random() <= calcChance(inst, 0.2, 0.5, 0.3)
+          skilltreeupdater:IsActivated("zeta_metapimancer_shepherd_2") and
+          math.random() <= calcChance(inst, 0.2, 0.5, 0.3)
       then
         enrageMinions(inst)
       end
@@ -706,9 +717,9 @@ local master_postinit = function(inst)
   inst._onhivenumchildren = function()
     if inst._hive ~= nil and inst._hive.components.childspawner then
       inst.net_hivechildren:set(inst._hive.components.childspawner:NumChildren() +
-      inst._hive.components.childspawner:NumEmergencyChildren())
+        inst._hive.components.childspawner:NumEmergencyChildren())
       inst.net_hivemaxchildren:set(inst._hive.components.childspawner.maxchildren +
-      inst._hive.components.childspawner.maxemergencychildren)
+        inst._hive.components.childspawner.maxemergencychildren)
     else
       inst.net_hivechildren:set(-1)
       inst.net_hivemaxchildren:set(-1)
