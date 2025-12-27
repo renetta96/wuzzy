@@ -71,33 +71,23 @@ function DOTable:HasEffectiveStack()
 end
 
 function DOTable:DoDamage(source, damage)
-  -- print("DOT DAMAGE: ", source, damage)
-
   if self.inst:IsValid() and self.inst.components.combat and self.inst.components.health then
     local delta = math.min(damage, self.inst.components.health.currenthealth - 1)
     self.inst.components.combat:GetAttacked(self.sources[source].inst, delta)
-    -- self.inst.components.health:DoDelta(-delta, true, "dot_tick_" .. source)
   end
 end
 
 local function OnTick(inst, self)
-  -- print("ON TICK")
-
   local damaged_sources = {}
   local all_damage = 0
 
   for source, stacks in pairs(self.stacks) do
-    -- print("SOURCE", source)
     local total_damage = 0
 
     for i, stack in ipairs(stacks) do
       if stack.ticksleft > 0 then
-        -- print("BEFORE", debugstring(stacks[i]))
         stack.ticksleft = stack.ticksleft - 1
-
         total_damage = total_damage + stack.damage
-
-        -- print("AFTER", debugstring(stacks[i]))
       end
     end
 
@@ -142,6 +132,9 @@ function DOTable:AddSource(name, maxstacks)
     self.sources[name].maxstacks = maxstacks
   else
     local inst = CreateEntity()
+    inst.entity:AddTransform()
+    inst.entity:SetParent(self.inst.entity)
+
     inst:AddTag("CLASSIFIED")
     inst.entity:SetCanSleep(false)
     inst.persists = false
