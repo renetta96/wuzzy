@@ -250,7 +250,7 @@ local function BuildSkillsData(SkillTreeFns)
     zeta_honeysmith_armor_honey_1 = {
       title = "Honey Suit I",
       desc = string.format(
-        "Honey Suit now stores absorbed damage. Exceeding %d releases stingers that strike nearby enemies, with damage scaling by the number of summoned Metapises. Unequipping resets stored damage, and stored damage rapidly decays after a period without taking hits.",
+        "Honey Suit increases healing and stores absorbed damage. Exceeding %d releases stingers that strike nearby enemies, scaling with the number of summoned Metapises. Stored damage resets when unequipped and rapidly decays after not taking hits.",
         TUNING.ARMORHONEY_RETALIATE_ACC_DAMAGE_THRESHOLD
       ),
       icon = "zeta_honeysmith_armor_honey_1",

@@ -23,31 +23,45 @@ local function StopHealing(inst)
 end
 
 local function DoHealing(inst)
-  local owner = nil
-
-  if inst.components.inventoryitem and inst.components.perishable then
-    owner = inst.components.inventoryitem:GetGrandOwner()
-    if owner and owner.components.health then
-      local percent =
-          Lerp(
-            TUNING.ARMORHONEY_MIN_HEAL_PERCENT,
-            TUNING.ARMORHONEY_MAX_HEAL_PERCENT,
-            inst.components.perishable:GetPercent()
-          )
-      local delta =
-          math.max(1, math.floor((owner.components.health.maxhealth - owner.components.health.currenthealth) * percent))
-      owner.components.health:DoDelta(delta, nil, "armorhoney_health")
-    end
+  if not inst.components.inventoryitem or not inst.components.perishable then
+    return
   end
 
+  local owner = inst.components.inventoryitem:GetGrandOwner()
+  if not owner or not owner.components.health then
+    return
+  end
+
+  local minpercent = TUNING.ARMORHONEY_MIN_HEAL_PERCENT
+  local maxpercent = TUNING.ARMORHONEY_MAX_HEAL_PERCENT
+
+  if owner.components.skilltreeupdater and owner.components.skilltreeupdater:IsActivated("zeta_honeysmith_armor_honey_1") then
+    minpercent = TUNING.ARMORHONEY_MIN_HEAL_PERCENT_UPGRADED
+    maxpercent = TUNING.ARMORHONEY_MAX_HEAL_PERCENT_UPGRADED
+  end
+
+  local percent = Lerp(minpercent, maxpercent, inst.components.perishable:GetPercent())
+  local delta = math.max(
+    1,
+    math.floor((owner.components.health.maxhealth - owner.components.health.currenthealth) * percent)
+  )
+  owner.components.health:DoDelta(delta, nil, "armorhoney_heal")
+
   inst._healtick = inst._healtick - 1
-  if inst._healtick <= 0 or (owner and owner.components.health and owner.components.health:IsDead()) then
+  if inst._healtick <= 0 or owner.components.health:IsDead() then
     StopHealing(inst)
   end
 end
 
 local function StartHealing(inst)
   inst._healtick = TUNING.ARMORHONEY_HEAL_TICKS
+
+  if inst.components.inventoryitem then
+    local owner = inst.components.inventoryitem:GetGrandOwner()
+    if owner and owner.components.skilltreeupdater and owner.components.skilltreeupdater:IsActivated("zeta_honeysmith_armor_honey_1") then
+      inst._healtick = TUNING.ARMORHONEY_HEAL_TICKS_UPGRADED
+    end
+  end
 
   if inst._healtask == nil then
     inst._healtask = inst:DoPeriodicTask(TUNING.ARMORHONEY_HEAL_INTERVAL, DoHealing)
