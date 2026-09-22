@@ -19,9 +19,9 @@ local killersounds = {
 local function IsHostile(inst)
   -- Webber's spiders
   if
-      inst.components.follower and inst.components.follower.leader ~= nil and
+    inst.components.follower and inst.components.follower.leader ~= nil and
       inst.components.follower.leader:HasTag("player")
-  then
+   then
     return false
   end
 
@@ -47,9 +47,9 @@ local function IsWithinLeaderRange(inst)
   return true
 end
 
-local TARGET_MUST_TAGS = { "_combat", "_health" }
-local TARGET_MUST_ONE_OF_TAGS = { "monster", "insect", "animal", "character", "epic", "hostile" }
-local TARGET_IGNORE_TAGS = { "beemutant", "INLIMBO", "player" }
+local TARGET_MUST_TAGS = {"_combat", "_health"}
+local TARGET_MUST_ONE_OF_TAGS = {"monster", "insect", "animal", "character", "epic", "hostile"}
+local TARGET_IGNORE_TAGS = {"beemutant", "INLIMBO", "player"}
 
 local function FindEnemies(inst, dist, checkfn)
   local x, y, z = inst.Transform:GetWorldPosition()
@@ -58,11 +58,11 @@ local function FindEnemies(inst, dist, checkfn)
   local validtargets = {}
   for i, e in ipairs(entities) do
     if
-        inst.components.combat:CanTarget(e) and e.components.combat and
+      inst.components.combat:CanTarget(e) and e.components.combat and
         (IsAlly(e.components.combat.target) or IsHostile(e)) and
         e.components.health and
         not e.components.health:IsDead()
-    then
+     then
       if checkfn == nil or checkfn(e) then
         table.insert(validtargets, e)
       end
@@ -89,9 +89,9 @@ local function FindTarget(inst, dist)
 
   for i, guy in ipairs(enemies) do
     if
-        inst.components.combat:CanTarget(guy) and guy.components.combat and
+      inst.components.combat:CanTarget(guy) and guy.components.combat and
         (IsAlly(guy.components.combat.target) or IsHostile(guy))
-    then
+     then
       if guy.components.health.currenthealth < lowesthealth then
         lowesthealth = guy.components.health.currenthealth
         lowestenemy = guy
@@ -173,13 +173,13 @@ end
 local SLEEP_NEAR_LEADER_DISTANCE = 8
 local function ShouldSleep(inst)
   return DefaultSleepTest(inst) and
-      (inst.components.follower == nil or inst.components.follower:IsNearLeader(SLEEP_NEAR_LEADER_DISTANCE))
+    (inst.components.follower == nil or inst.components.follower:IsNearLeader(SLEEP_NEAR_LEADER_DISTANCE))
 end
 
 local WAKE_TO_FOLLOW_DISTANCE = 15
 local function ShouldWakeUp(inst)
   return DefaultWakeTest(inst) or
-      (inst.components.follower and not inst.components.follower:IsNearLeader(WAKE_TO_FOLLOW_DISTANCE))
+    (inst.components.follower and not inst.components.follower:IsNearLeader(WAKE_TO_FOLLOW_DISTANCE))
 end
 
 local function keeptargetfn(inst, target)
@@ -240,9 +240,9 @@ local function OnKilledOther(inst, data)
     if victim:HasTag("shadow") and victim.sanityreward ~= nil then
       local owner = inst:GetOwner()
       if
-          owner and owner:HasTag("beemaster") and
+        owner and owner:HasTag("beemaster") and
           owner.components.skilltreeupdater:IsActivated("zeta_metapimancer_shepherd_1")
-      then
+       then
         owner.components.sanity:DoDelta(victim.sanityreward * 0.5)
       end
     end
@@ -353,7 +353,7 @@ local function OnAttacked(inst, data)
       return true
     end,
     targetshares,
-    { "_combat", "_health", "beemutantminion" }
+    {"_combat", "_health", "beemutantminion"}
   )
 end
 
@@ -466,9 +466,9 @@ local function findprotector(inst)
     function(guy)
       return not guy.components.health:IsDead() and guy._protectaura and guy:GetOwner() == inst:GetOwner()
     end,
-    { "beemutant", "_combat", "_health" },
-    { "INLIMBO" },
-    { "defender" }
+    {"beemutant", "_combat", "_health"},
+    {"INLIMBO"},
+    {"defender"}
   )
 end
 
@@ -480,13 +480,13 @@ local function MakeProtectable(inst)
   local oldDoDelta = inst.components.health.DoDelta
   inst.components.health.DoDelta = function(comp, amount, ...)
     if
-        amount < 0 and inst.components.health.currenthealth + amount < 0.5 * inst.components.health.maxhealth and
+      amount < 0 and inst.components.health.currenthealth + amount < 0.5 * inst.components.health.maxhealth and
         math.random() <= 0.25
-    then
+     then
       local owner = inst:GetOwner()
       if
-          owner and owner:HasTag("beemaster") and owner.components.skilltreeupdater:IsActivated("zeta_metapis_defender_1")
-      then
+        owner and owner:HasTag("beemaster") and owner.components.skilltreeupdater:IsActivated("zeta_metapis_defender_1")
+       then
         local protector = findprotector(inst)
         if protector ~= nil then
           -- print("FOUND PROTECTOR", protector, amount)
@@ -619,7 +619,7 @@ local function MakeShadowLaunchable(inst, spawnAnim, chargeAnim)
         startangle = startangle - TWOPI
       end
 
-      -- print("SPAWN FROM TARGET", tx, ty, tz, angle_to_target, startangle)
+    -- print("SPAWN FROM TARGET", tx, ty, tz, angle_to_target, startangle)
     end
 
     local offset, spawnAngle = FindWalkableOffset(inst:GetPosition(), startangle, 5, 5, false, false, nil, true, true)
@@ -667,7 +667,7 @@ end
 local function PushOwnerMinionAttackEvent(inst)
   local owner = inst:GetOwner()
   if owner ~= nil and owner.prefab == "zeta" then
-    owner:PushEvent("onminionattack", { minion = inst })
+    owner:PushEvent("onminionattack", {minion = inst})
   end
 end
 
@@ -824,7 +824,7 @@ end
 
 local function IsPoisonable(guy)
   return guy and guy:IsValid() and guy.components.health and not guy.components.health:IsDead() and
-      not guy:HasTag("player")
+    not guy:HasTag("player")
 end
 
 local function poisoncolor(inst, mr, mg, mb)
@@ -890,7 +890,7 @@ local function DoAreaDamage(inst, target, radius)
       return IsHostile(guy) or (guy.components.combat and IsAlly(guy.components.combat.target))
     end,
     nil,
-    { "INLIMBO", "player", "beemutant" }
+    {"INLIMBO", "player", "beemutant"}
   )
 end
 
@@ -1081,13 +1081,13 @@ end
 
 local function IsHealable(inst, guy)
   return inst:IsValid() and guy and guy:IsValid() and guy.components.health:IsHurt() and
-      not (guy.components.combat and guy.components.combat.target and guy.components.combat.target:HasTag("beemutant")) and -- don't heal bees fighting bees
-      inst:GetOwner() == guy:GetOwner()                                                                                   -- nil owner will heal nil owner
+    not (guy.components.combat and guy.components.combat.target and guy.components.combat.target:HasTag("beemutant")) and -- don't heal bees fighting bees
+    inst:GetOwner() == guy:GetOwner() -- nil owner will heal nil owner
 end
 
-local HEAL_MUST_TAGS = { "_combat", "_health" }
-local HEAL_MUST_NOT_TAGS = { "player", "INLIMBO", "lesserminion" }
-local HEAL_MUST_ONE_OF_TAGS = { "beemutantminion" }
+local HEAL_MUST_TAGS = {"_combat", "_health"}
+local HEAL_MUST_NOT_TAGS = {"player", "INLIMBO", "lesserminion"}
+local HEAL_MUST_ONE_OF_TAGS = {"beemutantminion"}
 
 local function FindHealingTarget(inst, origin)
   if not origin then
@@ -1095,16 +1095,16 @@ local function FindHealingTarget(inst, origin)
   end
 
   local ally =
-      FindEntity(
-        origin,
-        8,
-        function(guy)
-          return IsHealable(inst, guy)
-        end,
-        HEAL_MUST_TAGS,
-        HEAL_MUST_NOT_TAGS,
-        HEAL_MUST_ONE_OF_TAGS
-      )
+    FindEntity(
+    origin,
+    8,
+    function(guy)
+      return IsHealable(inst, guy)
+    end,
+    HEAL_MUST_TAGS,
+    HEAL_MUST_NOT_TAGS,
+    HEAL_MUST_ONE_OF_TAGS
+  )
 
   return ally
 end
@@ -1112,12 +1112,14 @@ end
 local SHADOW_HIT_RANGE_SQ = 3 ^ 2
 
 local function StartUpdate(inst)
-  inst._update_task = inst:DoPeriodicTask(FRAMES,
+  inst._update_task =
+    inst:DoPeriodicTask(
+    FRAMES,
     function(inst)
       if
-          inst._target == nil or not inst._target:IsValid() or
+        inst._target == nil or not inst._target:IsValid() or
           (inst._target.components.health and inst._target.components.health:IsDead())
-      then
+       then
         inst._update_task:Cancel()
         inst._update_task = nil
         return
@@ -1133,12 +1135,15 @@ local function StartUpdate(inst)
     end
   )
 
-  inst:ListenForEvent("onremove", function()
-    if inst._update_task ~= nil then
-      inst._update_task:Cancel()
-      inst._update_task = nil
+  inst:ListenForEvent(
+    "onremove",
+    function()
+      if inst._update_task ~= nil then
+        inst._update_task:Cancel()
+        inst._update_task = nil
+      end
     end
-  end)
+  )
 end
 
 local function MakeShadowPrefab(bank, build, customfn)

@@ -126,7 +126,7 @@ Assets = {
   Asset("ATLAS", "images/inventoryimages/mutanthealerbee_token.xml"),
   Asset("IMAGE", "images/inventoryimages/mutanthealerbee_token.tex"),
   Asset("IMAGE", "images/inventoryimages/mutantshadowfocus.tex"),
-  Asset("ATLAS", "images/inventoryimages/mutantshadowfocus.xml"),
+  Asset("ATLAS", "images/inventoryimages/mutantshadowfocus.xml")
 }
 
 RemapSoundEvent("dontstarve/characters/zeta/hurt", "zeta/zeta/hurt")
@@ -1183,7 +1183,8 @@ AddCharacterRecipe(
     description = "honeycomb_zeta_recipe" -- override RECIPE_DESC key
   }
 )
-GLOBAL.STRINGS.RECIPE_DESC.HONEYCOMB_ZETA_RECIPE = "After all this time, it only makes sense that I can finally craft this."
+GLOBAL.STRINGS.RECIPE_DESC.HONEYCOMB_ZETA_RECIPE =
+  "After all this time, it only makes sense that I can finally craft this."
 
 -- AddCharacterRecipe(
 --     "honey_sting_ball",

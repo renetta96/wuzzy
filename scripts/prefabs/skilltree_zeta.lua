@@ -1,19 +1,17 @@
-
-
 local H_GAP = 35
 local W_GAP = 38
 
 local METAPISMANCER_ANCHOR_X = -214 + 18
 local METAPIS_ANCHOR_X = -62
 local HONEYSMITH_ANCHOR_X = 66 + 18
-local ALLEGIANCE_ANCHOR_X = 154 + W_GAP/2
+local ALLEGIANCE_ANCHOR_X = 154 + W_GAP / 2
 local SKILL_FIRST_ROW_Y = 176
 
 local ORDERS = {
   {"metapimancer", {METAPISMANCER_ANCHOR_X, SKILL_FIRST_ROW_Y + 30}},
   {"metapis", {METAPIS_ANCHOR_X, SKILL_FIRST_ROW_Y + 30}},
   {"honeysmith", {HONEYSMITH_ANCHOR_X, SKILL_FIRST_ROW_Y + 30}},
-  {"allegiance", {154 + W_GAP/2, SKILL_FIRST_ROW_Y + 30 }},
+  {"allegiance", {154 + W_GAP / 2, SKILL_FIRST_ROW_Y + 30}}
 }
 
 local MAX_METAPIS_SKILLS = 4
@@ -104,7 +102,11 @@ local function BuildSkillsData(SkillTreeFns)
       tags = {"metapimancer", "metapimancer_shepherd"}
     },
     -- metapis
-    zeta_metapis_lock_1 = MakeMetapisLock({METAPIS_ANCHOR_X - W_GAP, SKILL_FIRST_ROW_Y}, {"zeta_metapis_assassin_1"}, "metapis_assassin"),
+    zeta_metapis_lock_1 = MakeMetapisLock(
+      {METAPIS_ANCHOR_X - W_GAP, SKILL_FIRST_ROW_Y},
+      {"zeta_metapis_assassin_1"},
+      "metapis_assassin"
+    ),
     zeta_metapis_assassin_1 = {
       title = "Metapis Mutant I",
       desc = "Less poison base damage but it becomes stackable. Maximum 20 stacks.",
@@ -124,7 +126,11 @@ local function BuildSkillsData(SkillTreeFns)
       group = "metapis",
       tags = {"metapis_minion", "metapis_assassin"}
     },
-    zeta_metapis_lock_2 = MakeMetapisLock({METAPIS_ANCHOR_X - W_GAP, SKILL_FIRST_ROW_Y - H_GAP}, {"zeta_metapis_shadow_1"}, "metapis_shadow"),
+    zeta_metapis_lock_2 = MakeMetapisLock(
+      {METAPIS_ANCHOR_X - W_GAP, SKILL_FIRST_ROW_Y - H_GAP},
+      {"zeta_metapis_shadow_1"},
+      "metapis_shadow"
+    ),
     zeta_metapis_shadow_1 = {
       title = "Metapis Shadow I",
       desc = "Metapis Shadows can summon Shadowlings to attack enemies. These melee minions have health decay over time and any damage received is capped at 15% max health.",
@@ -168,7 +174,11 @@ local function BuildSkillsData(SkillTreeFns)
       group = "metapis",
       tags = {"metapis_minion", "metapis_defender"}
     },
-    zeta_metapis_lock_4 = MakeMetapisLock({METAPIS_ANCHOR_X - W_GAP, SKILL_FIRST_ROW_Y - 3 * H_GAP}, {"zeta_metapis_ranger_1"}, "metapis_ranger"),
+    zeta_metapis_lock_4 = MakeMetapisLock(
+      {METAPIS_ANCHOR_X - W_GAP, SKILL_FIRST_ROW_Y - 3 * H_GAP},
+      {"zeta_metapis_ranger_1"},
+      "metapis_ranger"
+    ),
     zeta_metapis_ranger_1 = {
       title = "Metapis Voltwing I",
       desc = "Metapis Voltwings orbit around their target, periodically firing electric orbs. Each attack builds up their charge, and at full power, they unleash an electric wisp that accelerates toward the target, dealing damage on impact.",
@@ -188,7 +198,11 @@ local function BuildSkillsData(SkillTreeFns)
       group = "metapis",
       tags = {"metapis_minion", "metapis_ranger"}
     },
-    zeta_metapis_lock_5 = MakeMetapisLock({METAPIS_ANCHOR_X - W_GAP, SKILL_FIRST_ROW_Y - 4 * H_GAP}, {"zeta_metapis_mimic_1"}, "metapis_mimic"),
+    zeta_metapis_lock_5 = MakeMetapisLock(
+      {METAPIS_ANCHOR_X - W_GAP, SKILL_FIRST_ROW_Y - 4 * H_GAP},
+      {"zeta_metapis_mimic_1"},
+      "metapis_mimic"
+    ),
     zeta_metapis_mimic_1 = {
       title = "Metapis Mimic I",
       desc = "Evolve Metapis Soldiers into Metapis Mimics, which periodically adapt their abilities based on nearby Metapises. Each adaptation grants 1 ability, retaining only 1 total 75% of the time, and up to 2 abilities 25% of the time.",
@@ -208,7 +222,11 @@ local function BuildSkillsData(SkillTreeFns)
       group = "metapis",
       tags = {"metapis_minion", "metapis_mimic"}
     },
-    zeta_metapis_lock_6 = MakeMetapisLock({METAPIS_ANCHOR_X - W_GAP, SKILL_FIRST_ROW_Y - 5 * H_GAP}, {"zeta_metapis_healer_1"}, "metapis_healer"),
+    zeta_metapis_lock_6 = MakeMetapisLock(
+      {METAPIS_ANCHOR_X - W_GAP, SKILL_FIRST_ROW_Y - 5 * H_GAP},
+      {"zeta_metapis_healer_1"},
+      "metapis_healer"
+    ),
     zeta_metapis_healer_1 = {
       title = "Metapis Alchemist I",
       desc = "Metapis Alchemists periodically release pheromones, briefly frenzying nearby allies to boost attack speed but increase damage taken. Their heal orbs also gain Wuzzy’s bonus movement speed for a short time, stacking up to 3 times.",
@@ -285,23 +303,29 @@ local function BuildSkillsData(SkillTreeFns)
       root = true,
       desc = "Learned at least 12 skills, including Shepherd or Tyrant.",
       lock_open = function(prefabname, activatedskills, readonly)
-        return SkillTreeFns.CountSkills(prefabname, activatedskills) >= 12
-          and (SkillTreeFns.CountTags(prefabname, "metapimancer_shepherd", activatedskills) > 0 or SkillTreeFns.CountTags(prefabname, "metapimancer_tyrant", activatedskills) > 0)
+        return SkillTreeFns.CountSkills(prefabname, activatedskills) >= 12 and
+          (SkillTreeFns.CountTags(prefabname, "metapimancer_shepherd", activatedskills) > 0 or
+            SkillTreeFns.CountTags(prefabname, "metapimancer_tyrant", activatedskills) > 0)
       end,
       pos = {ALLEGIANCE_ANCHOR_X, SKILL_FIRST_ROW_Y}
     },
-
-    zeta_allegiance_shadow_lock_1 = SkillTreeFns.MakeFuelWeaverLock({ pos = { ALLEGIANCE_ANCHOR_X - W_GAP/2, SKILL_FIRST_ROW_Y - H_GAP } }),
-    zeta_allegiance_shadow_lock_2 = SkillTreeFns.MakeNoLunarLock({ pos = { ALLEGIANCE_ANCHOR_X - W_GAP/2, SKILL_FIRST_ROW_Y - 2*H_GAP } }),
-
-    zeta_allegiance_lunar_lock_1  = SkillTreeFns.MakeCelestialChampionLock({ pos = { ALLEGIANCE_ANCHOR_X + W_GAP/2, SKILL_FIRST_ROW_Y - H_GAP } }),
-    zeta_allegiance_lunar_lock_2  = SkillTreeFns.MakeNoShadowLock({ pos = { ALLEGIANCE_ANCHOR_X + W_GAP/2, SKILL_FIRST_ROW_Y - 2*H_GAP } }),
-
+    zeta_allegiance_shadow_lock_1 = SkillTreeFns.MakeFuelWeaverLock(
+      {pos = {ALLEGIANCE_ANCHOR_X - W_GAP / 2, SKILL_FIRST_ROW_Y - H_GAP}}
+    ),
+    zeta_allegiance_shadow_lock_2 = SkillTreeFns.MakeNoLunarLock(
+      {pos = {ALLEGIANCE_ANCHOR_X - W_GAP / 2, SKILL_FIRST_ROW_Y - 2 * H_GAP}}
+    ),
+    zeta_allegiance_lunar_lock_1 = SkillTreeFns.MakeCelestialChampionLock(
+      {pos = {ALLEGIANCE_ANCHOR_X + W_GAP / 2, SKILL_FIRST_ROW_Y - H_GAP}}
+    ),
+    zeta_allegiance_lunar_lock_2 = SkillTreeFns.MakeNoShadowLock(
+      {pos = {ALLEGIANCE_ANCHOR_X + W_GAP / 2, SKILL_FIRST_ROW_Y - 2 * H_GAP}}
+    ),
     zeta_allegiance_shadow_1 = {
       title = "Shadow Melissomancy I",
       desc = "The Queen will reward your loyalty with combat bonuses. You and your swarm take less damage from Shadow Aligned enemies and deal bonus damage to Lunar Aligned enemies. Being a Shepherd grants you lesser bonuses, but empowers your minions more. Being a Tyrant grants you greater bonuses, but empowers your minions less.",
       icon = "zeta_allegiance_shadow_1",
-      pos = {ALLEGIANCE_ANCHOR_X - W_GAP/2, SKILL_FIRST_ROW_Y - 3*H_GAP},
+      pos = {ALLEGIANCE_ANCHOR_X - W_GAP / 2, SKILL_FIRST_ROW_Y - 3 * H_GAP},
       group = "allegiance",
       tags = {"allegiance", "shadow", "shadow_favor"},
       locks = {"zeta_allegiance_lock_1", "zeta_allegiance_shadow_lock_1", "zeta_allegiance_shadow_lock_2"},
@@ -311,7 +335,7 @@ local function BuildSkillsData(SkillTreeFns)
       title = "Shadow Melissomancy II",
       desc = "The Queen will grant you the secrets of Shadow Nectar.",
       icon = "zeta_allegiance_shadow_2",
-      pos = {ALLEGIANCE_ANCHOR_X - W_GAP/2, SKILL_FIRST_ROW_Y - 4*H_GAP},
+      pos = {ALLEGIANCE_ANCHOR_X - W_GAP / 2, SKILL_FIRST_ROW_Y - 4 * H_GAP},
       group = "allegiance",
       tags = {"allegiance", "shadow", "shadow_favor"}
     },
@@ -319,11 +343,11 @@ local function BuildSkillsData(SkillTreeFns)
       title = "Lunar Melissomancy I",
       desc = "The Cryptic Founder will reward your curiosity with combat bonuses. You and your swarm take less damage from Lunar Aligned enemies and deal bonus damage to Shadow Aligned enemies. Being a Shepherd grants you lesser bonuses, but empowers your minions more. Being a Tyrant grants you greater bonuses, but empowers your minions less.",
       icon = "zeta_allegiance_lunar_1",
-      pos = {ALLEGIANCE_ANCHOR_X + W_GAP/2, SKILL_FIRST_ROW_Y - 3*H_GAP},
+      pos = {ALLEGIANCE_ANCHOR_X + W_GAP / 2, SKILL_FIRST_ROW_Y - 3 * H_GAP},
       group = "allegiance",
       tags = {"allegiance", "lunar", "lunar_favor"},
       locks = {"zeta_allegiance_lock_1", "zeta_allegiance_lunar_lock_1", "zeta_allegiance_lunar_lock_2"}
-    },
+    }
     -- zeta_allegiance_lunar_2 = {
     --   title = "Lunar II",
     --   desc = "",

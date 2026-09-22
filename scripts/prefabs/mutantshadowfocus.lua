@@ -22,32 +22,40 @@ local SIGIL_LAUNCH_TIMES = 4
 local SIGIL_RADIUS = 5
 
 local function launchShadowAOE(inst)
-	inst.components.counter:Decrement("shadow_launch_times")
-	inst.AnimState:PlayAnimation("pulse")
+  inst.components.counter:Decrement("shadow_launch_times")
+  inst.AnimState:PlayAnimation("pulse")
 
   local x, y, z = inst.Transform:GetWorldPosition()
   local allies = TheSim:FindEntities(x, y, z, SIGIL_RADIUS, MUST_TAGS, MUST_NOT_TAGS, MUST_ONE_OF_TAGS)
 
   for i, e in ipairs(allies) do
     local owner = e:GetOwner()
-    if e:IsValid() and not e.components.health:IsDead() and owner ~= nil and owner:HasTag("beemaster") and owner.userid == inst._userid then
+    if
+      e:IsValid() and not e.components.health:IsDead() and owner ~= nil and owner:HasTag("beemaster") and
+        owner.userid == inst._userid
+     then
       e:LaunchShadow()
     end
   end
 
-	if inst.components.counter:GetCount("shadow_launch_times") == 0 then
-		inst:ListenForEvent("animover", function()
-			inst:DoTaskInTime(1, function()
-				inst.AnimState:PlayAnimation("idle_pst")
-				inst:ListenForEvent("animover", inst.Remove)
-			end)
-		end)
-	else
-		inst.AnimState:PushAnimation("idle", true)
-		inst.components.timer:StartTimer("shadow_launch_cd", 3)
-	end
+  if inst.components.counter:GetCount("shadow_launch_times") == 0 then
+    inst:ListenForEvent(
+      "animover",
+      function()
+        inst:DoTaskInTime(
+          1,
+          function()
+            inst.AnimState:PlayAnimation("idle_pst")
+            inst:ListenForEvent("animover", inst.Remove)
+          end
+        )
+      end
+    )
+  else
+    inst.AnimState:PushAnimation("idle", true)
+    inst.components.timer:StartTimer("shadow_launch_cd", 3)
+  end
 end
-
 
 local function onSigilTimerDone(inst, data)
   if data and data.name == "shadow_launch_cd" then
@@ -84,7 +92,7 @@ local function sigil_fn()
   inst.AnimState:SetBank("mutantshadowsigil")
   inst.AnimState:SetBuild("mutantshadowsigil")
   inst.AnimState:PlayAnimation("idle_pre")
-	inst.AnimState:PushAnimation("idle", true)
+  inst.AnimState:PushAnimation("idle", true)
 
   inst.AnimState:SetOrientation(ANIM_ORIENTATION.OnGround)
   inst.AnimState:SetLayer(LAYER_BACKGROUND)
@@ -100,7 +108,7 @@ local function sigil_fn()
   end
 
   inst:AddComponent("timer")
-	inst.components.timer:StartTimer("shadow_launch_cd", 3)
+  inst.components.timer:StartTimer("shadow_launch_cd", 3)
   inst:ListenForEvent("timerdone", onSigilTimerDone)
 
   inst:AddComponent("counter")
@@ -144,20 +152,20 @@ local MAX_USES = 1000
 local DECAY_USES = 100
 local DECAY_RATE = 10
 local SPELL_COSTS = {
-	["sigil_shadow_launch"] = 250
+  ["sigil_shadow_launch"] = 250
 }
 local SPELL_COOLDOWNS = {
-	["sigil_shadow_launch"] = 17
+  ["sigil_shadow_launch"] = 17
 }
 
 local function SigilShadowLaunchSpellFn(inst, doer, pos)
-	if doer.components.spellbookcooldowns and doer.components.spellbookcooldowns:IsInCooldown("sigil_shadow_launch") then
-		return false, "SPELL_ON_COOLDOWN"
-	end
+  if doer.components.spellbookcooldowns and doer.components.spellbookcooldowns:IsInCooldown("sigil_shadow_launch") then
+    return false, "SPELL_ON_COOLDOWN"
+  end
 
-	if inst.components.finiteuses:GetUses() < SPELL_COSTS["sigil_shadow_launch"] then
-		return false, "NOT_ENOUGH_ENERGY"
-	end
+  if inst.components.finiteuses:GetUses() < SPELL_COSTS["sigil_shadow_launch"] then
+    return false, "NOT_ENOUGH_ENERGY"
+  end
 
   local sigil = SpawnPrefab("mutantshadowsigil")
   sigil.Transform:SetPosition(pos:Get())
@@ -166,11 +174,14 @@ local function SigilShadowLaunchSpellFn(inst, doer, pos)
     sigil._userid = doer.userid
   end
 
-	inst.components.finiteuses:Use(SPELL_COSTS["sigil_shadow_launch"])
+  inst.components.finiteuses:Use(SPELL_COSTS["sigil_shadow_launch"])
 
-	if doer.components.spellbookcooldowns then
-		doer.components.spellbookcooldowns:RestartSpellCooldown("sigil_shadow_launch", SPELL_COOLDOWNS["sigil_shadow_launch"])
-	end
+  if doer.components.spellbookcooldowns then
+    doer.components.spellbookcooldowns:RestartSpellCooldown(
+      "sigil_shadow_launch",
+      SPELL_COOLDOWNS["sigil_shadow_launch"]
+    )
+  end
 
   return true
 end
@@ -195,22 +206,20 @@ local SPELLS = {
     execute = StartAOETargeting,
     widget_scale = ICON_SCALE,
     bank = "spell_icons_zeta",
-		build = "spell_icons_zeta",
-		anims =
-		{
-			idle = { anim = "sigil_shadow_launch" },
-			focus = { anim = "sigil_shadow_launch_focus", loop = true },
-			down = { anim = "sigil_shadow_launch_pressed" },
-			cooldown = { anim = "sigil_shadow_launch_cooldown" },
-		},
-		checkcooldown = function(user)
-			--client safe
-			return user
-				and user.components.spellbookcooldowns
-				and user.components.spellbookcooldowns:GetSpellCooldownPercent("sigil_shadow_launch")
-				or nil
-		end,
-		cooldowncolor = { 0.5,0.5,0.5, 0.75 },
+    build = "spell_icons_zeta",
+    anims = {
+      idle = {anim = "sigil_shadow_launch"},
+      focus = {anim = "sigil_shadow_launch_focus", loop = true},
+      down = {anim = "sigil_shadow_launch_pressed"},
+      cooldown = {anim = "sigil_shadow_launch_cooldown"}
+    },
+    checkcooldown = function(user)
+      --client safe
+      return user and user.components.spellbookcooldowns and
+        user.components.spellbookcooldowns:GetSpellCooldownPercent("sigil_shadow_launch") or
+        nil
+    end,
+    cooldowncolor = {0.5, 0.5, 0.5, 0.75}
   }
 }
 
@@ -220,16 +229,24 @@ local function onPickUp(inst, pickupguy, src_pos)
     return
   end
 
-  if pickupguy.prefab == "zeta" and pickupguy.components.skilltreeupdater and not pickupguy.components.skilltreeupdater:IsActivated("zeta_allegiance_shadow_2") and pickupguy.components.talker then
+  if
+    pickupguy.prefab == "zeta" and pickupguy.components.skilltreeupdater and
+      not pickupguy.components.skilltreeupdater:IsActivated("zeta_allegiance_shadow_2") and
+      pickupguy.components.talker
+   then
     pickupguy.components.talker:Say(STRINGS.MUTANTSHADOWFOCUS_UNSKILLED)
   end
 end
 
 local function startDecay(inst)
   if inst._decaytask == nil then
-    inst._decaytask = inst:DoPeriodicTask(DECAY_RATE, function()
-      inst.components.finiteuses:Use(math.min(inst.components.finiteuses:GetUses(), DECAY_USES))
-    end)
+    inst._decaytask =
+      inst:DoPeriodicTask(
+      DECAY_RATE,
+      function()
+        inst.components.finiteuses:Use(math.min(inst.components.finiteuses:GetUses(), DECAY_USES))
+      end
+    )
   end
 end
 
@@ -244,9 +261,11 @@ end
 local function hookOwner(inst)
   local owner = inst.components.inventoryitem:GetGrandOwner()
 
-  if owner == nil or owner.prefab ~= "zeta" or
-    not (owner.components.skilltreeupdater and owner.components.skilltreeupdater:IsActivated("zeta_allegiance_shadow_2"))
-  then
+  if
+    owner == nil or owner.prefab ~= "zeta" or
+      not (owner.components.skilltreeupdater and
+        owner.components.skilltreeupdater:IsActivated("zeta_allegiance_shadow_2"))
+   then
     inst._owner = nil
     startDecay(inst)
     -- clear just in case
@@ -271,16 +290,22 @@ local function onPutInInventory(inst, owner)
     return
   end
 
-  local existing = owner.components.inventory:FindItem(function (item)
-    return item.prefab == "mutantshadowfocus" and item ~= inst
-  end)
+  local existing =
+    owner.components.inventory:FindItem(
+    function(item)
+      return item.prefab == "mutantshadowfocus" and item ~= inst
+    end
+  )
   if existing ~= nil then
-    owner:DoTaskInTime(0, function()
-      owner.components.inventory:DropItem(inst, true, true)
-      if owner.components.talker then
-        owner.components.talker:Say(STRINGS.MUTANTSHADOWFOCUS_AUTO_DROP)
+    owner:DoTaskInTime(
+      0,
+      function()
+        owner.components.inventory:DropItem(inst, true, true)
+        if owner.components.talker then
+          owner.components.talker:Say(STRINGS.MUTANTSHADOWFOCUS_AUTO_DROP)
+        end
       end
-    end)
+    )
     return
   end
 
@@ -366,8 +391,8 @@ local function fn()
   inst.components.inventoryitem:SetOnDroppedFn(onDropped)
   inst.components.inventoryitem:SetOnPickupFn(onPickUp)
 
-	inst:AddComponent("finiteuses")
-	inst.components.finiteuses:SetMaxUses(MAX_USES)
+  inst:AddComponent("finiteuses")
+  inst.components.finiteuses:SetMaxUses(MAX_USES)
   inst.components.finiteuses:SetUses(MAX_USES)
   inst.components.finiteuses:SetDoesNotStartFull(true)
 
@@ -426,4 +451,3 @@ return Prefab("mutantshadowfocus", fn, assets, prefabs), Prefab("reticuleaoe_mut
   {},
   prefabs
 ), Prefab("mutantshadowsigil", sigil_fn, assets, prefabs)
-

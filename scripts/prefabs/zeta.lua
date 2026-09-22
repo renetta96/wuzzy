@@ -23,7 +23,7 @@ for k, v in pairs(TUNING.GAMEMODE_STARTING_ITEMS) do
   start_inv[string.lower(k)] = v.ZETA or {}
 end
 
-prefabs = FlattenTree({ prefabs, start_inv }, true)
+prefabs = FlattenTree({prefabs, start_inv}, true)
 
 local function GetChildPrefab(inst, source)
   if source == nil then
@@ -66,7 +66,7 @@ local function OnNumStoreChange(inst)
   local maxstore = inst.components.beesummoner.maxstore
 
   inst.components.temperature.inherentinsulation =
-      (TUNING.INSULATION_MED / maxstore) * numstore - TUNING.INSULATION_SMALL
+    (TUNING.INSULATION_MED / maxstore) * numstore - TUNING.INSULATION_SMALL
 end
 
 local function SeasonalChanges(inst, season)
@@ -158,7 +158,7 @@ local function OnInit(inst)
   inst.components.eater.custom_stats_mod_fn = function(inst, health_delta, hunger_delta, sanity_delta, food, feeder, ...)
     if _custom_stats_mod_fn then
       health_delta, hunger_delta, sanity_delta =
-          _custom_stats_mod_fn(inst, health_delta, hunger_delta, sanity_delta, food, feeder, ...)
+        _custom_stats_mod_fn(inst, health_delta, hunger_delta, sanity_delta, food, feeder, ...)
     end
 
     if food and (food:HasTag("honeyed") or honeyed_foods[food.prefab]) then
@@ -233,15 +233,15 @@ end
 local function findNearbyMinions(inst, num)
   local x, y, z = inst.Transform:GetWorldPosition()
   local minions =
-      TheSim:FindEntities(
-        x,
-        y,
-        z,
-        10,
-        { "beemutant", "_combat", "_health" },
-        { "INLIMBO", "lesserminion" },
-        { "beemutantminion" }
-      )
+    TheSim:FindEntities(
+    x,
+    y,
+    z,
+    10,
+    {"beemutant", "_combat", "_health"},
+    {"INLIMBO", "lesserminion"},
+    {"beemutantminion"}
+  )
 
   local res = {}
   local cnt = 0
@@ -290,7 +290,7 @@ local function OnAttackOther(inst, data)
 
   if target:IsValid() then
     local x, y, z = inst.Transform:GetWorldPosition()
-    local allies = TheSim:FindEntities(x, y, z, 15, { "_combat", "_health", "beemutantminion" }, { "INLIMBO", "player" })
+    local allies = TheSim:FindEntities(x, y, z, 15, {"_combat", "_health", "beemutantminion"}, {"INLIMBO", "player"})
 
     for i, e in pairs(allies) do
       if e ~= target and e:GetOwner() == inst and not (e:IsInLimbo() or e.components.health:IsDead()) then
@@ -308,23 +308,23 @@ local function OnAttackOther(inst, data)
   end
 
   if
-      inst.components.skilltreeupdater:IsActivated("zeta_metapimancer_shepherd_2") and
+    inst.components.skilltreeupdater:IsActivated("zeta_metapimancer_shepherd_2") and
       math.random() <= calcChance(inst, 0.15, 0.3, 0.3)
-  then
+   then
     enrageMinions(inst)
   end
 
   if math.random() <= 0.25 and inst.components.skilltreeupdater:IsActivated("zeta_metapis_ranger_2") then
     local x, y, z = inst.Transform:GetWorldPosition()
     local rangers =
-        TheSim:FindEntities(x, y, z, 10, { "_combat", "_health", "beemutantminion", "ranger" }, { "INLIMBO", "player" })
+      TheSim:FindEntities(x, y, z, 10, {"_combat", "_health", "beemutantminion", "ranger"}, {"INLIMBO", "player"})
 
     local cnt = 0
     local limit = math.random(2, 4)
     for i, e in pairs(rangers) do
       if
-          e ~= target and e._shouldcharge and e:GetOwner() == inst and not (e:IsInLimbo() or e.components.health:IsDead())
-      then
+        e ~= target and e._shouldcharge and e:GetOwner() == inst and not (e:IsInLimbo() or e.components.health:IsDead())
+       then
         e:Charge()
         cnt = cnt + 1
         if cnt >= limit then
@@ -340,83 +340,83 @@ local function ModifySGClient(sg)
   local atk_handler = sg.actionhandlers[ACTIONS.ATTACK]
   local atk_deststate_fn = atk_handler.deststate
   local new_handler =
-      ActionHandler(
-        ACTIONS.ATTACK,
-        function(inst, action, ...)
-          local state = atk_deststate_fn(inst, action, ...)
-          local equip = inst.replica.inventory:GetEquippedItem(EQUIPSLOTS.HANDS)
-          local rider = inst.replica.rider
+    ActionHandler(
+    ACTIONS.ATTACK,
+    function(inst, action, ...)
+      local state = atk_deststate_fn(inst, action, ...)
+      local equip = inst.replica.inventory:GetEquippedItem(EQUIPSLOTS.HANDS)
+      local rider = inst.replica.rider
 
-          if
-              inst.prefab == "zeta" and state == "attack" and inst.components.skilltreeupdater ~= nil and
-              inst.components.skilltreeupdater:IsActivated("zeta_honeysmith_melissa_1") and
-              not (rider ~= nil and rider:IsRiding()) and
-              equip ~= nil and
-              equip:HasTag("beemaster_weapon") and
-              equip.ShouldSmashClient ~= nil and
-              equip:ShouldSmashClient()
-          then
-            return "attack_zeta_smash"
-          end
+      if
+        inst.prefab == "zeta" and state == "attack" and inst.components.skilltreeupdater ~= nil and
+          inst.components.skilltreeupdater:IsActivated("zeta_honeysmith_melissa_1") and
+          not (rider ~= nil and rider:IsRiding()) and
+          equip ~= nil and
+          equip:HasTag("beemaster_weapon") and
+          equip.ShouldSmashClient ~= nil and
+          equip:ShouldSmashClient()
+       then
+        return "attack_zeta_smash"
+      end
 
-          return state
-        end,
-        atk_handler.condition
-      )
+      return state
+    end,
+    atk_handler.condition
+  )
 
   local blink_swap_handler =
-      ActionHandler(
-        ACTIONS.ZETA_BLINK_SWAP_APPROX,
-        function(inst, action)
-          return "quicktele"
-        end
-      )
+    ActionHandler(
+    ACTIONS.ZETA_BLINK_SWAP_APPROX,
+    function(inst, action)
+      return "quicktele"
+    end
+  )
 
   sg.states["castspell_zeta"] =
-      State {
-        name = "castspell_zeta",
-        tags = { "doing", "busy", "canrotate" },
-        server_states = { "castspell_zeta" },
-        onenter = function(inst)
-          inst.components.locomotor:Stop()
-          inst.AnimState:PlayAnimation("cointoss_pre")
-          inst.AnimState:PushAnimation("cointoss_lag", false)
+    State {
+    name = "castspell_zeta",
+    tags = {"doing", "busy", "canrotate"},
+    server_states = {"castspell_zeta"},
+    onenter = function(inst)
+      inst.components.locomotor:Stop()
+      inst.AnimState:PlayAnimation("cointoss_pre")
+      inst.AnimState:PushAnimation("cointoss_lag", false)
 
-          inst:PerformPreviewBufferedAction()
-          inst.sg:SetTimeout(2)
-        end,
-        onupdate = function(inst)
-          if inst.sg:ServerStateMatches() then
-            if inst.entity:FlattenMovementPrediction() then
-              inst.sg:GoToState("idle", "noanim")
-            end
-          elseif inst.bufferedaction == nil then
-            inst.sg:GoToState("idle")
-          end
-        end,
-        ontimeout = function(inst)
-          inst:ClearBufferedAction()
-          inst.sg:GoToState("idle")
+      inst:PerformPreviewBufferedAction()
+      inst.sg:SetTimeout(2)
+    end,
+    onupdate = function(inst)
+      if inst.sg:ServerStateMatches() then
+        if inst.entity:FlattenMovementPrediction() then
+          inst.sg:GoToState("idle", "noanim")
         end
-      }
+      elseif inst.bufferedaction == nil then
+        inst.sg:GoToState("idle")
+      end
+    end,
+    ontimeout = function(inst)
+      inst:ClearBufferedAction()
+      inst.sg:GoToState("idle")
+    end
+  }
 
   local castaoe_handler = sg.actionhandlers[ACTIONS.CASTAOE]
   local castaoe_deststate_fn = castaoe_handler.deststate
   local new_castaoe_handler =
-      ActionHandler(
-        ACTIONS.CASTAOE,
-        function(inst, action, ...)
-          if
-              inst.prefab == "zeta" and action ~= nil and action.invobject ~= nil and
-              action.invobject:HasTag("mutantspellfocus")
-          then
-            return "castspell_zeta"
-          end
+    ActionHandler(
+    ACTIONS.CASTAOE,
+    function(inst, action, ...)
+      if
+        inst.prefab == "zeta" and action ~= nil and action.invobject ~= nil and
+          action.invobject:HasTag("mutantspellfocus")
+       then
+        return "castspell_zeta"
+      end
 
-          return castaoe_deststate_fn(inst, action, ...)
-        end,
-        castaoe_handler.condition
-      )
+      return castaoe_deststate_fn(inst, action, ...)
+    end,
+    castaoe_handler.condition
+  )
 
   sg.actionhandlers[new_handler.action] = new_handler
   sg.actionhandlers[blink_swap_handler.action] = blink_swap_handler
@@ -437,159 +437,157 @@ local function ModifySGMaster(sg)
   local atk_handler = sg.actionhandlers[ACTIONS.ATTACK]
   local atk_deststate_fn = atk_handler.deststate
   local new_atk_handler =
-      ActionHandler(
-        ACTIONS.ATTACK,
-        function(inst, action, ...)
-          local state = atk_deststate_fn(inst, action, ...)
-          local weapon = inst.components.combat ~= nil and inst.components.combat:GetWeapon() or nil
+    ActionHandler(
+    ACTIONS.ATTACK,
+    function(inst, action, ...)
+      local state = atk_deststate_fn(inst, action, ...)
+      local weapon = inst.components.combat ~= nil and inst.components.combat:GetWeapon() or nil
 
-          if
-              inst.prefab == "zeta" and state == "attack" and inst.components.skilltreeupdater ~= nil and
-              inst.components.skilltreeupdater:IsActivated("zeta_honeysmith_melissa_1") and
-              not (inst.components.rider ~= nil and inst.components.rider:IsRiding()) and
-              weapon ~= nil and
-              weapon:HasTag("beemaster_weapon") and
-              weapon.ShouldSmash ~= nil and
-              weapon:ShouldSmash()
-          then
-            return "attack_zeta_smash"
-          end
+      if
+        inst.prefab == "zeta" and state == "attack" and inst.components.skilltreeupdater ~= nil and
+          inst.components.skilltreeupdater:IsActivated("zeta_honeysmith_melissa_1") and
+          not (inst.components.rider ~= nil and inst.components.rider:IsRiding()) and
+          weapon ~= nil and
+          weapon:HasTag("beemaster_weapon") and
+          weapon.ShouldSmash ~= nil and
+          weapon:ShouldSmash()
+       then
+        return "attack_zeta_smash"
+      end
 
-          return state
-        end,
-        atk_handler.condition
-      )
+      return state
+    end,
+    atk_handler.condition
+  )
 
   local blink_swap_handler =
-      ActionHandler(
-        ACTIONS.ZETA_BLINK_SWAP_APPROX,
-        function(inst, action)
-          return "quicktele"
-        end
-      )
+    ActionHandler(
+    ACTIONS.ZETA_BLINK_SWAP_APPROX,
+    function(inst, action)
+      return "quicktele"
+    end
+  )
 
   sg.states["castspell_zeta"] =
-      State {
-        name = "castspell_zeta",
-        tags = { "doing", "busy", "canrotate" },
-        onenter = function(inst)
-          if inst.components.playercontroller ~= nil then
-            inst.components.playercontroller:Enable(false)
-          end
-          inst.AnimState:PlayAnimation("cointoss_pre")
-          inst.AnimState:PushAnimation("cointoss", false)
-          inst.components.locomotor:Stop()
+    State {
+    name = "castspell_zeta",
+    tags = {"doing", "busy", "canrotate"},
+    onenter = function(inst)
+      if inst.components.playercontroller ~= nil then
+        inst.components.playercontroller:Enable(false)
+      end
+      inst.AnimState:PlayAnimation("cointoss_pre")
+      inst.AnimState:PushAnimation("cointoss", false)
+      inst.components.locomotor:Stop()
 
-          local buffaction = inst:GetBufferedAction()
+      local buffaction = inst:GetBufferedAction()
 
-          local spellobj = buffaction ~= nil and buffaction.invobject or nil
-          inst.sg.statemem.fxcolour = spellobj ~= nil and spellobj.fxcolour or { 1, 1, 1 }
-          inst.sg.statemem.castsound = spellobj ~= nil and spellobj.castsound or nil
+      local spellobj = buffaction ~= nil and buffaction.invobject or nil
+      inst.sg.statemem.fxcolour = spellobj ~= nil and spellobj.fxcolour or {1, 1, 1}
+      inst.sg.statemem.castsound = spellobj ~= nil and spellobj.castsound or nil
 
-          if spellobj ~= nil and spellobj.components.aoetargeting ~= nil then
-            inst.sg.statemem.targetfx = spellobj.components.aoetargeting:SpawnTargetFXAt(buffaction
-            :GetDynamicActionPoint())
-            if inst.sg.statemem.targetfx ~= nil then
-              inst.sg.statemem.targetfx:ListenForEvent("onremove", OnRemoveCleanupTargetFX, inst)
-            end
-          end
-        end,
-        timeline = {
-          TimeEvent(
-            7 * FRAMES,
-            function(inst)
-              inst.sg.statemem.stafffx =
-                  SpawnPrefab(
-                    (inst.components.rider ~= nil and inst.components.rider:IsRiding()) and "staffcastfx_mount" or
-                    "staffcastfx"
-                  )
-              inst.sg.statemem.stafffx.entity:SetParent(inst.entity)
-              inst.sg.statemem.stafffx:SetUp(inst.sg.statemem.fxcolour)
-            end
-          ),
-          TimeEvent(
-            15 * FRAMES,
-            function(inst)
-              inst.sg.statemem.stafflight = SpawnPrefab("staff_castinglight")
-              inst.sg.statemem.stafflight.Transform:SetPosition(inst.Transform:GetWorldPosition())
-              inst.sg.statemem.stafflight:SetUp(inst.sg.statemem.fxcolour, 1.2, .33)
-            end
-          ),
-          TimeEvent(
-            13 * FRAMES,
-            function(inst)
-              if inst.sg.statemem.castsound then
-                inst.SoundEmitter:PlaySound(inst.sg.statemem.castsound)
-              end
-            end
-          ),
-          TimeEvent(
-            53 * FRAMES,
-            function(inst)
-              if inst.sg.statemem.targetfx ~= nil then
-                if inst.sg.statemem.targetfx:IsValid() then
-                  OnRemoveCleanupTargetFX(inst)
-                end
-                inst.sg.statemem.targetfx = nil
-              end
-              inst.sg.statemem.stafffx = nil --Can't be cancelled anymore
-              inst.sg.statemem.stafflight = nil --Can't be cancelled anymore
-              inst:PerformBufferedAction()
-            end
-          ),
-          TimeEvent(
-            70 * FRAMES,
-            function(inst)
-              inst.sg:RemoveStateTag("busy")
-              if inst.components.playercontroller ~= nil then
-                inst.components.playercontroller:Enable(true)
-              end
-            end
+      if spellobj ~= nil and spellobj.components.aoetargeting ~= nil then
+        inst.sg.statemem.targetfx = spellobj.components.aoetargeting:SpawnTargetFXAt(buffaction:GetDynamicActionPoint())
+        if inst.sg.statemem.targetfx ~= nil then
+          inst.sg.statemem.targetfx:ListenForEvent("onremove", OnRemoveCleanupTargetFX, inst)
+        end
+      end
+    end,
+    timeline = {
+      TimeEvent(
+        7 * FRAMES,
+        function(inst)
+          inst.sg.statemem.stafffx =
+            SpawnPrefab(
+            (inst.components.rider ~= nil and inst.components.rider:IsRiding()) and "staffcastfx_mount" or "staffcastfx"
           )
-        },
-        events = {
-          EventHandler(
-            "animqueueover",
-            function(inst)
-              if inst.AnimState:AnimDone() then
-                inst.sg:GoToState("idle")
-              end
+          inst.sg.statemem.stafffx.entity:SetParent(inst.entity)
+          inst.sg.statemem.stafffx:SetUp(inst.sg.statemem.fxcolour)
+        end
+      ),
+      TimeEvent(
+        15 * FRAMES,
+        function(inst)
+          inst.sg.statemem.stafflight = SpawnPrefab("staff_castinglight")
+          inst.sg.statemem.stafflight.Transform:SetPosition(inst.Transform:GetWorldPosition())
+          inst.sg.statemem.stafflight:SetUp(inst.sg.statemem.fxcolour, 1.2, .33)
+        end
+      ),
+      TimeEvent(
+        13 * FRAMES,
+        function(inst)
+          if inst.sg.statemem.castsound then
+            inst.SoundEmitter:PlaySound(inst.sg.statemem.castsound)
+          end
+        end
+      ),
+      TimeEvent(
+        53 * FRAMES,
+        function(inst)
+          if inst.sg.statemem.targetfx ~= nil then
+            if inst.sg.statemem.targetfx:IsValid() then
+              OnRemoveCleanupTargetFX(inst)
             end
-          )
-        },
-        onexit = function(inst)
+            inst.sg.statemem.targetfx = nil
+          end
+          inst.sg.statemem.stafffx = nil --Can't be cancelled anymore
+          inst.sg.statemem.stafflight = nil --Can't be cancelled anymore
+          inst:PerformBufferedAction()
+        end
+      ),
+      TimeEvent(
+        70 * FRAMES,
+        function(inst)
+          inst.sg:RemoveStateTag("busy")
           if inst.components.playercontroller ~= nil then
             inst.components.playercontroller:Enable(true)
           end
-          if inst.sg.statemem.stafffx ~= nil and inst.sg.statemem.stafffx:IsValid() then
-            inst.sg.statemem.stafffx:Remove()
-          end
-          if inst.sg.statemem.stafflight ~= nil and inst.sg.statemem.stafflight:IsValid() then
-            inst.sg.statemem.stafflight:Remove()
-          end
-          if inst.sg.statemem.targetfx ~= nil and inst.sg.statemem.targetfx:IsValid() then
-            OnRemoveCleanupTargetFX(inst)
+        end
+      )
+    },
+    events = {
+      EventHandler(
+        "animqueueover",
+        function(inst)
+          if inst.AnimState:AnimDone() then
+            inst.sg:GoToState("idle")
           end
         end
-      }
+      )
+    },
+    onexit = function(inst)
+      if inst.components.playercontroller ~= nil then
+        inst.components.playercontroller:Enable(true)
+      end
+      if inst.sg.statemem.stafffx ~= nil and inst.sg.statemem.stafffx:IsValid() then
+        inst.sg.statemem.stafffx:Remove()
+      end
+      if inst.sg.statemem.stafflight ~= nil and inst.sg.statemem.stafflight:IsValid() then
+        inst.sg.statemem.stafflight:Remove()
+      end
+      if inst.sg.statemem.targetfx ~= nil and inst.sg.statemem.targetfx:IsValid() then
+        OnRemoveCleanupTargetFX(inst)
+      end
+    end
+  }
 
   local castaoe_handler = sg.actionhandlers[ACTIONS.CASTAOE]
   local castaoe_deststate_fn = castaoe_handler.deststate
   local new_castaoe_handler =
-      ActionHandler(
-        ACTIONS.CASTAOE,
-        function(inst, action, ...)
-          if
-              inst.prefab == "zeta" and action ~= nil and action.invobject ~= nil and
-              action.invobject:HasTag("mutantspellfocus")
-          then
-            return "castspell_zeta"
-          end
+    ActionHandler(
+    ACTIONS.CASTAOE,
+    function(inst, action, ...)
+      if
+        inst.prefab == "zeta" and action ~= nil and action.invobject ~= nil and
+          action.invobject:HasTag("mutantspellfocus")
+       then
+        return "castspell_zeta"
+      end
 
-          return castaoe_deststate_fn(inst, action, ...)
-        end,
-        castaoe_handler.condition
-      )
+      return castaoe_deststate_fn(inst, action, ...)
+    end,
+    castaoe_handler.condition
+  )
 
   sg.actionhandlers[new_atk_handler.action] = new_atk_handler
   sg.actionhandlers[blink_swap_handler.action] = blink_swap_handler
@@ -849,7 +847,6 @@ local function OnSkillSelectionchange(inst, data)
   end
 end
 
-
 local function tryStartRegen(inst)
   if inst.components.beesummoner then
     inst.components.beesummoner:StartRegen(inst.components.beesummoner.currenttick) -- try resume regen
@@ -876,7 +873,7 @@ local master_postinit = function(inst)
   inst.components.beesummoner.childprefabfn = GetChildPrefab
   inst.components.beesummoner.shouldregenfn = function()
     return inst.components.hunger:GetPercent() >= TUNING.ZETA_SUMMON_REGEN_HUNGER_THRESHOLD and
-        not IsEntityDeadOrGhost(inst)
+      not IsEntityDeadOrGhost(inst)
   end
   inst.components.beesummoner.onregenfn = function(num)
     doRegenHungerDelta(inst, -num * TUNING.ZETA_SUMMON_REGEN_HUNGER_COST)
@@ -919,14 +916,14 @@ local master_postinit = function(inst)
 
   local _deltamodifierfn = inst.components.health.deltamodifierfn
   inst.components.health.deltamodifierfn = function(
-      inst,
-      amount,
-      overtime,
-      cause,
-      ignore_invincible,
-      afflicter,
-      ignore_absorb,
-      ...)
+    inst,
+    amount,
+    overtime,
+    cause,
+    ignore_invincible,
+    afflicter,
+    ignore_absorb,
+    ...)
     if _deltamodifierfn ~= nil then
       amount = _deltamodifierfn(inst, amount, overtime, cause, ignore_invincible, afflicter, ignore_absorb, ...)
     end
@@ -934,8 +931,8 @@ local master_postinit = function(inst)
     if amount < 0 and afflicter ~= nil and not overtime then -- taking damage from enemies
       local skilltreeupdater = inst.components.skilltreeupdater
       if
-          skilltreeupdater:IsActivated("zeta_metapimancer_tyrant_2") and math.random() <= calcChance(inst, 0.25, 1.0, 0.3)
-      then
+        skilltreeupdater:IsActivated("zeta_metapimancer_tyrant_2") and math.random() <= calcChance(inst, 0.25, 1.0, 0.3)
+       then
         local minions = findNearbyMinions(inst, TUNING.ZETA_TYRANT_REDIRECT_DAMAGE_MINIONS)
 
         if #minions >= TUNING.ZETA_TYRANT_REDIRECT_DAMAGE_MINIONS then
@@ -953,9 +950,9 @@ local master_postinit = function(inst)
       end
 
       if
-          skilltreeupdater:IsActivated("zeta_metapimancer_shepherd_2") and
+        skilltreeupdater:IsActivated("zeta_metapimancer_shepherd_2") and
           math.random() <= calcChance(inst, 0.2, 0.5, 0.3)
-      then
+       then
         enrageMinions(inst)
       end
     end
