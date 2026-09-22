@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<spriter_data scml_version="1.0" generator="BrashMonkey Spriter" generator_version="r11">
+    <folder id="0" name="orb">
+        <file id="0" name="orb/orb-0.png" width="200" height="200" pivot_x="0.5" pivot_y="0.5"/>
+    </folder>
+    <folder id="1" name="shadow">
+        <file id="0" name="shadow/shadow-0.png" width="200" height="50" pivot_x="0" pivot_y="1"/>
+    </folder>
+    <entity id="0" name="mutantshadowfocus">
+        <animation id="0" name="idle" length="30" interval="100">
+            <mainline>
+                <key id="0" curve_type="cubic" c1="0.995025" c2="0.995025">
+                    <object_ref id="0" timeline="1" key="0" z_index="0"/>
+                    <object_ref id="1" timeline="0" key="0" z_index="1"/>
+                </key>
+            </mainline>
+            <timeline id="0" name="orb-0">
+                <key id="0" spin="0">
+                    <object folder="0" file="0" x="-1.7756" y="57.071677" angle="348.947139"/>
+                </key>
+            </timeline>
+            <timeline id="1" name="shadow-0">
+                <key id="0" spin="0">
+                    <object folder="1" file="0" x="-64.673993" y="35.276843" scale_x="0.62806"/>
+                </key>
+            </timeline>
+        </animation>
+    </entity>
+</spriter_data>

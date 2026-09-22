@@ -19,9 +19,9 @@ local killersounds = {
 local function IsHostile(inst)
   -- Webber's spiders
   if
-    inst.components.follower and inst.components.follower.leader ~= nil and
+      inst.components.follower and inst.components.follower.leader ~= nil and
       inst.components.follower.leader:HasTag("player")
-   then
+  then
     return false
   end
 
@@ -47,9 +47,9 @@ local function IsWithinLeaderRange(inst)
   return true
 end
 
-local TARGET_MUST_TAGS = {"_combat", "_health"}
-local TARGET_MUST_ONE_OF_TAGS = {"monster", "insect", "animal", "character"}
-local TARGET_IGNORE_TAGS = {"beemutant", "INLIMBO", "player"}
+local TARGET_MUST_TAGS = { "_combat", "_health" }
+local TARGET_MUST_ONE_OF_TAGS = { "monster", "insect", "animal", "character", "epic", "hostile" }
+local TARGET_IGNORE_TAGS = { "beemutant", "INLIMBO", "player" }
 
 local function FindEnemies(inst, dist, checkfn)
   local x, y, z = inst.Transform:GetWorldPosition()
@@ -58,11 +58,11 @@ local function FindEnemies(inst, dist, checkfn)
   local validtargets = {}
   for i, e in ipairs(entities) do
     if
-      inst.components.combat:CanTarget(e) and e.components.combat and
+        inst.components.combat:CanTarget(e) and e.components.combat and
         (IsAlly(e.components.combat.target) or IsHostile(e)) and
         e.components.health and
         not e.components.health:IsDead()
-     then
+    then
       if checkfn == nil or checkfn(e) then
         table.insert(validtargets, e)
       end
@@ -89,9 +89,9 @@ local function FindTarget(inst, dist)
 
   for i, guy in ipairs(enemies) do
     if
-      inst.components.combat:CanTarget(guy) and guy.components.combat and
+        inst.components.combat:CanTarget(guy) and guy.components.combat and
         (IsAlly(guy.components.combat.target) or IsHostile(guy))
-     then
+    then
       if guy.components.health.currenthealth < lowesthealth then
         lowesthealth = guy.components.health.currenthealth
         lowestenemy = guy
@@ -173,13 +173,13 @@ end
 local SLEEP_NEAR_LEADER_DISTANCE = 8
 local function ShouldSleep(inst)
   return DefaultSleepTest(inst) and
-    (inst.components.follower == nil or inst.components.follower:IsNearLeader(SLEEP_NEAR_LEADER_DISTANCE))
+      (inst.components.follower == nil or inst.components.follower:IsNearLeader(SLEEP_NEAR_LEADER_DISTANCE))
 end
 
 local WAKE_TO_FOLLOW_DISTANCE = 15
 local function ShouldWakeUp(inst)
   return DefaultWakeTest(inst) or
-    (inst.components.follower and not inst.components.follower:IsNearLeader(WAKE_TO_FOLLOW_DISTANCE))
+      (inst.components.follower and not inst.components.follower:IsNearLeader(WAKE_TO_FOLLOW_DISTANCE))
 end
 
 local function keeptargetfn(inst, target)
@@ -240,9 +240,9 @@ local function OnKilledOther(inst, data)
     if victim:HasTag("shadow") and victim.sanityreward ~= nil then
       local owner = inst:GetOwner()
       if
-        owner and owner:HasTag("beemaster") and
+          owner and owner:HasTag("beemaster") and
           owner.components.skilltreeupdater:IsActivated("zeta_metapimancer_shepherd_1")
-       then
+      then
         owner.components.sanity:DoDelta(victim.sanityreward * 0.5)
       end
     end
@@ -276,6 +276,41 @@ local function OnCommonInit(inst)
 
     if owner.components.skilltreeupdater:IsActivated("zeta_metapis_healer_2") then
       inst._frenzy_explode = true
+    end
+
+    if owner.components.skilltreeupdater:IsActivated("zeta_allegiance_shadow_1") then
+      local shadowresist = 1.0
+      local lunarbonus = 1.0
+
+      if owner.components.skilltreeupdater:CountSkillTag("metapimancer_shepherd") > 0 then
+        shadowresist = TUNING.MUTANT_BEE_ALLEGIANCE_SHADOW_RESIST_SHEPHERD
+        lunarbonus = TUNING.MUTANT_BEE_ALLEGIANCE_VS_LUNAR_BONUS_SHEPHERD
+      end
+      if owner.components.skilltreeupdater:CountSkillTag("metapimancer_tyrant") > 0 then
+        shadowresist = TUNING.MUTANT_BEE_ALLEGIANCE_SHADOW_RESIST_TYRANT
+        lunarbonus = TUNING.MUTANT_BEE_ALLEGIANCE_VS_LUNAR_BONUS_TYRANT
+      end
+
+      inst.components.damagetyperesist:AddResist("shadow_aligned", inst, shadowresist, "allegiance_shadow")
+      inst.components.damagetypebonus:AddBonus("lunar_aligned", inst, lunarbonus, "allegiance_shadow")
+    end
+
+    if owner.components.skilltreeupdater:IsActivated("zeta_allegiance_lunar_1") then
+      local lunarresist = 1.0
+      local shadowbonus = 1.0
+
+      if owner.components.skilltreeupdater:CountSkillTag("metapimancer_shepherd") > 0 then
+        lunarresist = TUNING.MUTANT_BEE_ALLEGIANCE_LUNAR_RESIST_SHEPHERD
+        shadowbonus = TUNING.MUTANT_BEE_ALLEGIANCE_VS_SHADOW_BONUS_SHEPHERD
+      end
+
+      if owner.components.skilltreeupdater:CountSkillTag("metapimancer_tyrant") > 0 then
+        lunarresist = TUNING.MUTANT_BEE_ALLEGIANCE_LUNAR_RESIST_TYRANT
+        shadowbonus = TUNING.MUTANT_BEE_ALLEGIANCE_VS_SHADOW_BONUS_TYRANT
+      end
+
+      inst.components.damagetyperesist:AddResist("lunar_aligned", inst, lunarresist, "allegiance_lunar")
+      inst.components.damagetypebonus:AddBonus("shadow_aligned", inst, shadowbonus, "allegiance_lunar")
     end
   end
 end
@@ -318,7 +353,7 @@ local function OnAttacked(inst, data)
       return true
     end,
     targetshares,
-    {"_combat", "_health", "beemutantminion"}
+    { "_combat", "_health", "beemutantminion" }
   )
 end
 
@@ -431,9 +466,9 @@ local function findprotector(inst)
     function(guy)
       return not guy.components.health:IsDead() and guy._protectaura and guy:GetOwner() == inst:GetOwner()
     end,
-    {"beemutant", "_combat", "_health"},
-    {"INLIMBO"},
-    {"defender"}
+    { "beemutant", "_combat", "_health" },
+    { "INLIMBO" },
+    { "defender" }
   )
 end
 
@@ -445,13 +480,13 @@ local function MakeProtectable(inst)
   local oldDoDelta = inst.components.health.DoDelta
   inst.components.health.DoDelta = function(comp, amount, ...)
     if
-      amount < 0 and inst.components.health.currenthealth + amount < 0.5 * inst.components.health.maxhealth and
+        amount < 0 and inst.components.health.currenthealth + amount < 0.5 * inst.components.health.maxhealth and
         math.random() <= 0.25
-     then
+    then
       local owner = inst:GetOwner()
       if
-        owner and owner:HasTag("beemaster") and owner.components.skilltreeupdater:IsActivated("zeta_metapis_defender_1")
-       then
+          owner and owner:HasTag("beemaster") and owner.components.skilltreeupdater:IsActivated("zeta_metapis_defender_1")
+      then
         local protector = findprotector(inst)
         if protector ~= nil then
           -- print("FOUND PROTECTOR", protector, amount)
@@ -560,6 +595,82 @@ local function Explode(inst)
   end
 end
 
+local function MakeShadowLaunchable(inst, spawnAnim, chargeAnim)
+  inst.LaunchShadow = function(inst)
+    local shadow = SpawnPrefab(inst.prefab .. "_shadow")
+    local x, y, z = inst.Transform:GetWorldPosition()
+
+    shadow.Transform:SetPosition(x, y, z)
+    shadow.Physics:Teleport(x, 0.1, z)
+    shadow.Transform:SetRotation(inst.Transform:GetRotation())
+    shadow.AnimState:PlayAnimation(spawnAnim)
+    shadow.AnimState:PushAnimation("idle", true)
+
+    local currenttarget = nil
+    local startangle = math.random() * TWOPI
+
+    if inst.components.combat and inst.components.combat:HasTarget() and inst.components.combat.target:IsValid() then
+      currenttarget = inst.components.combat.target
+      local tx, ty, tz = inst.components.combat.target.Transform:GetWorldPosition()
+      local angle_to_target = inst:GetAngleToPoint(tx, ty, tz) -- degrees
+
+      startangle = (angle_to_target + 180 + GetRandomMinMax(-30, 30)) * DEGREES
+      if startangle > TWOPI then
+        startangle = startangle - TWOPI
+      end
+
+      -- print("SPAWN FROM TARGET", tx, ty, tz, angle_to_target, startangle)
+    end
+
+    local offset, spawnAngle = FindWalkableOffset(inst:GetPosition(), startangle, 5, 5, false, false, nil, true, true)
+    local spawnSpeed = 10.0
+    shadow.Physics:SetVel(math.cos(spawnAngle) * spawnSpeed, 0, -math.sin(spawnAngle) * spawnSpeed)
+
+    shadow:DoTaskInTime(
+      1,
+      function()
+        local chargeAngle = nil
+
+        if currenttarget ~= nil and currenttarget:IsValid() then
+          shadow._target = currenttarget
+        elseif inst:IsValid() and not inst.components.health:IsDead() and inst.components.combat:HasTarget() then
+          shadow._target = inst.components.combat.target
+        end
+
+        if shadow._target ~= nil and shadow._target:IsValid() and not shadow._target.components.health:IsDead() then
+          local tx, ty, tz = shadow._target.Transform:GetWorldPosition()
+          chargeAngle = shadow:GetAngleToPoint(tx, ty, tz) * DEGREES -- degrees -> radians
+          shadow:ForceFacePoint(tx, ty, tz)
+
+          -- print("GOT TARGET TO CHARGE", shadow._target, tx, ty, tz, chargeAngle)
+
+          -- valid target, watch to hit
+          shadow:StartUpdate()
+        else
+          -- charge randomly for visual, no target
+          chargeAngle = math.random() * TWOPI
+          shadow.Transform:SetRotation(chargeAngle * RADIANS)
+        end
+
+        shadow.AnimState:PlayAnimation(chargeAnim, true)
+        shadow.Physics:SetDamping(0)
+
+        local chargeSpeed = 30
+        shadow.Physics:SetVel(math.cos(chargeAngle) * chargeSpeed, 0, -math.sin(chargeAngle) * chargeSpeed)
+
+        shadow:DoTaskInTime(3, shadow.Remove)
+      end
+    )
+  end
+end
+
+local function PushOwnerMinionAttackEvent(inst)
+  local owner = inst:GetOwner()
+  if owner ~= nil and owner.prefab == "zeta" then
+    owner:PushEvent("onminionattack", { minion = inst })
+  end
+end
+
 local function CommonMasterInit(inst, options, checkupgradefn)
   inst:AddComponent("inspectable")
   inst:AddComponent("knownlocations")
@@ -594,6 +705,9 @@ local function CommonMasterInit(inst, options, checkupgradefn)
   inst.components.combat:SetPlayerStunlock(PLAYERSTUNLOCK.RARELY)
   inst.components.combat:SetKeepTargetFunction(keeptargetfn)
 
+  inst:AddComponent("damagetyperesist")
+  inst:AddComponent("damagetypebonus")
+
   if not (options and options.notprotectable) then
     MakeProtectable(inst)
   end
@@ -617,6 +731,7 @@ local function CommonMasterInit(inst, options, checkupgradefn)
   inst._frenzy_fx_offset = options.frenzy_fx_offset
 
   inst:ListenForEvent("attacked", OnAttacked)
+  inst:ListenForEvent("onattackother", PushOwnerMinionAttackEvent)
   TrackLastCombatTime(inst)
   MakeLessNoise(inst)
 
@@ -638,6 +753,8 @@ local function CommonMasterInit(inst, options, checkupgradefn)
   inst.EnableRageFX = EnableRageFX
   inst.EnableFrenzyFx = EnableFrenzyFx
   inst.Explode = Explode
+
+  MakeShadowLaunchable(inst, options.shadowSpawnAnim or "evade", options.shadowLaunchAnim or "walk_loop")
 
   inst:DoTaskInTime(0, OnCommonInit)
 
@@ -707,7 +824,7 @@ end
 
 local function IsPoisonable(guy)
   return guy and guy:IsValid() and guy.components.health and not guy.components.health:IsDead() and
-    not guy:HasTag("player")
+      not guy:HasTag("player")
 end
 
 local function poisoncolor(inst, mr, mg, mb)
@@ -773,7 +890,7 @@ local function DoAreaDamage(inst, target, radius)
       return IsHostile(guy) or (guy.components.combat and IsAlly(guy.components.combat.target))
     end,
     nil,
-    {"INLIMBO", "player", "beemutant"}
+    { "INLIMBO", "player", "beemutant" }
   )
 end
 
@@ -804,10 +921,6 @@ local function debugtable(t)
 end
 
 local function getChildTokens(inst, basechild, hivetags)
-  if not inst.components.container then
-    return nil
-  end
-
   local tokens = {}
   for i, item in ipairs(inst.components.container:GetAllItems()) do
     if item and item:HasTag("beemutanttoken") then
@@ -909,7 +1022,12 @@ local function PickChildPrefab(owner, hive, children, maxchildren, prioritychild
   -- debugtable(currentcount)
 
   local function expectedCnt(prefab)
-    return math.floor(maxchildren * expect[prefab] / totalexpect)
+    local e = math.floor(maxchildren * expect[prefab] / totalexpect)
+    if expect[prefab] > 0 then
+      e = math.max(e, 1)
+    end
+
+    return e
   end
 
   local function expectedDiff(prefab)
@@ -939,10 +1057,8 @@ local function PickChildPrefab(owner, hive, children, maxchildren, prioritychild
   -- prioritize summon this child if there is none right now
   if prioritychild ~= nil then
     for i, prefab in ipairs(topick) do
-      if prefab == prioritychild then
-        if (currentcount[prioritychild] or 0) == 0 then
-          return prioritychild
-        end
+      if prefab == prioritychild and (currentcount[prioritychild] or 0) == 0 then
+        return prioritychild
       end
     end
   end
@@ -965,13 +1081,13 @@ end
 
 local function IsHealable(inst, guy)
   return inst:IsValid() and guy and guy:IsValid() and guy.components.health:IsHurt() and
-    not (guy.components.combat and guy.components.combat.target and guy.components.combat.target:HasTag("beemutant")) and -- don't heal bees fighting bees
-    inst:GetOwner() == guy:GetOwner() -- nil owner will heal nil owner
+      not (guy.components.combat and guy.components.combat.target and guy.components.combat.target:HasTag("beemutant")) and -- don't heal bees fighting bees
+      inst:GetOwner() == guy:GetOwner()                                                                                   -- nil owner will heal nil owner
 end
 
-local HEAL_MUST_TAGS = {"_combat", "_health"}
-local HEAL_MUST_NOT_TAGS = {"player", "INLIMBO", "lesserminion"}
-local HEAL_MUST_ONE_OF_TAGS = {"beemutantminion"}
+local HEAL_MUST_TAGS = { "_combat", "_health" }
+local HEAL_MUST_NOT_TAGS = { "player", "INLIMBO", "lesserminion" }
+local HEAL_MUST_ONE_OF_TAGS = { "beemutantminion" }
 
 local function FindHealingTarget(inst, origin)
   if not origin then
@@ -979,18 +1095,131 @@ local function FindHealingTarget(inst, origin)
   end
 
   local ally =
-    FindEntity(
-    origin,
-    8,
-    function(guy)
-      return IsHealable(inst, guy)
-    end,
-    HEAL_MUST_TAGS,
-    HEAL_MUST_NOT_TAGS,
-    HEAL_MUST_ONE_OF_TAGS
-  )
+      FindEntity(
+        origin,
+        8,
+        function(guy)
+          return IsHealable(inst, guy)
+        end,
+        HEAL_MUST_TAGS,
+        HEAL_MUST_NOT_TAGS,
+        HEAL_MUST_ONE_OF_TAGS
+      )
 
   return ally
+end
+
+local SHADOW_HIT_RANGE_SQ = 3 ^ 2
+
+local function StartUpdate(inst)
+  inst._update_task = inst:DoPeriodicTask(FRAMES,
+    function(inst)
+      if
+          inst._target == nil or not inst._target:IsValid() or
+          (inst._target.components.health and inst._target.components.health:IsDead())
+      then
+        inst._update_task:Cancel()
+        inst._update_task = nil
+        return
+      end
+
+      if distsq(inst:GetPosition(), inst._target:GetPosition()) < SHADOW_HIT_RANGE_SQ then
+        -- hit
+        -- print("FUCKING HIT")
+        inst.components.combat:DoAttack(inst._target)
+        inst._update_task:Cancel()
+        inst._update_task = nil
+      end
+    end
+  )
+
+  inst:ListenForEvent("onremove", function()
+    if inst._update_task ~= nil then
+      inst._update_task:Cancel()
+      inst._update_task = nil
+    end
+  end)
+end
+
+local function MakeShadowPrefab(bank, build, customfn)
+  return function()
+    local inst = CreateEntity()
+    inst.entity:AddTransform()
+    inst.entity:AddAnimState()
+    inst.entity:AddDynamicShadow()
+    inst.entity:AddNetwork()
+
+    local phys = inst.entity:AddPhysics()
+    phys:SetMass(1)
+    phys:SetCollisionGroup(COLLISION.ITEMS)
+    phys:SetCollisionMask(COLLISION.GROUND)
+    phys:SetFriction(0)
+    phys:SetDamping(0.7)
+    phys:SetSphere(0.1)
+
+    inst.DynamicShadow:SetSize(.8, .5)
+    inst.Transform:SetFourFaced()
+    inst.Transform:SetScale(1.2, 1.2, 1.2)
+
+    inst.AnimState:SetBank(bank)
+    inst.AnimState:SetBuild(build)
+    inst.AnimState:PlayAnimation("idle", true)
+    inst.AnimState:SetMultColour(0, 0, 0, 0.5)
+
+    inst:AddTag("FX")
+    inst:AddTag("NOCLICK")
+
+    if customfn ~= nil then
+      customfn(inst)
+    end
+
+    inst.entity:SetPristine()
+
+    if not TheWorld.ismastersim then
+      return inst
+    end
+
+    inst:AddComponent("combat")
+    inst.components.combat:SetDefaultDamage(0)
+    inst.components.combat.ignorehitrange = true
+
+    inst:AddComponent("planardamage")
+    inst.components.planardamage:SetBaseDamage(TUNING.SPELL_SHADOW_LAUNCH_PLANAR_DAMAGE_PER_SHADOW)
+
+    inst.persists = false
+
+    inst.StartUpdate = StartUpdate
+
+    return inst
+  end
+end
+
+local function PauseAllTimers(inst)
+  if not inst:IsValid() then
+    return
+  end
+
+  if not inst.components.timer then
+    return
+  end
+
+  for name, v in pairs(inst.components.timer.timers) do
+    inst.components.timer:PauseTimer(name)
+  end
+end
+
+local function ResumeAllTimers(inst)
+  if not inst:IsValid() then
+    return
+  end
+
+  if not inst.components.timer then
+    return
+  end
+
+  for name, v in pairs(inst.components.timer.timers) do
+    inst.components.timer:ResumeTimer(name)
+  end
 end
 
 return {
@@ -1008,5 +1237,8 @@ return {
   DealPoison = DealPoison,
   PickChildPrefab = PickChildPrefab,
   FindHealingTarget = FindHealingTarget,
-  IsHealable = IsHealable
+  IsHealable = IsHealable,
+  MakeShadowPrefab = MakeShadowPrefab,
+  PauseAllTimers = PauseAllTimers,
+  ResumeAllTimers = ResumeAllTimers
 }

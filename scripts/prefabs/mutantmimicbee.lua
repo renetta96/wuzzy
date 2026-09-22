@@ -5,6 +5,7 @@ local FindTarget = metapis_common.FindTarget
 local FindEnemies = metapis_common.FindEnemies
 local DealPoison = metapis_common.DealPoison
 local FindHealingTarget = metapis_common.FindHealingTarget
+local MakeShadowPrefab = metapis_common.MakeShadowPrefab
 
 local assets = {
   Asset("ANIM", "anim/mutantmimicbee.zip"),
@@ -505,4 +506,15 @@ STRINGS.MUTANTMIMICBEE = "Metapis Mimic"
 STRINGS.NAMES.MUTANTMIMICBEE = "Metapis Mimic"
 STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTMIMICBEE = "Improvise. Adapt. Overcome."
 
-return Prefab("mutantmimicbee", mimicbee, assets, prefabs)
+return Prefab("mutantmimicbee", mimicbee, assets, prefabs), Prefab(
+  "mutantmimicbee_shadow",
+  MakeShadowPrefab(
+    "bee",
+    "mutantmimicbee",
+    function(inst)
+      inst.Transform:SetScale(1.0, 1.0, 1.0)
+    end
+  ),
+  assets,
+  nil
+)

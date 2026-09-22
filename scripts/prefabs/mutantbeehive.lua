@@ -160,9 +160,9 @@ end
 
 local function StartSpawning(inst)
   if
-      inst.components.childspawner ~= nil and
+    inst.components.childspawner ~= nil and
       not (inst.components.freezable ~= nil and inst.components.freezable:IsFrozen())
-  then
+   then
     inst:Say(SPEECH.SPAWN)
     inst.components.childspawner:StartSpawning()
   end
@@ -297,7 +297,7 @@ local function IsValidOwner(inst, owner)
 
   if inst._ownerid then
     return owner.userid and owner.userid == inst._ownerid and owner.prefab == "zeta" and
-        not (owner._hive and owner._hive ~= inst)
+      not (owner._hive and owner._hive ~= inst)
   end
 
   return false
@@ -343,7 +343,7 @@ end
 
 local function GetSlaves(inst, moremusttags)
   local x, y, z = inst.Transform:GetWorldPosition()
-  local musttags = { "mutantslavehive" }
+  local musttags = {"mutantslavehive"}
 
   if moremusttags ~= nil and type(moremusttags) == "table" then
     for i, tag in ipairs(moremusttags) do
@@ -352,15 +352,15 @@ local function GetSlaves(inst, moremusttags)
   end
 
   local entities =
-      TheSim:FindEntities(
-        x,
-        y,
-        z,
-        TUNING.MUTANT_BEEHIVE_MASTER_SLAVE_DIST,
-        { "_combat", "_health" },
-        { "INLIMBO", "player" },
-        musttags
-      )
+    TheSim:FindEntities(
+    x,
+    y,
+    z,
+    TUNING.MUTANT_BEEHIVE_MASTER_SLAVE_DIST,
+    {"_combat", "_health"},
+    {"INLIMBO", "player"},
+    musttags
+  )
 
   local slaves = {}
 
@@ -378,7 +378,7 @@ local function GetUtils(inst)
   local x, y, z = inst.Transform:GetWorldPosition()
 
   local entities =
-      TheSim:FindEntities(x, y, z, TUNING.MUTANT_BEEHIVE_MASTER_SLAVE_DIST, {}, { "INLIMBO", "player" }, { "mutantutil" })
+    TheSim:FindEntities(x, y, z, TUNING.MUTANT_BEEHIVE_MASTER_SLAVE_DIST, {}, {"INLIMBO", "player"}, {"mutantutil"})
 
   local utils = {}
 
@@ -416,7 +416,11 @@ local function GetNumChildrenDecay(inst)
       multiplier = 0.5
     end
 
-    local maintaincost = RoundBiasedUp(multiplier * TUNING.MUTANT_BEEHIVE_MAINTAIN_COST_A * (TUNING.MUTANT_BEEHIVE_MAINTAIN_COST_S^inst._stage.LEVEL) * (TUNING.MUTANT_BEEHIVE_MAINTAIN_COST_B^diff))
+    local maintaincost =
+      RoundBiasedUp(
+      multiplier * TUNING.MUTANT_BEEHIVE_MAINTAIN_COST_A * (TUNING.MUTANT_BEEHIVE_MAINTAIN_COST_S ^ inst._stage.LEVEL) *
+        (TUNING.MUTANT_BEEHIVE_MAINTAIN_COST_B ^ diff)
+    )
 
     -- not enough honey to maintain
     if numhoney < maintaincost then
@@ -431,13 +435,16 @@ local function GetNumChildrenDecay(inst)
 end
 
 local function regenCostFormula(inst, num)
-  return RoundBiasedUp(TUNING.MUTANT_BEEHIVE_REGEN_COST_A * (TUNING.MUTANT_BEEHIVE_REGEN_COST_S^inst._stage.LEVEL) * (TUNING.MUTANT_BEEHIVE_REGEN_COST_B^num))
+  return RoundBiasedUp(
+    TUNING.MUTANT_BEEHIVE_REGEN_COST_A * (TUNING.MUTANT_BEEHIVE_REGEN_COST_S ^ inst._stage.LEVEL) *
+      (TUNING.MUTANT_BEEHIVE_REGEN_COST_B ^ num)
+  )
 end
 
 local function GetNumChildrenRegen(inst)
   local numbase = NumEmergencyChildrenBase(inst)
   local numhoney = getnumhoney(inst)
-  local barracks = GetSlaves(inst, { "mutantbarrack" })
+  local barracks = GetSlaves(inst, {"mutantbarrack"})
   local numbarracks = #barracks
 
   local numregen = 1
@@ -446,7 +453,8 @@ local function GetNumChildrenRegen(inst)
   end
 
   -- calculate exact number of regen to avoid over-calculate cost
-  numregen = math.min(
+  numregen =
+    math.min(
     numregen,
     math.max(0, inst.components.childspawner.maxemergencychildren - inst.components.childspawner:NumEmergencyChildren())
   )
@@ -466,7 +474,7 @@ local function GetNumChildrenRegen(inst)
   -- find highest number of cost regen given num honey
   local cancostregen = 0
   local cancost = 0
-  for c = costregen-1, 0, -1 do
+  for c = costregen - 1, 0, -1 do
     local regencost = regenCostFormula(inst, c)
     if regencost <= numhoney then
       cancostregen = c
@@ -495,14 +503,13 @@ local function GetNumChildrenFromSlaves(slaves)
   return num
 end
 
-
-
 local function OnSlave(inst)
   if inst.components.childspawner then
     local slaves = GetSlaves(inst)
 
     -- do not use SetMaxEmergencyChildren here as it will refill children inside to max
-    inst.components.childspawner.maxemergencychildren = NumEmergencyChildrenBase(inst) + GetNumChildrenFromSlaves(slaves)
+    inst.components.childspawner.maxemergencychildren =
+      NumEmergencyChildrenBase(inst) + GetNumChildrenFromSlaves(slaves)
     inst.components.childspawner:TryStopUpdate()
     inst.components.childspawner:StartUpdate()
 
@@ -569,16 +576,16 @@ end
 
 local function HasSlaveWithTag(inst, tag)
   local hive =
-      FindEntity(
-        inst,
-        TUNING.MUTANT_BEEHIVE_MASTER_SLAVE_DIST,
-        function(guy)
-          return IsSlave(inst, guy)
-        end,
-        { "_combat", "_health" },
-        { "INLIMBO", "player" },
-        { tag }
-      )
+    FindEntity(
+    inst,
+    TUNING.MUTANT_BEEHIVE_MASTER_SLAVE_DIST,
+    function(guy)
+      return IsSlave(inst, guy)
+    end,
+    {"_combat", "_health"},
+    {"INLIMBO", "player"},
+    {tag}
+  )
 
   return hive ~= nil
 end
@@ -642,11 +649,11 @@ local function FindEnemy(inst)
     TUNING.MUTANT_BEEHIVE_WATCH_DIST,
     function(guy)
       return inst.components.combat:CanTarget(guy) and guy.components.combat and guy.components.combat.target and
-          (guy.components.combat.target:HasTag("beemaster") or guy.components.combat.target:HasTag("beemutant"))
+        (guy.components.combat.target:HasTag("beemaster") or guy.components.combat.target:HasTag("beemutant"))
     end,
-    { "_combat", "_health" },
-    { "beemutant", "INLIMBO", "player" },
-    { "monster", "insect", "animal", "character" }
+    {"_combat", "_health"},
+    {"beemutant", "INLIMBO", "player"},
+    {"monster", "insect", "animal", "character"}
   )
 end
 
@@ -682,9 +689,9 @@ local function onwallattacked(inst, wall, data)
   end
 
   if
-      not (attacker:HasTag("monster") or attacker:HasTag("animal") or attacker:HasTag("insect") or
-        attacker:HasTag("character"))
-  then
+    not (attacker:HasTag("monster") or attacker:HasTag("animal") or attacker:HasTag("insect") or
+      attacker:HasTag("character"))
+   then
     return
   end
 
@@ -705,7 +712,7 @@ end
 local function WatchWalls(inst)
   local x, y, z = inst.Transform:GetWorldPosition()
   local walls =
-      TheSim:FindEntities(x, y, z, TUNING.MUTANT_BEEHIVE_WATCH_DIST, { "_combat", "_health" }, { "INLIMBO" }, { "wall" })
+    TheSim:FindEntities(x, y, z, TUNING.MUTANT_BEEHIVE_WATCH_DIST, {"_combat", "_health"}, {"INLIMBO"}, {"wall"})
 
   for i, wall in ipairs(walls) do
     if not inst._watched_walls[wall] then
@@ -735,7 +742,7 @@ local function SelfRepair(inst)
   if inst and inst.components.childspawner and inst.components.health then
     if not inst.components.health:IsDead() then
       local numfixers =
-          inst.components.childspawner.childreninside + inst.components.childspawner.emergencychildreninside
+        inst.components.childspawner.childreninside + inst.components.childspawner.emergencychildreninside
       local recover = TUNING.MUTANT_BEEHIVE_RECOVER_PER_CHILD * numfixers
       inst.components.health:DoDelta(recover, true, "self_repair")
 
@@ -751,23 +758,23 @@ end
 
 local function OnHaunt(inst)
   if
-      inst.components.childspawner == nil or not inst.components.childspawner:CanSpawn() or
+    inst.components.childspawner == nil or not inst.components.childspawner:CanSpawn() or
       math.random() > TUNING.HAUNT_CHANCE_HALF
-  then
+   then
     return false
   end
 
   local target =
-      FindEntity(
-        inst,
-        25,
-        function(guy)
-          return inst.components.combat:CanTarget(guy)
-        end,
-        { "_combat" }, --See entityreplica.lua (re: "_combat" tag)
-        { "insect", "playerghost", "INLIMBO" },
-        { "character", "animal", "monster" }
-      )
+    FindEntity(
+    inst,
+    25,
+    function(guy)
+      return inst.components.combat:CanTarget(guy)
+    end,
+    {"_combat"}, --See entityreplica.lua (re: "_combat" tag)
+    {"insect", "playerghost", "INLIMBO"},
+    {"character", "animal", "monster"}
+  )
 
   if target ~= nil then
     OnHit(inst, target)
@@ -786,7 +793,7 @@ local function LinkToPlayer(inst, player, say)
     inst._owner = player
     player._hive = inst
 
-    player:ListenForEvent("onnumchildren", player._onhivenumchildren , inst)
+    player:ListenForEvent("onnumchildren", player._onhivenumchildren, inst)
     player:ListenForEvent("onnumhoney", player._onhivenumhoney, inst)
 
     -- kick off
@@ -828,9 +835,9 @@ local function OnPlayerJoined(inst, player)
     -- if the player is the owner, and is not a seamless character (like Wonkey), which means the player despawned and joined using another character
     -- then destroy the mother hive
     if
-        inst._ownerid and player.userid and player.userid == inst._ownerid and
+      inst._ownerid and player.userid and player.userid == inst._ownerid and
         (not table.contains(SEAMLESSSWAP_CHARACTERLIST, player.prefab))
-    then
+     then
       print("SAME PLAYER, DIFFERENT CHARACTER, NOT SEAMLESS")
     end
   end
@@ -855,7 +862,7 @@ local function ConvertPollenToHoney(inst)
 
   for i = 1, maxhoneys do
     local numpollens =
-        math.random(TUNING.MUTANT_BEEHIVE_NUM_POLLENS_PER_HONEY, TUNING.MUTANT_BEEHIVE_NUM_POLLENS_PER_HONEY + 2)
+      math.random(TUNING.MUTANT_BEEHIVE_NUM_POLLENS_PER_HONEY, TUNING.MUTANT_BEEHIVE_NUM_POLLENS_PER_HONEY + 2)
     local has, numfound = inst._container.components.container:Has("zetapollen", numpollens)
     if not has then
       break
@@ -877,11 +884,11 @@ local function RefreshHoneyArmor(inst)
   end
 
   local armors =
-      inst._container.components.container:FindItems(
-        function(item)
-          return item.prefab and item.prefab == "armor_honey" and item:IsValid()
-        end
-      )
+    inst._container.components.container:FindItems(
+    function(item)
+      return item.prefab and item.prefab == "armor_honey" and item:IsValid()
+    end
+  )
 
   local chunk = 0.2
 
@@ -928,7 +935,7 @@ local function DoGather(inst)
   end
 
   local x, y, z = inst.Transform:GetWorldPosition()
-  local entities = TheSim:FindEntities(x, y, z, TUNING.MUTANT_BEEHIVE_WATCH_DIST, { "flower" })
+  local entities = TheSim:FindEntities(x, y, z, TUNING.MUTANT_BEEHIVE_WATCH_DIST, {"flower"})
   local numflowers = #entities
 
   -- num required flowers per bee, check mutantworkerbee.lua
@@ -942,7 +949,8 @@ end
 local function StartBackgroundGatherTask(inst)
   if inst._gathertask == nil then
     -- add some extra period to penalty auto background gather task
-    local period = inst.components.childspawner.spawnperiod * inst.components.childspawner.maxchildren + (8 - inst._stage.LEVEL) * 5
+    local period =
+      inst.components.childspawner.spawnperiod * inst.components.childspawner.maxchildren + (8 - inst._stage.LEVEL) * 5
     inst._gathertask = inst:DoPeriodicTask(period, DoGather)
   end
 end
@@ -1067,7 +1075,9 @@ end
 
 local function updateNetNumChildren(inst)
   if inst.components.childspawner ~= nil then
-    inst.net_numchildren:set(inst.components.childspawner:NumChildren() + inst.components.childspawner:NumEmergencyChildren())
+    inst.net_numchildren:set(
+      inst.components.childspawner:NumChildren() + inst.components.childspawner:NumEmergencyChildren()
+    )
   end
 end
 
@@ -1167,7 +1177,6 @@ local function MakeMotherHive(name, stage_conf)
 
     inst.components.childspawner.AddChildrenInside = function(comp, count, ...)
       local result = oldAddChildrenInside(comp, count, ...)
-
 
       inst:PushEvent("onnumchildren")
 
@@ -1384,9 +1393,10 @@ local function teleportal()
   inst.components.childspawner.CanEmergencySpawn = function(comp)
     local source = GetSource(inst)
 
-    if source and source:IsValid() and source.components.childspawner and
+    if
+      source and source:IsValid() and source.components.childspawner and
         source.components.childspawner.emergencychildreninside > 0
-    then
+     then
       return oldCanEmergencySpawn(comp)
     end
 
@@ -1396,12 +1406,15 @@ local function teleportal()
   inst:AddComponent("combat")
 
   inst:DoPeriodicTask(1, WatchEnemyTeleportal)
-  inst:DoPeriodicTask(3, function()
-    -- basically refill full
-    inst.components.childspawner:AddEmergencyChildrenInside(
-      inst.components.childspawner.maxemergencychildren - inst.components.childspawner.emergencychildreninside
-    )
-  end)
+  inst:DoPeriodicTask(
+    3,
+    function()
+      -- basically refill full
+      inst.components.childspawner:AddEmergencyChildrenInside(
+        inst.components.childspawner.maxemergencychildren - inst.components.childspawner.emergencychildreninside
+      )
+    end
+  )
 
   ---------------------
   MakeLargeBurnable(inst)

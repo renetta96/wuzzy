@@ -5,6 +5,9 @@ local FindTarget = metapis_common.FindTarget
 local FindEnemies = metapis_common.FindEnemies
 local SpawnShadowlings = metapis_common.SpawnShadowlings
 local DoAreaDamage = metapis_common.DoAreaDamage
+local MakeShadowPrefab = metapis_common.MakeShadowPrefab
+local PauseAllTimers = metapis_common.PauseAllTimers
+local ResumeAllTimers = metapis_common.ResumeAllTimers
 
 local assets = {
   Asset("ANIM", "anim/mutantshadowbee.zip"),
@@ -233,6 +236,19 @@ local function shadowbee()
   inst:AddComponent("timer")
   inst:ListenForEvent("timerdone", OnTimerDone)
 
+  inst:ListenForEvent(
+    "enterlimbo",
+    function()
+      PauseAllTimers(inst)
+    end
+  )
+  inst:ListenForEvent(
+    "exitlimbo",
+    function()
+      ResumeAllTimers(inst)
+    end
+  )
+
   inst.components.health:SetMaxHealth(TUNING.MUTANT_BEE_SHADOW_HEALTH)
   inst.components.combat:SetDefaultDamage(TUNING.MUTANT_BEE_SHADOW_DAMAGE)
   inst.components.combat:SetAttackPeriod(TUNING.MUTANT_BEE_SHADOW_ATK_PERIOD)
@@ -369,4 +385,4 @@ return Prefab("mutantshadowbee", shadowbee, assets, prefabs), Prefab(
   lessershadowfn,
   assets,
   prefabs
-)
+), Prefab("mutantshadowbee_shadow", MakeShadowPrefab("bee", "mutantshadowbee"), assets, nil)

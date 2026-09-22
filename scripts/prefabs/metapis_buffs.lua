@@ -1,5 +1,38 @@
 -- learnt from spider_buffs.lua
 
+local function common_fx_events(inst, target)
+  inst:ListenForEvent(
+    "death",
+    function()
+      inst:Remove()
+    end,
+    target
+  )
+  inst:ListenForEvent(
+    "onremove",
+    function()
+      inst:Remove()
+    end,
+    target
+  )
+  inst:ListenForEvent(
+    "enterlimbo",
+    function()
+      inst:Hide()
+    end,
+    target
+  )
+  inst:ListenForEvent(
+    "exitlimbo",
+    function()
+      if inst:IsValid() then
+        inst:Show()
+      end
+    end,
+    target
+  )
+end
+
 local function OnExtended(inst, target)
   if inst.decaytimer ~= nil then
     inst.decaytimer:Cancel()
@@ -226,20 +259,7 @@ local function rage_fx()
 
       inst.entity:AddFollower():FollowSymbol(target.GUID, followsymbol, followoffset.x, followoffset.y, followoffset.z)
 
-      inst:ListenForEvent(
-        "death",
-        function()
-          inst:Remove()
-        end,
-        target
-      )
-      inst:ListenForEvent(
-        "onremove",
-        function()
-          inst:Remove()
-        end,
-        target
-      )
+      common_fx_events(inst, target)
     end
   end
 
@@ -290,20 +310,7 @@ local function frenzy_fx()
   local function attach(inst, target, symbol, offset_x, offset_y, offset_z)
     inst.entity:AddFollower():FollowSymbol(target.GUID, symbol, offset_x, offset_y, offset_z)
 
-    inst:ListenForEvent(
-      "death",
-      function()
-        inst:Remove()
-      end,
-      target
-    )
-    inst:ListenForEvent(
-      "onremove",
-      function()
-        inst:Remove()
-      end,
-      target
-    )
+    common_fx_events(inst, target)
   end
 
   local inst = CreateEntity()

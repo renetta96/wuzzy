@@ -1,33 +1,33 @@
 local assets = {
-    Asset("ANIM", "anim/stinger_nova.zip")
+  Asset("ANIM", "anim/stinger_nova.zip")
 }
 
 local function PlayAnim(proxy)
-    local inst = CreateEntity()
+  local inst = CreateEntity()
 
-    inst.entity:AddTransform()
-    inst.entity:AddAnimState()
-    inst.entity:AddSoundEmitter()
-    inst.AnimState:SetBank("stinger_nova")
-    inst.AnimState:SetBuild("stinger_nova")
-    inst.AnimState:SetOrientation(ANIM_ORIENTATION.OnGround)
-    inst.AnimState:SetLayer(LAYER_BACKGROUND)
+  inst.entity:AddTransform()
+  inst.entity:AddAnimState()
+  inst.entity:AddSoundEmitter()
+  inst.AnimState:SetBank("stinger_nova")
+  inst.AnimState:SetBuild("stinger_nova")
+  inst.AnimState:SetOrientation(ANIM_ORIENTATION.OnGround)
+  inst.AnimState:SetLayer(LAYER_BACKGROUND)
 
-    inst:AddTag("FX")
+  inst:AddTag("FX")
 
-    --[[Non-networked entity]]
-    inst.entity:SetCanSleep(false)
-    inst.persists = false
+  --[[Non-networked entity]]
+  inst.entity:SetCanSleep(false)
+  inst.persists = false
 
-    local parent = proxy.entity:GetParent()
-    if parent ~= nil then
-        inst.entity:SetParent(parent.entity)
-    end
+  local parent = proxy.entity:GetParent()
+  if parent ~= nil then
+    inst.entity:SetParent(parent.entity)
+  end
 
-    inst.Transform:SetFromProxy(proxy.GUID)
-    inst.AnimState:PlayAnimation("nova")
-    inst.SoundEmitter:PlaySound("dontstarve/bee/beemine_explo")
-    inst:ListenForEvent("animover", inst.Remove)
+  inst.Transform:SetFromProxy(proxy.GUID)
+  inst.AnimState:PlayAnimation("nova")
+  inst.SoundEmitter:PlaySound("dontstarve/bee/beemine_explo")
+  inst:ListenForEvent("animover", inst.Remove)
 end
 
 local function Attach(inst, target)
@@ -39,28 +39,28 @@ local function Attach(inst, target)
 end
 
 local function fn()
-    local inst = CreateEntity()
+  local inst = CreateEntity()
 
-    inst.entity:AddTransform()
-    inst.entity:AddNetwork()
+  inst.entity:AddTransform()
+  inst.entity:AddNetwork()
 
-    inst:AddTag("FX")
+  inst:AddTag("FX")
 
-    inst.entity:SetPristine()
+  inst.entity:SetPristine()
 
-    if not TheNet:IsDedicated() then
-        inst:DoTaskInTime(0, PlayAnim)
-    end
+  if not TheNet:IsDedicated() then
+    inst:DoTaskInTime(0, PlayAnim)
+  end
 
-    if not TheWorld.ismastersim then
-        return inst
-    end
-
-    inst.persists = false
-    inst.Attach = Attach
-    inst:DoTaskInTime(1, inst.Remove)
-
+  if not TheWorld.ismastersim then
     return inst
+  end
+
+  inst.persists = false
+  inst.Attach = Attach
+  inst:DoTaskInTime(1, inst.Remove)
+
+  return inst
 end
 
 local function SetStage(inst, stage)

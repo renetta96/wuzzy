@@ -1,9 +1,9 @@
 local metapis_common = require "metapis_common"
 local easing = require "easing"
 
-local IsAlly = metapis_common.IsAlly
 local BarrackModifier = metapis_common.BarrackModifier
 local FindTarget = metapis_common.FindTarget
+local MakeShadowPrefab = metapis_common.MakeShadowPrefab
 
 local assets = {
   Asset("ANIM", "anim/mutantrangerbee.zip"),
@@ -390,4 +390,9 @@ STRINGS.MUTANTRANGERBEE = "Metapis Voltwing"
 STRINGS.NAMES.MUTANTRANGERBEE = "Metapis Voltwing"
 STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTRANGERBEE = "It always tries to keep distance."
 
-return Prefab("mutantrangerbee", rangerbee, assets, prefabs)
+return Prefab("mutantrangerbee", rangerbee, assets, prefabs), Prefab(
+  "mutantrangerbee_shadow",
+  MakeShadowPrefab("bee", "mutantrangerbee"),
+  assets,
+  nil
+)

@@ -52,7 +52,8 @@ return {
       NOT_ENOUGH_EMBERS = "only_used_by_willow",
       NO_MAX_SANITY = "only_used_by_waxwell",
       NO_TARGETS = "only_used_by_willow",
-      SPELL_ON_COOLDOWN = "only_used_by_willow"
+      SPELL_ON_COOLDOWN = "Patient!",
+      NOT_ENOUGH_ENERGY = "Not enough violence, keep going!"
     },
     CAST_POCKETWATCH = {
       GENERIC = "only_used_by_wanda",

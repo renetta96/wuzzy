@@ -7,32 +7,32 @@
 -- end
 
 local DOTable =
-    Class(
-      function(self, inst)
-        self.inst = inst
-        self.stacks = {}
-        self.tickinterval = 2
-        self.sources = {}
+  Class(
+  function(self, inst)
+    self.inst = inst
+    self.stacks = {}
+    self.tickinterval = 2
+    self.sources = {}
 
-        self._gc = nil
-        self._ticktask = nil
+    self._gc = nil
+    self._ticktask = nil
 
-        self.ontickfn = nil
+    self.ontickfn = nil
 
-        self.inst:ListenForEvent(
-          "death",
-          function(inst)
-            self:StopTicking()
-          end
-        )
-        self.inst:ListenForEvent(
-          "onremove",
-          function(inst)
-            self:StopTicking()
-          end
-        )
+    self.inst:ListenForEvent(
+      "death",
+      function(inst)
+        self:StopTicking()
       end
     )
+    self.inst:ListenForEvent(
+      "onremove",
+      function(inst)
+        self:StopTicking()
+      end
+    )
+  end
+)
 
 local function _gc(inst, self)
   -- print("GC")
@@ -194,7 +194,7 @@ end
 function DOTable:OnSave()
   -- print("ON SAVE")
   local sources = {}
-  for source, conf  in pairs(self.sources) do
+  for source, conf in pairs(self.sources) do
     sources[source] = {
       maxstacks = conf.maxstacks
     }

@@ -1,11 +1,13 @@
 local metapis_common = require "metapis_common"
 local easing = require "easing"
 
-local IsAlly = metapis_common.IsAlly
 local BarrackModifier = metapis_common.BarrackModifier
 local FindTarget = metapis_common.FindTarget
 local FindHealingTarget = metapis_common.FindHealingTarget
 local IsHealable = metapis_common.IsHealable
+local MakeShadowPrefab = metapis_common.MakeShadowPrefab
+local PauseAllTimers = metapis_common.PauseAllTimers
+local ResumeAllTimers = metapis_common.ResumeAllTimers
 
 local assets = {
   Asset("ANIM", "anim/mutanthealerbee.zip"),
@@ -239,6 +241,20 @@ local function healerbee()
   inst.FindHealingTarget = FindHealingTarget
   inst:AddComponent("timer")
   inst:ListenForEvent("timerdone", OnTimerDone)
+
+  inst:ListenForEvent(
+    "enterlimbo",
+    function()
+      PauseAllTimers(inst)
+    end
+  )
+  inst:ListenForEvent(
+    "exitlimbo",
+    function()
+      ResumeAllTimers(inst)
+    end
+  )
+
   inst:ListenForEvent("onattackother", OnAttackOther)
 
   MakeHauntablePanic(inst)
@@ -250,4 +266,15 @@ STRINGS.MUTANTHEALERBEE = "Metapis Alchemist"
 STRINGS.NAMES.MUTANTHEALERBEE = "Metapis Alchemist"
 STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTHEALERBEE = "Looks like a vial full of honey."
 
-return Prefab("mutanthealerbee", healerbee, assets, prefabs)
+return Prefab("mutanthealerbee", healerbee, assets, prefabs), Prefab(
+  "mutanthealerbee_shadow",
+  MakeShadowPrefab(
+    "bee",
+    "mutanthealerbee",
+    function(inst)
+      inst.Transform:SetScale(0.85, 0.85, 0.85)
+    end
+  ),
+  assets,
+  nil
+)

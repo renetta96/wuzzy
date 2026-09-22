@@ -323,8 +323,7 @@ local function OnAttackOther(inst, data)
     local limit = math.random(2, 4)
     for i, e in pairs(rangers) do
       if
-          e ~= target and e._shouldcharge and e:GetOwner() == inst and
-          not (e:IsInLimbo() or e.components.health:IsDead())
+          e ~= target and e._shouldcharge and e:GetOwner() == inst and not (e:IsInLimbo() or e.components.health:IsDead())
       then
         e:Charge()
         cnt = cnt + 1
@@ -340,7 +339,6 @@ local function ModifySGClient(sg)
   print("GOT CLIENT SG ", sg.name)
   local atk_handler = sg.actionhandlers[ACTIONS.ATTACK]
   local atk_deststate_fn = atk_handler.deststate
-
   local new_handler =
       ActionHandler(
         ACTIONS.ATTACK,
@@ -374,16 +372,71 @@ local function ModifySGClient(sg)
         end
       )
 
+  sg.states["castspell_zeta"] =
+      State {
+        name = "castspell_zeta",
+        tags = { "doing", "busy", "canrotate" },
+        server_states = { "castspell_zeta" },
+        onenter = function(inst)
+          inst.components.locomotor:Stop()
+          inst.AnimState:PlayAnimation("cointoss_pre")
+          inst.AnimState:PushAnimation("cointoss_lag", false)
+
+          inst:PerformPreviewBufferedAction()
+          inst.sg:SetTimeout(2)
+        end,
+        onupdate = function(inst)
+          if inst.sg:ServerStateMatches() then
+            if inst.entity:FlattenMovementPrediction() then
+              inst.sg:GoToState("idle", "noanim")
+            end
+          elseif inst.bufferedaction == nil then
+            inst.sg:GoToState("idle")
+          end
+        end,
+        ontimeout = function(inst)
+          inst:ClearBufferedAction()
+          inst.sg:GoToState("idle")
+        end
+      }
+
+  local castaoe_handler = sg.actionhandlers[ACTIONS.CASTAOE]
+  local castaoe_deststate_fn = castaoe_handler.deststate
+  local new_castaoe_handler =
+      ActionHandler(
+        ACTIONS.CASTAOE,
+        function(inst, action, ...)
+          if
+              inst.prefab == "zeta" and action ~= nil and action.invobject ~= nil and
+              action.invobject:HasTag("mutantspellfocus")
+          then
+            return "castspell_zeta"
+          end
+
+          return castaoe_deststate_fn(inst, action, ...)
+        end,
+        castaoe_handler.condition
+      )
+
   sg.actionhandlers[new_handler.action] = new_handler
   sg.actionhandlers[blink_swap_handler.action] = blink_swap_handler
+  sg.actionhandlers[new_castaoe_handler.action] = new_castaoe_handler
+end
+
+local function OnRemoveCleanupTargetFX(inst)
+  if inst.sg.statemem.targetfx.KillFX ~= nil then
+    inst.sg.statemem.targetfx:RemoveEventCallback("onremove", OnRemoveCleanupTargetFX, inst)
+    inst.sg.statemem.targetfx:KillFX()
+  else
+    inst.sg.statemem.targetfx:Remove()
+  end
 end
 
 local function ModifySGMaster(sg)
   print("GOT MASTER SG ", sg.name)
   local atk_handler = sg.actionhandlers[ACTIONS.ATTACK]
   local atk_deststate_fn = atk_handler.deststate
-
-  local new_handler =
+  local new_atk_handler =
       ActionHandler(
         ACTIONS.ATTACK,
         function(inst, action, ...)
@@ -415,8 +468,132 @@ local function ModifySGMaster(sg)
         end
       )
 
-  sg.actionhandlers[new_handler.action] = new_handler
+  sg.states["castspell_zeta"] =
+      State {
+        name = "castspell_zeta",
+        tags = { "doing", "busy", "canrotate" },
+        onenter = function(inst)
+          if inst.components.playercontroller ~= nil then
+            inst.components.playercontroller:Enable(false)
+          end
+          inst.AnimState:PlayAnimation("cointoss_pre")
+          inst.AnimState:PushAnimation("cointoss", false)
+          inst.components.locomotor:Stop()
+
+          local buffaction = inst:GetBufferedAction()
+
+          local spellobj = buffaction ~= nil and buffaction.invobject or nil
+          inst.sg.statemem.fxcolour = spellobj ~= nil and spellobj.fxcolour or { 1, 1, 1 }
+          inst.sg.statemem.castsound = spellobj ~= nil and spellobj.castsound or nil
+
+          if spellobj ~= nil and spellobj.components.aoetargeting ~= nil then
+            inst.sg.statemem.targetfx = spellobj.components.aoetargeting:SpawnTargetFXAt(buffaction
+            :GetDynamicActionPoint())
+            if inst.sg.statemem.targetfx ~= nil then
+              inst.sg.statemem.targetfx:ListenForEvent("onremove", OnRemoveCleanupTargetFX, inst)
+            end
+          end
+        end,
+        timeline = {
+          TimeEvent(
+            7 * FRAMES,
+            function(inst)
+              inst.sg.statemem.stafffx =
+                  SpawnPrefab(
+                    (inst.components.rider ~= nil and inst.components.rider:IsRiding()) and "staffcastfx_mount" or
+                    "staffcastfx"
+                  )
+              inst.sg.statemem.stafffx.entity:SetParent(inst.entity)
+              inst.sg.statemem.stafffx:SetUp(inst.sg.statemem.fxcolour)
+            end
+          ),
+          TimeEvent(
+            15 * FRAMES,
+            function(inst)
+              inst.sg.statemem.stafflight = SpawnPrefab("staff_castinglight")
+              inst.sg.statemem.stafflight.Transform:SetPosition(inst.Transform:GetWorldPosition())
+              inst.sg.statemem.stafflight:SetUp(inst.sg.statemem.fxcolour, 1.2, .33)
+            end
+          ),
+          TimeEvent(
+            13 * FRAMES,
+            function(inst)
+              if inst.sg.statemem.castsound then
+                inst.SoundEmitter:PlaySound(inst.sg.statemem.castsound)
+              end
+            end
+          ),
+          TimeEvent(
+            53 * FRAMES,
+            function(inst)
+              if inst.sg.statemem.targetfx ~= nil then
+                if inst.sg.statemem.targetfx:IsValid() then
+                  OnRemoveCleanupTargetFX(inst)
+                end
+                inst.sg.statemem.targetfx = nil
+              end
+              inst.sg.statemem.stafffx = nil --Can't be cancelled anymore
+              inst.sg.statemem.stafflight = nil --Can't be cancelled anymore
+              inst:PerformBufferedAction()
+            end
+          ),
+          TimeEvent(
+            70 * FRAMES,
+            function(inst)
+              inst.sg:RemoveStateTag("busy")
+              if inst.components.playercontroller ~= nil then
+                inst.components.playercontroller:Enable(true)
+              end
+            end
+          )
+        },
+        events = {
+          EventHandler(
+            "animqueueover",
+            function(inst)
+              if inst.AnimState:AnimDone() then
+                inst.sg:GoToState("idle")
+              end
+            end
+          )
+        },
+        onexit = function(inst)
+          if inst.components.playercontroller ~= nil then
+            inst.components.playercontroller:Enable(true)
+          end
+          if inst.sg.statemem.stafffx ~= nil and inst.sg.statemem.stafffx:IsValid() then
+            inst.sg.statemem.stafffx:Remove()
+          end
+          if inst.sg.statemem.stafflight ~= nil and inst.sg.statemem.stafflight:IsValid() then
+            inst.sg.statemem.stafflight:Remove()
+          end
+          if inst.sg.statemem.targetfx ~= nil and inst.sg.statemem.targetfx:IsValid() then
+            OnRemoveCleanupTargetFX(inst)
+          end
+        end
+      }
+
+  local castaoe_handler = sg.actionhandlers[ACTIONS.CASTAOE]
+  local castaoe_deststate_fn = castaoe_handler.deststate
+  local new_castaoe_handler =
+      ActionHandler(
+        ACTIONS.CASTAOE,
+        function(inst, action, ...)
+          if
+              inst.prefab == "zeta" and action ~= nil and action.invobject ~= nil and
+              action.invobject:HasTag("mutantspellfocus")
+          then
+            return "castspell_zeta"
+          end
+
+          return castaoe_deststate_fn(inst, action, ...)
+        end,
+        castaoe_handler.condition
+      )
+
+  sg.actionhandlers[new_atk_handler.action] = new_atk_handler
   sg.actionhandlers[blink_swap_handler.action] = blink_swap_handler
+  sg.actionhandlers[new_castaoe_handler.action] = new_castaoe_handler
 end
 
 -- because I don't want to affect other characters' stategraph.
@@ -565,35 +742,81 @@ local function setDefaultStats(inst)
   end
 end
 
-local function OnActivateSkill(inst, data)
-  -- print("ON ACTIVATE", data.skill, GetTime())
-  if data and data.skill then
-    if data.skill == "zeta_metapimancer_tyrant_1" then
-      setTyrantStats(inst)
-    end
+local function setShadowAllegiance(inst)
+  inst:AddTag("player_shadow_aligned")
 
-    if data.skill == "zeta_metapimancer_shepherd_1" then
-      setShepherdStats(inst)
-    end
+  local shadowresist = 1.0
+  local lunarbonus = 1.0
+
+  if inst.components.skilltreeupdater:CountSkillTag("metapimancer_shepherd") > 0 then
+    shadowresist = TUNING.ZETA_ALLEGIANCE_SHADOW_RESIST_SHEPHERD
+    lunarbonus = TUNING.ZETA_ALLEGIANCE_VS_LUNAR_BONUS_SHEPHERD
+  end
+
+  if inst.components.skilltreeupdater:CountSkillTag("metapimancer_tyrant") > 0 then
+    shadowresist = TUNING.ZETA_ALLEGIANCE_SHADOW_RESIST_TYRANT
+    lunarbonus = TUNING.ZETA_ALLEGIANCE_VS_LUNAR_BONUS_TYRANT
+  end
+
+  if inst.components.damagetyperesist ~= nil then
+    inst.components.damagetyperesist:AddResist("shadow_aligned", inst, shadowresist, "allegiance_shadow")
+  end
+
+  if inst.components.damagetypebonus ~= nil then
+    inst.components.damagetypebonus:AddBonus("lunar_aligned", inst, lunarbonus, "allegiance_shadow")
   end
 end
 
-local function OnDeactivateSkill(inst, data)
-  -- print("ON DEACTIVATE", data.skill, GetTime())
-  if data and data.skill then
-    if data.skill == "zeta_metapimancer_tyrant_1" then
-      setDefaultStats(inst)
-    end
+local function setLunarAllegiance(inst)
+  inst:AddTag("player_lunar_aligned")
 
-    if data.skill == "zeta_metapimancer_shepherd_1" then
-      setDefaultStats(inst)
-    end
+  local lunarresist = 1.0
+  local shadowbonus = 1.0
+
+  if inst.components.skilltreeupdater:CountSkillTag("metapimancer_shepherd") > 0 then
+    lunarresist = TUNING.ZETA_ALLEGIANCE_LUNAR_RESIST_SHEPHERD
+    shadowbonus = TUNING.ZETA_ALLEGIANCE_VS_SHADOW_BONUS_SHEPHERD
+  end
+
+  if inst.components.skilltreeupdater:CountSkillTag("metapimancer_tyrant") > 0 then
+    lunarresist = TUNING.ZETA_ALLEGIANCE_LUNAR_RESIST_TYRANT
+    shadowbonus = TUNING.ZETA_ALLEGIANCE_VS_SHADOW_BONUS_TYRANT
+  end
+
+  if inst.components.damagetyperesist ~= nil then
+    inst.components.damagetyperesist:AddResist("lunar_aligned", inst, lunarresist, "allegiance_lunar")
+  end
+
+  if inst.components.damagetypebonus ~= nil then
+    inst.components.damagetypebonus:AddBonus("shadow_aligned", inst, shadowbonus, "allegiance_lunar")
   end
 end
 
-local function OnSkillTreeInitialized(inst)
-  -- print("ON SKILL TREE INIT", GetTime())
+local function unsetShadowAllegiance(inst)
+  inst:RemoveTag("player_shadow_aligned")
 
+  if inst.components.damagetyperesist ~= nil then
+    inst.components.damagetyperesist:RemoveResist("shadow_aligned", inst, "allegiance_shadow")
+  end
+
+  if inst.components.damagetypebonus ~= nil then
+    inst.components.damagetypebonus:RemoveBonus("lunar_aligned", inst, "allegiance_shadow")
+  end
+end
+
+local function unsetLunarAllegiance(inst)
+  inst:RemoveTag("player_lunar_aligned")
+
+  if inst.components.damagetyperesist ~= nil then
+    inst.components.damagetyperesist:RemoveResist("lunar_aligned", inst, "allegiance_lunar")
+  end
+
+  if inst.components.damagetypebonus ~= nil then
+    inst.components.damagetypebonus:RemoveBonus("shadow_aligned", inst, "allegiance_lunar")
+  end
+end
+
+local function OnSkillSelectionchange(inst, data)
   local skilltreeupdater = inst.components.skilltreeupdater
   if not skilltreeupdater then
     return
@@ -606,7 +829,26 @@ local function OnSkillTreeInitialized(inst)
   else
     setDefaultStats(inst)
   end
+
+  if skilltreeupdater:IsActivated("zeta_allegiance_shadow_1") then
+    setShadowAllegiance(inst)
+  else
+    unsetShadowAllegiance(inst)
+  end
+
+  if skilltreeupdater:IsActivated("zeta_allegiance_lunar_1") then
+    setLunarAllegiance(inst)
+  else
+    unsetLunarAllegiance(inst)
+  end
+
+  if skilltreeupdater:IsActivated("zeta_allegiance_shadow_2") then
+    inst:AddTag("melissomancer_shadow")
+  else
+    inst:RemoveTag("melissomancer_shadow")
+  end
 end
+
 
 local function tryStartRegen(inst)
   if inst.components.beesummoner then
@@ -664,9 +906,9 @@ local master_postinit = function(inst)
   inst.EnablePoisonAttack = EnablePoisonAttack
   inst:ListenForEvent("onattackother", OnAttackOther)
 
-  inst:ListenForEvent("onactivateskill_server", OnActivateSkill)
-  inst:ListenForEvent("ondeactivateskill_server", OnDeactivateSkill)
-  inst:ListenForEvent("ms_skilltreeinitialized", OnSkillTreeInitialized)
+  inst:ListenForEvent("onactivateskill_server", OnSkillSelectionchange)
+  inst:ListenForEvent("ondeactivateskill_server", OnSkillSelectionchange)
+  inst:ListenForEvent("ms_skilltreeinitialized", OnSkillSelectionchange)
 
   inst:ListenForEvent(
     "unlockrecipe",
@@ -676,8 +918,15 @@ local master_postinit = function(inst)
   )
 
   local _deltamodifierfn = inst.components.health.deltamodifierfn
-  inst.components.health.deltamodifierfn = function(inst, amount, overtime, cause, ignore_invincible, afflicter,
-                                                    ignore_absorb, ...)
+  inst.components.health.deltamodifierfn = function(
+      inst,
+      amount,
+      overtime,
+      cause,
+      ignore_invincible,
+      afflicter,
+      ignore_absorb,
+      ...)
     if _deltamodifierfn ~= nil then
       amount = _deltamodifierfn(inst, amount, overtime, cause, ignore_invincible, afflicter, ignore_absorb, ...)
     end
@@ -716,10 +965,12 @@ local master_postinit = function(inst)
 
   inst._onhivenumchildren = function()
     if inst._hive ~= nil and inst._hive.components.childspawner then
-      inst.net_hivechildren:set(inst._hive.components.childspawner:NumChildren() +
-        inst._hive.components.childspawner:NumEmergencyChildren())
-      inst.net_hivemaxchildren:set(inst._hive.components.childspawner.maxchildren +
-        inst._hive.components.childspawner.maxemergencychildren)
+      inst.net_hivechildren:set(
+        inst._hive.components.childspawner:NumChildren() + inst._hive.components.childspawner:NumEmergencyChildren()
+      )
+      inst.net_hivemaxchildren:set(
+        inst._hive.components.childspawner.maxchildren + inst._hive.components.childspawner.maxemergencychildren
+      )
     else
       inst.net_hivechildren:set(-1)
       inst.net_hivemaxchildren:set(-1)

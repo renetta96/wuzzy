@@ -4,9 +4,7 @@ local FindEnemies = metapis_common.FindEnemies
 local zeta_utils = require "zeta_utils"
 
 local assets = {
-  Asset("ANIM", "anim/armor_honey.zip"),
-  Asset("ATLAS", "images/inventoryimages/armor_honey.xml"),
-  Asset("IMAGE", "images/inventoryimages/armor_honey.tex")
+  Asset("ANIM", "anim/armor_honey.zip")
 }
 
 local prefabs = {
@@ -35,16 +33,16 @@ local function DoHealing(inst)
   local minpercent = TUNING.ARMORHONEY_MIN_HEAL_PERCENT
   local maxpercent = TUNING.ARMORHONEY_MAX_HEAL_PERCENT
 
-  if owner.components.skilltreeupdater and owner.components.skilltreeupdater:IsActivated("zeta_honeysmith_armor_honey_1") then
+  if
+    owner.components.skilltreeupdater and owner.components.skilltreeupdater:IsActivated("zeta_honeysmith_armor_honey_1")
+   then
     minpercent = TUNING.ARMORHONEY_MIN_HEAL_PERCENT_UPGRADED
     maxpercent = TUNING.ARMORHONEY_MAX_HEAL_PERCENT_UPGRADED
   end
 
   local percent = Lerp(minpercent, maxpercent, inst.components.perishable:GetPercent())
-  local delta = math.max(
-    1,
-    math.floor((owner.components.health.maxhealth - owner.components.health.currenthealth) * percent)
-  )
+  local delta =
+    math.max(1, math.floor((owner.components.health.maxhealth - owner.components.health.currenthealth) * percent))
   owner.components.health:DoDelta(delta, nil, "armorhoney_heal")
 
   inst._healtick = inst._healtick - 1
@@ -58,7 +56,10 @@ local function StartHealing(inst)
 
   if inst.components.inventoryitem then
     local owner = inst.components.inventoryitem:GetGrandOwner()
-    if owner and owner.components.skilltreeupdater and owner.components.skilltreeupdater:IsActivated("zeta_honeysmith_armor_honey_1") then
+    if
+      owner and owner.components.skilltreeupdater and
+        owner.components.skilltreeupdater:IsActivated("zeta_honeysmith_armor_honey_1")
+     then
       inst._healtick = TUNING.ARMORHONEY_HEAL_TICKS_UPGRADED
     end
   end
@@ -73,8 +74,10 @@ local function doStingerNova(owner)
   fx:Attach(owner)
 
   local enemies = FindEnemies(owner, TUNING.ARMORHONEY_RETALIATE_RANGE)
-  local damage = (owner.components.beesummoner.numchildren + owner.components.beesummoner:GetNumExtraChildren()) *
-    TUNING.ARMORHONEY_RETALIATE_DAMAGE_MULT + TUNING.ARMORHONEY_RETALIATE_DAMAGE_BASE
+  local damage =
+    (owner.components.beesummoner.numchildren + owner.components.beesummoner:GetNumExtraChildren()) *
+    TUNING.ARMORHONEY_RETALIATE_DAMAGE_MULT +
+    TUNING.ARMORHONEY_RETALIATE_DAMAGE_BASE
 
   local targets = PickSome(math.min(TUNING.ARMORHONEY_RETALIATE_NUM_TARGETS, GetTableSize(enemies)), enemies)
   for i, e in ipairs(targets) do
@@ -110,10 +113,12 @@ local function tryStingerNova(inst, amount)
   end
 
   local owner = inst.components.inventoryitem:GetGrandOwner()
-  if owner ~= nil and owner.prefab == "zeta"
-      and owner:IsValid() and not owner.components.health:IsDead()
-      and owner.components.skilltreeupdater and owner.components.skilltreeupdater:IsActivated("zeta_honeysmith_armor_honey_1")
-      and owner.components.beesummoner then
+  if
+    owner ~= nil and owner.prefab == "zeta" and owner:IsValid() and not owner.components.health:IsDead() and
+      owner.components.skilltreeupdater and
+      owner.components.skilltreeupdater:IsActivated("zeta_honeysmith_armor_honey_1") and
+      owner.components.beesummoner
+   then
     inst._accdmg = (inst._accdmg or 0) + amount
 
     if inst._status == nil then
@@ -171,13 +176,17 @@ local function onattacked(owner, data)
     return
   end
 
-  if owner.prefab == "zeta"
-      and owner.components.skilltreeupdater
-      and owner.components.skilltreeupdater:IsActivated("zeta_honeysmith_armor_honey_2")
-      and owner.components.beesummoner then
-    owner.components.beesummoner:AddExtraSource("armorhoney_attacked", function()
-      return owner.components.beesummoner.maxchildren
-    end)
+  if
+    owner.prefab == "zeta" and owner.components.skilltreeupdater and
+      owner.components.skilltreeupdater:IsActivated("zeta_honeysmith_armor_honey_2") and
+      owner.components.beesummoner
+   then
+    owner.components.beesummoner:AddExtraSource(
+      "armorhoney_attacked",
+      function()
+        return owner.components.beesummoner.maxchildren
+      end
+    )
 
     if math.random() <= TUNING.ARMORHONEY_ATTACKED_SUMMON_CHANCE then
       owner.components.beesummoner:SummonChild(attacker, "armorhoney_attacked")
@@ -191,7 +200,12 @@ local function onequip(inst, owner)
 
   if owner.components.beesummoner then
     owner.components.beesummoner:AddStoreModifier_Additive("armorhoney", TUNING.ARMORHONEY_ADD_STORE)
-    owner.components.beesummoner:AddRegenTickModifier_Mult("armorhoney", function() return CalcStoreModifier(inst) end)
+    owner.components.beesummoner:AddRegenTickModifier_Mult(
+      "armorhoney",
+      function()
+        return CalcStoreModifier(inst)
+      end
+    )
 
     inst:ListenForEvent("attacked", onattacked, owner)
   end
@@ -231,7 +245,7 @@ end
 local function OnPerishChange(inst, data)
   if inst.components.armor and inst.components.perishable then
     local absorption =
-        Lerp(TUNING.ARMORHONEY_MIN_ABSORPTION, TUNING.ARMORHONEY_MAX_ABSORPTION, inst.components.perishable:GetPercent())
+      Lerp(TUNING.ARMORHONEY_MIN_ABSORPTION, TUNING.ARMORHONEY_MAX_ABSORPTION, inst.components.perishable:GetPercent())
     inst.components.armor:SetAbsorption(absorption)
   end
 end
@@ -269,6 +283,7 @@ local function fn()
 
   inst:AddComponent("inventoryitem")
   inst.components.inventoryitem.atlasname = "images/inventoryimages/armor_honey.xml"
+  inst.components.inventoryitem.imagename = "armor_honey"
 
   inst:AddComponent("armor")
   inst.components.armor:InitIndestructible(TUNING.ARMORHONEY_MAX_ABSORPTION)

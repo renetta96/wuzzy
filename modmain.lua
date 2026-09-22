@@ -6,13 +6,9 @@ local TECH = GLOBAL.TECH
 local SpawnPrefab = GLOBAL.SpawnPrefab
 local Action = GLOBAL.Action
 local SEASONS = GLOBAL.SEASONS
-local RECIPETABS = GLOBAL.RECIPETABS
-local CLIENT_RPC = GLOBAL.CLIENT_RPC
 local PREFAB_SKINS = GLOBAL.PREFAB_SKINS
 local PREFAB_SKINS_IDS = GLOBAL.PREFAB_SKINS_IDS
 local SkillTreeDefs = require("prefabs/skilltree_defs")
-local GetClosestInstWithTag = GLOBAL.GetClosestInstWithTag
-local FindClosestEntity = GLOBAL.FindClosestEntity
 local Vector3 = GLOBAL.Vector3
 
 PrefabFiles = {
@@ -43,7 +39,8 @@ PrefabFiles = {
   "poison_fx",
   "metapis_buffs",
   "mutantbeetoken",
-  "stinger_nova"
+  "stinger_nova",
+  "mutantshadowfocus"
 }
 
 Assets = {
@@ -127,16 +124,20 @@ Assets = {
   Asset("ATLAS", "images/inventoryimages/mutantshadowbee_token.xml"),
   Asset("IMAGE", "images/inventoryimages/mutantshadowbee_token.tex"),
   Asset("ATLAS", "images/inventoryimages/mutanthealerbee_token.xml"),
-  Asset("IMAGE", "images/inventoryimages/mutanthealerbee_token.tex")
+  Asset("IMAGE", "images/inventoryimages/mutanthealerbee_token.tex"),
+  Asset("IMAGE", "images/inventoryimages/mutantshadowfocus.tex"),
+  Asset("ATLAS", "images/inventoryimages/mutantshadowfocus.xml"),
 }
 
 RemapSoundEvent("dontstarve/characters/zeta/hurt", "zeta/zeta/hurt")
 RemapSoundEvent("dontstarve/characters/zeta/talk_LP", "zeta/zeta/talk_LP")
 RemapSoundEvent("dontstarve/characters/zeta/death_voice", "zeta/zeta/death_voice")
-RemapSoundEvent("dontstarve/characters/zeta/emote", "zeta/zeta/emote")       --dst
-RemapSoundEvent("dontstarve/characters/zeta/pose", "zeta/zeta/pose")         --dst
-RemapSoundEvent("dontstarve/characters/zeta/yawn", "zeta/zeta/yawn")         --dst
+RemapSoundEvent("dontstarve/characters/zeta/emote", "zeta/zeta/emote") --dst
+RemapSoundEvent("dontstarve/characters/zeta/pose", "zeta/zeta/pose") --dst
+RemapSoundEvent("dontstarve/characters/zeta/yawn", "zeta/zeta/yawn") --dst
 RemapSoundEvent("dontstarve/characters/zeta/ghost_LP", "zeta/zeta/ghost_LP") --dst
+
+RegisterInventoryItemAtlas("images/inventoryimages/mutantshadowfocus.xml", "mutantshadowfocus.tex")
 
 -- Stats
 TUNING.ZETA_HEALTH = 175
@@ -174,6 +175,16 @@ TUNING.ZETA_NON_HONEYED_FOOD_ABSORPTION = 0.5
 TUNING.ZETA_PICK_FLOWER_SANITY = -3 * TUNING.SANITY_TINY
 TUNING.ZETA_TYRANT_REDIRECT_DAMAGE_MINIONS = 3
 TUNING.ZETA_ENRAGE_BUFF_DURATION = 10
+
+TUNING.ZETA_ALLEGIANCE_SHADOW_RESIST_SHEPHERD = 0.95
+TUNING.ZETA_ALLEGIANCE_VS_LUNAR_BONUS_SHEPHERD = 1.05
+TUNING.ZETA_ALLEGIANCE_SHADOW_RESIST_TYRANT = 0.9
+TUNING.ZETA_ALLEGIANCE_VS_LUNAR_BONUS_TYRANT = 1.1
+
+TUNING.ZETA_ALLEGIANCE_LUNAR_RESIST_SHEPHERD = 0.95
+TUNING.ZETA_ALLEGIANCE_VS_SHADOW_BONUS_SHEPHERD = 1.05
+TUNING.ZETA_ALLEGIANCE_LUNAR_RESIST_TYRANT = 0.9
+TUNING.ZETA_ALLEGIANCE_VS_SHADOW_BONUS_TYRANT = 1.1
 
 TUNING.GAMEMODE_STARTING_ITEMS.DEFAULT.ZETA = {
   "honeycomb",
@@ -251,6 +262,16 @@ TUNING.MUTANT_BEE_HEALER_MAX_HEAL_ORB_MAX_DISTANCE = 5
 TUNING.MUTANT_BEE_RAGED_DAMAGE_BUFF = 1.25
 TUNING.MUTANT_BEE_FRENZY_ATK_SPEED_BUFF = 0.5
 
+TUNING.MUTANT_BEE_ALLEGIANCE_SHADOW_RESIST_SHEPHERD = 0.9
+TUNING.MUTANT_BEE_ALLEGIANCE_VS_LUNAR_BONUS_SHEPHERD = 1.1
+TUNING.MUTANT_BEE_ALLEGIANCE_SHADOW_RESIST_TYRANT = 0.95
+TUNING.MUTANT_BEE_ALLEGIANCE_VS_LUNAR_BONUS_TYRANT = 1.05
+
+TUNING.MUTANT_BEE_ALLEGIANCE_LUNAR_RESIST_SHEPHERD = 0.9
+TUNING.MUTANT_BEE_ALLEGIANCE_VS_SHADOW_BONUS_SHEPHERD = 1.1
+TUNING.MUTANT_BEE_ALLEGIANCE_LUNAR_RESIST_TYRANT = 0.95
+TUNING.MUTANT_BEE_ALLEGIANCE_VS_SHADOW_BONUS_TYRANT = 1.05
+
 -- Mutant beehive stats
 TUNING.MUTANT_BEEHIVE_DEFAULT_EMERGENCY_BEES = 2
 TUNING.MUTANT_BEEHIVE_EMERGENCY_RADIUS = 30
@@ -317,11 +338,16 @@ TUNING.STING_TRAP_DAMAGE = 10
 TUNING.STING_TRAP_DEFAULT_SPEED_PENALTY = 0.6
 TUNING.STING_TRAP_EPIC_SPEED_PENALTY = 0.75
 
+-- Spells
+TUNING.SHADOW_FOCUS_MINION_CHARGE = 2
+TUNING.SHADOW_FOCUS_ZETA_CHARGE = 10
+TUNING.SPELL_SHADOW_LAUNCH_PLANAR_DAMAGE_PER_SHADOW = 10
+
 -- The character select screen lines
 STRINGS.CHARACTER_TITLES.zeta = "The Buzzy"
 STRINGS.CHARACTER_NAMES.zeta = "Wuzzy"
 STRINGS.CHARACTER_DESCRIPTIONS.zeta =
-"*Leads his own species and hive\n*Fights alongside his symbiotic bees\n*Can pick pollen from flowers\n*Loves honeyed foods"
+  "*Leads and fights along side his own swarm\n*Can pick pollen from flowers\n*Loves honeyed foods"
 STRINGS.CHARACTER_QUOTES.zeta = '"Bees together strong."'
 STRINGS.CHARACTER_SURVIVABILITY.zeta = "Grim"
 STRINGS.SKIN_NAMES.zeta_none = "Wuzzy"
@@ -332,6 +358,12 @@ STRINGS.CHARACTERS.ZETA = require "speech_zeta"
 
 -- The character's name as appears in-game
 STRINGS.NAMES.ZETA = "Wuzzy"
+
+STRINGS.MELISSOMANCY = {
+  SIGIL_SHADOW_LAUNCH = "Sigil Of Shadow Harvest"
+}
+STRINGS.ACTIONS.USESPELLBOOK.MELISSOMANCY = "Invoke"
+STRINGS.ACTIONS.CLOSESPELLBOOK.MELISSOMANCY = "Dismiss"
 
 AddMinimapAtlas("images/map_icons/zeta.xml")
 -- AddMinimapAtlas("images/map_icons/mutantbeecocoon.xml")
@@ -378,6 +410,9 @@ RegisterSkilltreeIconsAtlas("images/skilltree_zeta_icons.xml", "zeta_honeysmith_
 RegisterSkilltreeIconsAtlas("images/skilltree_zeta_icons.xml", "zeta_honeysmith_melissa_2.tex")
 RegisterSkilltreeIconsAtlas("images/skilltree_zeta_icons.xml", "zeta_honeysmith_armor_honey_1.tex")
 RegisterSkilltreeIconsAtlas("images/skilltree_zeta_icons.xml", "zeta_honeysmith_armor_honey_2.tex")
+RegisterSkilltreeIconsAtlas("images/skilltree_zeta_icons.xml", "zeta_allegiance_shadow_1.tex")
+RegisterSkilltreeIconsAtlas("images/skilltree_zeta_icons.xml", "zeta_allegiance_shadow_2.tex")
+RegisterSkilltreeIconsAtlas("images/skilltree_zeta_icons.xml", "zeta_allegiance_lunar_1.tex")
 
 CreateSkillTree()
 
@@ -397,7 +432,7 @@ local skin_modes = {
     anim_bank = "ghost",
     idle_anim = "idle",
     scale = 0.75,
-    offset = { 0, -25 }
+    offset = {0, -25}
   }
 }
 AddModCharacter("zeta", "MALE", skin_modes)
@@ -406,8 +441,8 @@ AddModCharacter("zeta", "MALE", skin_modes)
 local function HandleHoneyPerishingInMetapisHive(prefab)
   if prefab.components.perishable and prefab.components.inventoryitem then
     local OldOnPutInInventory = prefab.components.inventoryitem.onputininventoryfn or function()
-      return
-    end
+        return
+      end
     prefab.components.inventoryitem:SetOnPutInInventoryFn(
       function(inst, owner)
         if owner and owner.prefab == "mutantcontainer" then
@@ -525,12 +560,20 @@ local function FlowerPostInit(prefab)
   prefab.net_pollenpicked = GLOBAL.net_bool(prefab.GUID, "flower.pollenpicked", "pollenpickeddirty")
 
   if not GLOBAL.TheNet:IsDedicated() then
-    prefab:ListenForEvent("playeractivated", function(world, player)
-      tryEnablingPulsing(prefab)
-    end, GLOBAL.TheWorld)
-    prefab:ListenForEvent("playerdeactivated", function(world, player)
-      tryEnablingPulsing(prefab)
-    end, GLOBAL.TheWorld)
+    prefab:ListenForEvent(
+      "playeractivated",
+      function(world, player)
+        tryEnablingPulsing(prefab)
+      end,
+      GLOBAL.TheWorld
+    )
+    prefab:ListenForEvent(
+      "playerdeactivated",
+      function(world, player)
+        tryEnablingPulsing(prefab)
+      end,
+      GLOBAL.TheWorld
+    )
 
     prefab:DoTaskInTime(0, tryEnablingPulsing)
   end
@@ -777,7 +820,7 @@ local mutantcontainer_container = {
   },
   itemtestfn = function(inst, item, slot)
     return item and item.prefab and
-        (item.prefab == "honey" or item.prefab == "zetapollen" or item.prefab == "armor_honey")
+      (item.prefab == "honey" or item.prefab == "zetapollen" or item.prefab == "armor_honey")
   end,
   type = "chest"
 }
@@ -860,7 +903,7 @@ AddCharacterRecipe(
 local function slavehivetestfn(pt, rot)
   local x, y, z = pt:Get()
   local possiblemasters =
-      GLOBAL.TheSim:FindEntities(x, y, z, TUNING.MUTANT_BEEHIVE_MASTER_SLAVE_DIST, { "mutantbeehive" })
+    GLOBAL.TheSim:FindEntities(x, y, z, TUNING.MUTANT_BEEHIVE_MASTER_SLAVE_DIST, {"mutantbeehive"})
 
   if possiblemasters[1] ~= nil then
     return true
@@ -1110,6 +1153,38 @@ AddCharacterRecipe(
   }
 )
 
+AddCharacterRecipe(
+  "mutantshadowfocus",
+  {
+    Ingredient("honey", 20),
+    Ingredient("honeycomb", 1),
+    Ingredient("horrorfuel", 3)
+  },
+  TECH.NONE,
+  {
+    builder_skill = "zeta_allegiance_shadow_2",
+    atlas = "images/inventoryimages/mutantshadowfocus.xml",
+    image = "mutantshadowfocus.tex"
+  }
+)
+
+AddCharacterRecipe(
+  "honeycomb_zeta_recipe",
+  {
+    Ingredient(GLOBAL.CHARACTER_INGREDIENT.HEALTH, 20),
+    Ingredient("honey", 20)
+  },
+  TECH.NONE,
+  {
+    builder_tag = "beemaster",
+    -- atlas = "images/inventoryimages/armor_honey.xml",
+    -- image = "armor_honey.tex",
+    product = "honeycomb",
+    description = "honeycomb_zeta_recipe" -- override RECIPE_DESC key
+  }
+)
+GLOBAL.STRINGS.RECIPE_DESC.HONEYCOMB_ZETA_RECIPE = "After all this time, it only makes sense that I can finally craft this."
+
 -- AddCharacterRecipe(
 --     "honey_sting_ball",
 --     {
@@ -1182,7 +1257,7 @@ local function findNearestMinion(pos, inst)
 
   -- a bit longer than client find distance to compensate minion movement
   local radius = swap_approx_dist + 4
-  local ents = GLOBAL.TheSim:FindEntities(x, y, z, radius, { "beemutantminion" }, { "lesserminion", "INLIMBO" })
+  local ents = GLOBAL.TheSim:FindEntities(x, y, z, radius, {"beemutantminion"}, {"lesserminion", "INLIMBO"})
 
   local closestEntity = nil
   local rangesq = radius * radius
@@ -1200,28 +1275,38 @@ local function findNearestMinion(pos, inst)
 end
 
 local blink_swap_approx_act =
-    AddAction(
-      "ZETA_BLINK_SWAP_APPROX",
-      "Swap",
-      function(act)
-        -- print("BLINK SWAP APPROX", act.doer, act.invobject, act.target)
+  AddAction(
+  "ZETA_BLINK_SWAP_APPROX",
+  "Swap",
+  function(act)
+    -- print("BLINK SWAP APPROX", act.doer, act.invobject, act.target)
 
-        local minion = findNearestMinion(act:GetActionPoint(), act.doer)
-        if minion ~= nil then
-          return performSwap(act.doer, minion, act.invobject)
-        end
+    local minion = findNearestMinion(act:GetActionPoint(), act.doer)
+    if minion ~= nil then
+      return performSwap(act.doer, minion, act.invobject)
+    end
 
-        return false, "NO_MINION"
-      end
-    )
+    return false, "NO_MINION"
+  end
+)
 blink_swap_approx_act.priority = 10
 blink_swap_approx_act.rmb = true
 blink_swap_approx_act.distance = 25
 
+local old_USESPELLBOOK_strfn = GLOBAL.ACTIONS.USESPELLBOOK.strfn
+GLOBAL.ACTIONS.USESPELLBOOK.strfn = function(act, ...)
+  return (act.doer:HasTag("beemaster") and "MELISSOMANCY") or old_USESPELLBOOK_strfn(act, ...)
+end
+
+local old_CLOSESPELLBOOK_strfn = GLOBAL.ACTIONS.CLOSESPELLBOOK.strfn
+GLOBAL.ACTIONS.CLOSESPELLBOOK.strfn = function(act, ...)
+  return (act.doer:HasTag("beemaster") and "MELISSOMANCY") or old_CLOSESPELLBOOK_strfn(act, ...)
+end
+
 local function hasNearbyMinion(pos)
   local x, y, z = pos:Get()
   local radius = swap_approx_dist
-  local ents = GLOBAL.TheSim:FindEntities(x, y, z, radius, { "beemutantminion" }, { "lesserminion" })
+  local ents = GLOBAL.TheSim:FindEntities(x, y, z, radius, {"beemutantminion"}, {"lesserminion", "INLIMBO"})
 
   return #ents > 0
 end
@@ -1232,11 +1317,11 @@ AddComponentAction(
   function(inst, doer, pos, actions, right, target)
     local x, y, z = pos:Get()
     if
-        right and inst:HasTag("beemaster_weapon") and doer:HasTag("beemaster") and not doer:HasTag("steeringboat") and
+      right and inst:HasTag("beemaster_weapon") and doer:HasTag("beemaster") and not doer:HasTag("steeringboat") and
         not doer:HasTag("rotatingboat") and
         (GLOBAL.TheWorld.Map:IsAboveGroundAtPoint(x, y, z) or GLOBAL.TheWorld.Map:GetPlatformAtPoint(x, z) ~= nil) and
         not GLOBAL.TheWorld.Map:IsGroundTargetBlocked(pos)
-    then
+     then
       if hasNearbyMinion(pos) then
         table.insert(actions, GLOBAL.ACTIONS.ZETA_BLINK_SWAP_APPROX)
       end
@@ -1280,7 +1365,7 @@ end
 
 local function StatusPostConstruct(self)
   if self.owner.prefab == "zeta" then
-    self.symbiosis = self:AddChild(Badge(nil, self.owner, { 48 / 255, 169 / 255, 169 / 255, 1 }, "status_symbiosis"))
+    self.symbiosis = self:AddChild(Badge(nil, self.owner, {48 / 255, 169 / 255, 169 / 255, 1}, "status_symbiosis"))
     self.symbiosis.backing:GetAnimState():SetBuild("status_meter_symbiosis")
 
     self.symbiosis:Hide()
@@ -1309,25 +1394,29 @@ local function StatusPostConstruct(self)
   end
 end
 
-local MotherHiveDisplay = Class(Widget, function(self, owner)
-  Widget._ctor(self, "MotherHiveDisplay")
-  self.owner = owner
+local MotherHiveDisplay =
+  Class(
+  Widget,
+  function(self, owner)
+    Widget._ctor(self, "MotherHiveDisplay")
+    self.owner = owner
 
-  self.backing = self:AddChild(UIAnim())
-  self.backing:GetAnimState():SetBank("mother_hive_display")
-  self.backing:GetAnimState():SetBuild("mother_hive_display")
-  self.backing:GetAnimState():PlayAnimation("anim")
+    self.backing = self:AddChild(UIAnim())
+    self.backing:GetAnimState():SetBank("mother_hive_display")
+    self.backing:GetAnimState():SetBuild("mother_hive_display")
+    self.backing:GetAnimState():PlayAnimation("anim")
 
-  self.num_children = self:AddChild(Text(GLOBAL.BODYTEXTFONT, 24))
-  self.num_children:SetPosition(-48, -40)
-  self._num_children_val = nil -- local cache for pulsing
-  self._num_children_pulse_task = nil
+    self.num_children = self:AddChild(Text(GLOBAL.BODYTEXTFONT, 24))
+    self.num_children:SetPosition(-48, -40)
+    self._num_children_val = nil -- local cache for pulsing
+    self._num_children_pulse_task = nil
 
-  self.num_honey = self:AddChild(Text(GLOBAL.BODYTEXTFONT, 30))
-  self.num_honey:SetPosition(-42, -113)
-  self._num_honey = nil -- local cache for pulsing
-  self._num_honey_pulse_task = nil
-end)
+    self.num_honey = self:AddChild(Text(GLOBAL.BODYTEXTFONT, 30))
+    self.num_honey:SetPosition(-42, -113)
+    self._num_honey = nil -- local cache for pulsing
+    self._num_honey_pulse_task = nil
+  end
+)
 
 function MotherHiveDisplay:SetNumChildren(num, max)
   self.num_children:SetString(string.format("%d/%d", num, max))
@@ -1343,10 +1432,14 @@ function MotherHiveDisplay:SetNumChildren(num, max)
       self._num_children_pulse_task:Cancel()
     end
 
-    self._num_children_pulse_task = self.inst:DoTaskInTime(0.3, function()
-      self.num_children:SetColour(1, 1, 1, 1)
-      self._num_children_pulse_task = nil
-    end)
+    self._num_children_pulse_task =
+      self.inst:DoTaskInTime(
+      0.3,
+      function()
+        self.num_children:SetColour(1, 1, 1, 1)
+        self._num_children_pulse_task = nil
+      end
+    )
   end
 
   self._num_children_val = num
@@ -1371,10 +1464,14 @@ function MotherHiveDisplay:SetNumHoney(num)
       self._num_honey_pulse_task:Cancel()
     end
 
-    self._num_honey_pulse_task = self.inst:DoTaskInTime(0.3, function()
-      self.num_honey:SetColour(1, 1, 1, 1)
-      self._num_honey_pulse_task = nil
-    end)
+    self._num_honey_pulse_task =
+      self.inst:DoTaskInTime(
+      0.3,
+      function()
+        self.num_honey:SetColour(1, 1, 1, 1)
+        self._num_honey_pulse_task = nil
+      end
+    )
   end
 
   self._num_honey = num
@@ -1430,7 +1527,7 @@ local function PlayerPostConstruct(inst)
     inst:DoTaskInTime(
       0,
       function()
-        inst:PushEvent("onregentick", { currenttick = 0 })
+        inst:PushEvent("onregentick", {currenttick = 0})
       end
     )
   end
@@ -1485,7 +1582,7 @@ AddStategraphState(
   "wilson",
   State {
     name = "attack_zeta_smash",
-    tags = { "attack", "notalking", "abouttoattack", "autopredict" },
+    tags = {"attack", "notalking", "abouttoattack", "autopredict"},
     onenter = function(inst)
       if inst.components.combat:InCooldown() then
         inst.sg:RemoveStateTag("abouttoattack")
@@ -1578,7 +1675,7 @@ AddStategraphState(
   "wilson_client",
   State {
     name = "attack_zeta_smash",
-    tags = { "attack", "notalking", "abouttoattack" },
+    tags = {"attack", "notalking", "abouttoattack"},
     onenter = function(inst)
       local combat = inst.replica.combat
       if combat:InCooldown() then

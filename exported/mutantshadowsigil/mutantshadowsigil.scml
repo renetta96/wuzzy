@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<spriter_data scml_version="1.0" generator="BrashMonkey Spriter" generator_version="r11">
+    <folder id="0" name="circle">
+        <file id="0" name="circle/circle-0.png" width="500" height="500" pivot_x="0.5" pivot_y="0.5"/>
+    </folder>
+    <entity id="0" name="mutantshadowsigil">
+        <animation id="0" name="idle_pre" length="600" interval="100">
+            <mainline>
+                <key id="0" curve_type="cubic" c1="0.4129" c2="0.995025">
+                    <object_ref id="0" timeline="0" key="0" z_index="0"/>
+                </key>
+                <key id="1" time="600">
+                    <object_ref id="0" timeline="0" key="1" z_index="0"/>
+                </key>
+            </mainline>
+            <timeline id="0" name="circle-0_000">
+                <key id="0">
+                    <object folder="0" file="0" angle="180" scale_x="0.3" scale_y="0.3"/>
+                </key>
+                <key id="1" time="600" spin="-1">
+                    <object folder="0" file="0"/>
+                </key>
+            </timeline>
+        </animation>
+        <animation id="1" name="idle" length="30" interval="100">
+            <mainline>
+                <key id="0" curve_type="instant">
+                    <object_ref id="0" timeline="0" key="0" z_index="0"/>
+                </key>
+            </mainline>
+            <timeline id="0" name="circle-0">
+                <key id="0" spin="0">
+                    <object folder="0" file="0" angle="0"/>
+                </key>
+            </timeline>
+        </animation>
+        <animation id="2" name="idle_pst" length="600" interval="100">
+            <mainline>
+                <key id="0" curve_type="cubic" c1="0.2587" c2="0.3134">
+                    <object_ref id="0" timeline="0" key="0" z_index="0"/>
+                </key>
+                <key id="1" time="600" curve_type="cubic" c1="0.2587" c2="0.3134">
+                    <object_ref id="0" timeline="0" key="1" z_index="0"/>
+                </key>
+            </mainline>
+            <timeline id="0" name="circle-0_001">
+                <key id="0" spin="-1">
+                    <object folder="0" file="0"/>
+                </key>
+                <key id="1" time="600">
+                    <object folder="0" file="0" angle="180.262823" scale_x="0.3" scale_y="0.3"/>
+                </key>
+            </timeline>
+        </animation>
+        <animation id="3" name="pulse" length="300" interval="100">
+            <mainline>
+                <key id="0" curve_type="instant">
+                    <object_ref id="0" timeline="0" key="0" z_index="0"/>
+                </key>
+                <key id="1" time="133" curve_type="cubic" c1="0.9801" c2="0.995025">
+                    <object_ref id="0" timeline="0" key="1" z_index="0"/>
+                </key>
+            </mainline>
+            <timeline id="0" name="circle-0_002">
+                <key id="0" spin="0">
+                    <object folder="0" file="0"/>
+                </key>
+                <key id="1" time="133" spin="0">
+                    <object folder="0" file="0" scale_x="1.05" scale_y="1.05"/>
+                </key>
+            </timeline>
+        </animation>
+    </entity>
+</spriter_data>

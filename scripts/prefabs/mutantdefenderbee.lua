@@ -1,10 +1,10 @@
 local metapis_common = require "metapis_common"
 
-local IsAlly = metapis_common.IsAlly
 local BarrackModifier = metapis_common.BarrackModifier
 local FindTarget = metapis_common.FindTarget
 local FindEnemies = metapis_common.FindEnemies
 local CommonMasterInit = metapis_common.CommonMasterInit
+local MakeShadowPrefab = metapis_common.MakeShadowPrefab
 
 local assets = {
   Asset("ANIM", "anim/mutantdefenderbee.zip"),
@@ -300,7 +300,9 @@ local function defenderbee()
       rage_fx_scale_fn = function()
         return 5.5
       end,
-      frenzy_fx_offset = {x = -3, y = 52, z = 0}
+      frenzy_fx_offset = {x = -3, y = 52, z = 0},
+      shadowLaunchAnim = "run_loop",
+      shadowSpawnAnim = "evade"
     },
     CheckDefenderUpgrade
   )
@@ -335,8 +337,24 @@ local function defenderbee()
   return inst
 end
 
+local defendershadow =
+  MakeShadowPrefab(
+  "bee_guard",
+  "mutantdefenderbee",
+  function(inst)
+    inst.Transform:SetSixFaced()
+    inst.Transform:SetScale(1.4, 1.4, 1.4)
+    inst.DynamicShadow:SetSize(1.2, .75)
+  end
+)
+
 STRINGS.MUTANTDEFENDERBEE = "Metapis Moonguard"
 STRINGS.NAMES.MUTANTDEFENDERBEE = "Metapis Moonguard"
 STRINGS.CHARACTERS.GENERIC.DESCRIBE.MUTANTDEFENDERBEE = "Hard rock."
 
-return Prefab("mutantdefenderbee", defenderbee, assets, prefabs)
+return Prefab("mutantdefenderbee", defenderbee, assets, prefabs), Prefab(
+  "mutantdefenderbee_shadow",
+  defendershadow,
+  assets,
+  nil
+)
