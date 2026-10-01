@@ -158,7 +158,15 @@ local function MakeSpikeRing(rings)
     end
 
     inst.persists = false
-    inst:DoTaskInTime(3, inst.Remove) -- cleanup just in case
+
+    local maxdelay = 1.0
+    for i, ring in ipairs(rings) do
+      if ring.delay + 0.25 > maxdelay then
+        maxdelay = ring.delay + 0.25
+      end
+    end
+
+    inst:DoTaskInTime(maxdelay, inst.Remove) -- cleanup just in case
 
     return inst
   end

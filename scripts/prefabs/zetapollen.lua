@@ -1,4 +1,5 @@
-local zeta_utils = require "zeta_utils"
+local hive_common = require "hive_common"
+local MakeStopPerishingInHive = hive_common.MakeStopPerishingInHive
 
 local assets = {
   Asset("ANIM", "anim/zetapollen.zip"),
@@ -65,7 +66,7 @@ local function fn()
   MakeSmallBurnable(inst, TUNING.TINY_BURNTIME)
   MakeSmallPropagator(inst)
   MakeHauntableLaunchAndPerish(inst)
-  zeta_utils.MakeStopPerishingInHive(inst)
+  MakeStopPerishingInHive(inst)
 
   inst:DoPeriodicTask(1, checkiswet)
 

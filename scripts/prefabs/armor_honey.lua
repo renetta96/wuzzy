@@ -1,7 +1,7 @@
 local metapis_common = require "metapis_common"
 local FindEnemies = metapis_common.FindEnemies
-
-local zeta_utils = require "zeta_utils"
+local hive_common = require "hive_common"
+local MakeStopPerishingInHive = hive_common.MakeStopPerishingInHive
 
 local assets = {
   Asset("ANIM", "anim/armor_honey.zip")
@@ -302,7 +302,7 @@ local function fn()
   inst:ListenForEvent("perishchange", OnPerishChange)
 
   MakeHauntableLaunch(inst)
-  zeta_utils.MakeStopPerishingInHive(inst)
+  MakeStopPerishingInHive(inst)
 
   inst:DoTaskInTime(0, InitFn)
 

@@ -233,6 +233,17 @@ local function frenzy_fn()
   return inst
 end
 
+local function perm_frenzy_fn()
+  local inst = frenzy_fn()
+
+  if not TheWorld.ismastersim then
+    return inst
+  end
+
+  inst.duration = 1000
+  return inst
+end
+
 local enrage_assets = {
   Asset("ANIM", "anim/enrage_buff_fx.zip")
 }
@@ -501,4 +512,7 @@ return Prefab("metapis_haste_buff", haste_fn), Prefab("metapis_rage_buff", rage_
 ), Prefab("metapis_rage_fx", rage_fx, enrage_assets), Prefab("metapis_frenzy_fx", frenzy_fx, frenzy_assets), Prefab(
   "metapis_shred_buff",
   shred_fn
-), Prefab("metapis_stack_haste_buff", stack_haste_fn), Prefab("metapis_frostbite_buff", frostbite_fn)
+), Prefab("metapis_stack_haste_buff", stack_haste_fn), Prefab("metapis_frostbite_buff", frostbite_fn), Prefab(
+  "metapis_perm_frenzy_buff",
+  frenzy_fn
+)

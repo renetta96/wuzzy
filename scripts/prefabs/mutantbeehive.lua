@@ -77,6 +77,67 @@ local SPEECH = {
   }
 }
 
+local RELEASE_ALL_LIMIT = 10
+
+local function MakeReleaseAllChildrenWithThrottle(inst)
+  if not inst.components.childspawner then
+    return
+  end
+
+  inst._throttle = RELEASE_ALL_LIMIT
+
+  local oldCanEmergencySpawn = inst.components.childspawner.CanEmergencySpawn
+  inst.components.childspawner.CanEmergencySpawn = function(comp)
+    if inst._throttle <= 0 then
+      return false
+    end
+
+    return oldCanEmergencySpawn(comp)
+  end
+
+  local oldSpawnEmergencyChild = inst.components.childspawner.SpawnEmergencyChild
+  inst.components.childspawner.SpawnEmergencyChild = function(comp, target, prefab, ...)
+    local child = oldSpawnEmergencyChild(comp, target, prefab, ...)
+    if child ~= nil then
+      inst._throttle = inst._throttle - 1
+    end
+
+    return child
+  end
+end
+
+local function doReleaseAll(inst, target, releasedfn)
+  inst._pending_release_task = nil
+
+  if not inst:IsValid() then
+    return
+  end
+
+  if not inst.components.childspawner then
+    return
+  end
+
+  local released = inst.components.childspawner:ReleaseAllChildren(target)
+  if releasedfn ~= nil then
+    releasedfn(released)
+  end
+  if #released == 0 then
+    return
+  end
+
+  inst._pending_release_task = inst:DoTaskInTime(math.random(1, 3) * FRAMES, doReleaseAll, target, releasedfn)
+end
+
+local function ReleaseAllChildrenThrottle(inst, target, releasedfn)
+  inst._throttle = RELEASE_ALL_LIMIT
+  if inst._pending_release_task ~= nil then
+    inst._pending_release_task:Cancel()
+    inst._pending_release_task = nil
+  end
+
+  doReleaseAll(inst, target, releasedfn)
+end
+
 local function GetSource(inst)
   if not inst._ownerid then
     return nil
@@ -209,7 +270,7 @@ end
 local function OnIgnite(inst)
   inst:Say(SPEECH.IGNITE)
   if inst.components.childspawner ~= nil then
-    inst.components.childspawner:ReleaseAllChildren()
+    ReleaseAllChildrenThrottle(inst)
   end
   inst.SoundEmitter:KillSound("loop")
   DefaultBurnFn(inst)
@@ -313,7 +374,7 @@ local function OnHit(inst, attacker, damage)
   end
 
   if inst.components.childspawner ~= nil and not IsValidOwner(inst, attacker) then
-    inst.components.childspawner:ReleaseAllChildren(attacker)
+    ReleaseAllChildrenThrottle(inst, attacker)
   end
   if not inst.components.health:IsDead() then
     Shake(inst)
@@ -700,7 +761,7 @@ local function onwallattacked(inst, wall, data)
   end
 
   if inst.components.childspawner then
-    inst.components.childspawner:ReleaseAllChildren(attacker)
+    ReleaseAllChildrenThrottle(inst, attacker)
   end
 end
 
@@ -1073,14 +1134,6 @@ local function OnLoad(inst, data)
   inst._emergencychildreninside = data._emergencychildreninside
 end
 
-local function updateNetNumChildren(inst)
-  if inst.components.childspawner ~= nil then
-    inst.net_numchildren:set(
-      inst.components.childspawner:NumChildren() + inst.components.childspawner:NumEmergencyChildren()
-    )
-  end
-end
-
 local function MakeMotherHive(name, stage_conf)
   local function fn()
     local inst = CreateEntity()
@@ -1197,6 +1250,8 @@ local function MakeMotherHive(name, stage_conf)
       inst:PushEvent("onnumchildren")
     end
 
+    MakeReleaseAllChildrenWithThrottle(inst) -- make sure it's the last childspawner init setup
+
     inst:DoTaskInTime(0, OnInit)
 
     ---------------------
@@ -1283,6 +1338,10 @@ local function onteleportback(inst)
   end
 end
 
+local function teleportalSummonHoneyCost(num)
+  return math.floor(TUNING.MUTANT_TELEPORTAL_SUMMON_COST * TUNING.MUTANT_TELEPORTAL_SUMMON_COST_CHANCE * num)
+end
+
 local function WatchEnemyTeleportal(inst)
   local source = GetSource(inst)
   if source ~= nil and source._owner ~= nil then
@@ -1294,9 +1353,14 @@ local function WatchEnemyTeleportal(inst)
   end
 
   local enemy = FindEnemy(inst)
-
   if enemy then
-    inst.components.childspawner:ReleaseAllChildren(enemy)
+    ReleaseAllChildrenThrottle(
+      inst,
+      enemy,
+      function(released)
+        consumeHoney(source, teleportalSummonHoneyCost(#released))
+      end
+    )
   end
 end
 
@@ -1364,20 +1428,6 @@ local function teleportal()
       return
     end
 
-    -- randomly require honey cost to summon with teleportal
-    if math.random() <= TUNING.MUTANT_TELEPORTAL_SUMMON_COST_CHANCE then
-      if not has_valid_container(source) then
-        return
-      end
-
-      local has, numfound = source._container.components.container:Has("honey", TUNING.MUTANT_TELEPORTAL_SUMMON_COST)
-      if not has then
-        return
-      end
-
-      consumeHoney(source, TUNING.MUTANT_TELEPORTAL_SUMMON_COST)
-    end
-
     local newprefab = PickChildPrefab_Teleportal(inst)
     local child = oldSpawnEmergencyChild(comp, target, newprefab, ...)
 
@@ -1395,13 +1445,25 @@ local function teleportal()
 
     if
       source and source:IsValid() and source.components.childspawner and
-        source.components.childspawner.emergencychildreninside > 0
+        source.components.childspawner.emergencychildreninside > 0 and
+        has_valid_container(source)
      then
+      local has, numfound =
+        source._container.components.container:Has(
+        "honey",
+        teleportalSummonHoneyCost(source.components.childspawner.emergencychildreninside)
+      )
+      if not has then
+        return false
+      end
+
       return oldCanEmergencySpawn(comp)
     end
 
     return false
   end
+
+  MakeReleaseAllChildrenWithThrottle(inst) -- make sure it's the last childspawner init setup
 
   inst:AddComponent("combat")
 

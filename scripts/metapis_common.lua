@@ -196,38 +196,106 @@ local function OnCommonLoad(inst, data)
   end
 end
 
-local function SpawnShadowlings(inst, num_spawn, frenzy)
+local SHADOWLING_LIMIT = 60
+local SHADOWLING_SIMULATED_LIVE_TIME = 10
+local shadowlingmanager = {}
+
+local function SpawnShadowlings(inst, numSpawn, frenzy)
   local spikeondeath = false
   local owner = inst:GetOwner()
-  if owner and owner:HasTag("beemaster") then
+
+  if not owner then
+    return
+  end
+
+  if owner:HasTag("beemaster") then
     if owner.components.skilltreeupdater:IsActivated("zeta_metapis_shadow_2") then
       spikeondeath = true
     end
   end
 
-  for i = 1, num_spawn do
-    local s = SpawnPrefab("mutantshadowling")
-    local offset = FindWalkableOffset(inst:GetPosition(), math.random() * 2 * PI, 2, 5, true, false, nil, true, true)
-    local pos = inst:GetPosition()
-    if offset ~= nil then
-      pos.x = pos.x + offset.x
-      pos.z = pos.z + offset.z
+  if not shadowlingmanager[owner] then
+    shadowlingmanager[owner] = {
+      live = {},
+      simulated = {}
+    }
+    owner:ListenForEvent(
+      "onremove",
+      function()
+        shadowlingmanager[owner] = nil
+      end
+    )
+  end
+
+  local manager = shadowlingmanager[owner]
+  local ownerLimit = math.ceil(SHADOWLING_LIMIT / GetTableSize(shadowlingmanager))
+  local numCanSpawn = math.min(numSpawn, math.max(0, ownerLimit - GetTableSize(manager.live)))
+  local numExceed = numSpawn - numCanSpawn
+  local now = GetTime()
+
+  if numExceed > 0 then
+    table.insert(
+      manager.simulated,
+      {
+        num = numExceed,
+        ts = now
+      }
+    )
+  end
+
+  -- trim old sim
+  if #manager.simulated > 0 and manager.simulated[1].ts + SHADOWLING_SIMULATED_LIVE_TIME <= now then
+    local newsim = {}
+    for i, sim in ipairs(manager.simulated) do
+      if sim.ts + SHADOWLING_SIMULATED_LIVE_TIME > now then
+        table.insert(newsim, sim)
+      end
     end
 
-    s.Transform:SetPosition(pos:Get())
-    s.components.combat:SetTarget(inst.components.combat.target)
+    manager.simulated = newsim
+  end
 
-    if spikeondeath then
-      s:ListenForEvent("death", s.SpikeOnDeath)
+  if numCanSpawn > 0 then
+    local totalSim = 0
+
+    -- consume sims to boost spawning minions
+    if #manager.simulated > 0 then
+      for i, sim in ipairs(manager.simulated) do
+        totalSim = totalSim + sim.num
+      end
+
+      manager.simulated = {}
     end
 
-    -- frenzy til death
-    if frenzy then
-      s.components.debuffable:AddDebuff("metapis_frenzy_buff", "metapis_frenzy_buff")
-      s:DoPeriodicTask(
-        1,
+    for i = 1, numCanSpawn do
+      local s = SpawnPrefab("mutantshadowling")
+      s.components.combat.damagemultiplier = 1 + (0.25 * totalSim / numCanSpawn)
+      -- print("EXTRA DAMAGE", (0.2 * totalSim / numCanSpawn))
+
+      local offset = FindWalkableOffset(inst:GetPosition(), math.random() * 2 * PI, 2, 5, true, false, nil, true, true)
+      local pos = inst:GetPosition()
+      if offset ~= nil then
+        pos.x = pos.x + offset.x
+        pos.z = pos.z + offset.z
+      end
+
+      s.Transform:SetPosition(pos:Get())
+      s.components.combat:SetTarget(inst.components.combat.target)
+
+      if spikeondeath then
+        s:ListenForEvent("death", s.SpikeOnDeath)
+      end
+
+      -- frenzy til death
+      if frenzy then
+        s.components.debuffable:AddDebuff("metapis_perm_frenzy_buff", "metapis_perm_frenzy_buff")
+      end
+
+      manager.live[s] = s
+      s:ListenForEvent(
+        "onremove",
         function()
-          s.components.debuffable:AddDebuff("metapis_frenzy_buff", "metapis_frenzy_buff")
+          manager.live[s] = nil
         end
       )
     end
@@ -409,7 +477,7 @@ local function OnInitUpgrade(inst, checkupgradefn, retries)
 
   local check = checkupgradefn(inst, hive._stage.LEVEL)
   if not check then
-    print("check upgrade failed", inst)
+    print("[WARN] check upgrade failed", inst)
   end
 end
 

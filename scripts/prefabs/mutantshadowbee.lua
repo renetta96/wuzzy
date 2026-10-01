@@ -23,15 +23,65 @@ local prefabs = {
   "shadowspike_ring_3s"
 }
 
+local spikefxmanager = {
+  shadowspike_ring_4s = {
+    targetfx = {},
+    limit = 6,
+    window = 0.5
+  },
+  shadowspike_ring_6s = {
+    targetfx = {},
+    limit = 5,
+    window = 0.5
+  }
+}
+
+local function SpawnRingManaged(target, prefab)
+  if not spikefxmanager[prefab] then
+    return
+  end
+
+  local manager = spikefxmanager[prefab]
+  if not manager.targetfx[target] then
+    manager.targetfx[target] = {}
+    target:ListenForEvent(
+      "onremove",
+      function()
+        manager.targetfx[target] = nil
+      end
+    )
+  end
+
+  local now = GetTime()
+
+  -- trim old timestamps
+  if #manager.targetfx[target] > 0 and manager.targetfx[target][1] < now - manager.window then
+    local newarr = {}
+    for i, t in ipairs(manager.targetfx[target]) do
+      if t >= now - manager.window then
+        table.insert(newarr, t)
+      end
+    end
+
+    manager.targetfx[target] = newarr
+  end
+
+  if #manager.targetfx[target] >= manager.limit then
+    return
+  end
+
+  local spikefx = SpawnPrefab(prefab)
+  spikefx.Transform:SetPosition(target.Transform:GetWorldPosition())
+
+  table.insert(manager.targetfx[target], now)
+end
+
 local function SpikeRingSmall(inst, target)
   if not target or not inst:IsValid() or not inst.components.combat:CanTarget(target) then
     return
   end
 
-  local spikefx = SpawnPrefab("shadowspike_ring_4s")
-  if spikefx then
-    spikefx.Transform:SetPosition(target.Transform:GetWorldPosition())
-  end
+  SpawnRingManaged(target, "shadowspike_ring_4s")
 
   inst:DoTaskInTime(
     0.25,
@@ -62,10 +112,7 @@ local function SpikeRingBig(inst, target)
     return
   end
 
-  local spikefx = SpawnPrefab("shadowspike_ring_6s")
-  if spikefx then
-    spikefx.Transform:SetPosition(target.Transform:GetWorldPosition())
-  end
+  SpawnRingManaged(target, "shadowspike_ring_6s")
 
   inst:DoTaskInTime(
     0.25,
@@ -266,28 +313,12 @@ local function shadowbee()
 end
 
 local function DecayHealth(inst)
-  local base = 1.25 + (math.log(math.floor(inst._count / 5) + 1) / math.log(2))
+  local base = 1.25
   local pct = math.pow(base, inst._decayticks) -- decay in ~20 secs
   local amount = inst.components.health.maxhealth * pct / 100
 
   inst.components.health:DoDelta(-amount, nil, "lesser_shadow_health_decay")
   inst._decayticks = inst._decayticks + 1
-end
-
-local _shadowlingmanager = {
-  count = 0
-}
-
-local function registerShadowling(inst)
-  _shadowlingmanager.count = _shadowlingmanager.count + 1
-  inst._count = _shadowlingmanager.count
-
-  inst:ListenForEvent(
-    "onremove",
-    function()
-      _shadowlingmanager.count = _shadowlingmanager.count - 1
-    end
-  )
 end
 
 local shadowlingbrain = require("brains/shadowlingbrain")
@@ -366,8 +397,6 @@ local function lessershadowfn()
   inst.SpikeOnDeath = SpikeOnDeath
 
   inst.persists = false
-
-  registerShadowling(inst)
 
   return inst
 end
